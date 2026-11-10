@@ -29,11 +29,11 @@ def boards_h(axis_pos,span,z0,z1,h,m,coll,wall="back",holes=(),th=0.045,gap=0.00
 def build(time="day"):
     random.seed(7); sc=bpy.context.scene
     S=bpy.data.collections.new("set"); sc.collection.children.link(S)
-    upper=mat("upper_wall",(0.72,0.62,0.42),0.8,0.15,vary=0.06)
-    lower=mat("wainscot",(0.42,0.22,0.11),0.6,0.25,vary=0.12)
-    floor=mat("floor",(0.55,0.3,0.13),0.55,0.3,vary=0.18)
-    trim=mat("trim",(0.33,0.17,0.08),0.5,0.3,vary=0.05)
-    beamm=mat("beam",(0.30,0.16,0.08),0.6,0.2,vary=0.1)
+    upper=mat("upper_wall",(0.66,0.70,0.68),0.8,0.15,vary=0.05)
+    lower=mat("wainscot",(0.20,0.36,0.38),0.6,0.25,vary=0.08)
+    floor=mat("floor",(0.50,0.31,0.17),0.55,0.3,vary=0.16)
+    trim=mat("trim",(0.88,0.85,0.78),0.5,0.3,vary=0.03)
+    beamm=mat("beam",(0.36,0.23,0.14),0.6,0.2,vary=0.1)
     # floor boards with staggered ends
     x=X0
     while x<X1:
@@ -69,7 +69,7 @@ def build(time="day"):
     for xw in (x0,x1): box((xw,Y1-0.02,(z0+z1)/2),(0.08,0.14,z1-z0+0.08),fm,0.01,coll=S,name="wframe")
     box((cx,Y1,(z0+z1)/2),(0.04,0.05,z1-z0),fm,0.006,coll=S); box((cx,Y1,(z0+z1)/2),(x1-x0,0.05,0.04),fm,0.006,coll=S)
     box((cx,Y1-0.12,z0-0.03),(x1-x0+0.3,0.26,0.05),fm,0.01,coll=S,name="sill")
-    cur=mat("curtain",(0.78,0.2,0.18),0.8,0.1)
+    cur=mat("curtain",(0.66,0.24,0.2),0.8,0.1)
     for s,xc in ((-1,x0-0.12),(1,x1+0.12)):
         for k in range(4): cyl((xc+s*0.04*k,Y1-0.1-0.02*(k%2),(z0+z1)/2+0.1),0.05,1.25,cur,verts=12,bevel=0,coll=S,name="curtain")
     cyl((cx,Y1-0.12,z1+0.18),0.02,x1-x0+0.7,mat("brass",(0.85,0.6,0.15),0.3,0.6),rot=(0,math.pi/2,0),coll=S)
@@ -146,7 +146,7 @@ def build(time="day"):
     rm=bpy.data.materials.new("rug"); rm.use_nodes=True; nt=rm.node_tree; p=nt.nodes["Principled BSDF"]; p.inputs["Roughness"].default_value=0.95
     tc=nt.nodes.new('ShaderNodeTexCoord'); w=nt.nodes.new('ShaderNodeTexWave'); w.wave_type='RINGS'; w.wave_profile='SAW'; w.inputs['Scale'].default_value=3.2; w.inputs['Distortion'].default_value=0.0; w.inputs['Detail'].default_value=1
     cr=nt.nodes.new('ShaderNodeValToRGB'); cr.color_ramp.interpolation='CONSTANT'; els=cr.color_ramp.elements
-    cols=[(0.72,0.24,0.16),(0.92,0.72,0.42),(0.3,0.48,0.58),(0.85,0.5,0.25)]
+    cols=[(0.55,0.27,0.2),(0.82,0.74,0.58),(0.3,0.42,0.48),(0.66,0.5,0.34)]
     els[0].color=(*cols[0],1); els[1].position=0.25; els[1].color=(*cols[1],1)
     for i,c_ in enumerate(cols[2:]): e=els.new(0.5+0.25*i); e.color=(*c_,1)
     nt.links.new(tc.outputs['Object'],w.inputs[0]); nt.links.new(w.outputs['Fac'],cr.inputs[0]); nt.links.new(cr.outputs[0],p.inputs['Base Color'])
@@ -159,7 +159,7 @@ def build(time="day"):
     box((1.65,1.75,0.25),(0.5,0.45,0.5),wood,0.015,rot=(0,0,0.2),coll=S)
     for k in range(4): torus((1.65,1.75,0.52+k*0.035),0.16-k*0.015,0.025,mat("rope",(0.8,0.65,0.4),0.9,0.1),coll=S)
     # hanging lantern
-    cyl((0.5,-0.2,ZT-0.45),0.006,0.5,dark,verts=6,coll=S); cyl((0.5,-0.2,ZT-0.75),0.08,0.16,mat("lantglass",(1,0.8,0.5),0.3,0.2,emit=8),verts=12,coll=S)
+    cyl((0.5,-0.2,ZT-0.45),0.006,0.5,dark,verts=6,coll=S); cyl((0.5,-0.2,ZT-0.75),0.08,0.16,mat("lantglass",(1,0.8,0.5),0.3,0.2,emit=8),verts=32,coll=S)
     cyl((0.5,-0.2,ZT-0.65),0.1,0.03,dark,verts=12,coll=S); cyl((0.5,-0.2,ZT-0.85),0.1,0.03,dark,verts=12,coll=S)
     # coat hooks with a yellow coat-ish hat on the back wall
     box((1.95,Y1-0.04,1.75),(0.7,0.04,0.1),trim,0.006,coll=S)
@@ -170,7 +170,7 @@ def lights(time="day"):
     sc=bpy.context.scene
     bpy.ops.object.light_add(type='SUN',rotation=(math.radians(-52),0,math.radians(-30)))
     sun=bpy.context.object.data; sun.energy=float(os.environ.get('SUN','6')); sun.color=(1.0,0.78,0.52); sun.angle=math.radians(2.5)
-    bpy.ops.object.light_add(type='SPOT',location=(0.9,4.6,3.6)); sp=bpy.context.object; sp.data.energy=float(os.environ.get('KEY','2500')); sp.data.color=(1.0,0.76,0.48)
+    bpy.ops.object.light_add(type='SPOT',location=(0.9,4.6,3.6)); sp=bpy.context.object; sp.data.energy=float(os.environ.get('KEY','2500')); sp.data.color=(1.0,0.86,0.68)
     sp.data.spot_size=math.radians(38); sp.data.spot_blend=0.15; sp.data.shadow_soft_size=0.05
     tg=bpy.data.objects.new("key_tgt",None); bpy.context.scene.collection.objects.link(tg); tg.location=(-0.3,0.0,0.0)
     cn=sp.constraints.new('TRACK_TO'); cn.target=tg; cn.track_axis='TRACK_NEGATIVE_Z'; cn.up_axis='UP_Y'
@@ -178,6 +178,6 @@ def lights(time="day"):
     bpy.ops.object.light_add(type='POINT',location=(0.5,-0.2,ZT-0.75)); l=bpy.context.object.data; l.energy=60; l.color=(1.0,0.7,0.4); l.shadow_soft_size=0.05
     bpy.ops.object.light_add(type='POINT',location=(-1.85,1.2,0.4)); l=bpy.context.object.data; l.energy=40; l.color=(1.0,0.45,0.15)
     # soft overall fill so the room reads bright like the competitors' game-style lighting
-    bpy.ops.object.light_add(type='AREA',location=(0.3,-0.8,ZT-0.35),rotation=(0,0,0)); a=bpy.context.object.data; a.energy=float(os.environ.get('FILL','45')); a.size=3.0; a.color=(1.0,0.93,0.85)
+    bpy.ops.object.light_add(type='AREA',location=(0.3,-0.8,ZT-0.35),rotation=(0,0,0)); a=bpy.context.object.data; a.energy=float(os.environ.get('FILL','45')); a.size=3.0; a.color=(0.95,0.95,0.95)
     bpy.ops.object.light_add(type='AREA',location=(1.5,-3.2,1.6),rotation=(math.radians(80),0,math.radians(15))); a=bpy.context.object.data; a.energy=float(os.environ.get('FRONT','55')); a.size=2.5; a.color=(0.9,0.92,1.0)
     w=bpy.data.worlds.new("w"); sc.world=w; w.use_nodes=True; bg=w.node_tree.nodes["Background"]; bg.inputs[0].default_value=(0.75,0.82,0.95,1); bg.inputs[1].default_value=0.4

@@ -14,6 +14,17 @@ def join(objs,name):
     """Merge into one mesh (Cycles bakes one object fast, hundreds slowly). Per-object random shade kept as attribute 'rand'."""
     import random
     for o in objs:
+        oc=o.data.attributes.new("ocoord",'FLOAT_VECTOR','POINT')   # original object-space coords (patterns/decals survive the join)
+        co=[0.0]*(3*len(o.data.vertices)); o.data.vertices.foreach_get("co",co); oc.data.foreach_set("vector",co)
+        for m in o.data.materials:
+            if not m or not m.node_tree or m.get("ocoord_done"): continue
+            nt=m.node_tree
+            for tc in [n for n in nt.nodes if n.type=='TEX_COORD']:
+                links=[l for l in nt.links if l.from_node==tc and l.from_socket.name=='Object']
+                if not links: continue
+                at=nt.nodes.new('ShaderNodeAttribute'); at.attribute_name="ocoord"; at.attribute_type='GEOMETRY'
+                for l in links: nt.links.new(at.outputs['Vector'],l.to_socket)
+            m["ocoord_done"]=1
         a=o.data.attributes.get("rand") or o.data.attributes.new("rand",'FLOAT','POINT')
         r=random.random(); a.data.foreach_set("value",[r]*len(o.data.vertices))
         if len(o.data.uv_layers): o.data.uv_layers[0].name="UVMap"
@@ -37,6 +48,8 @@ def unwrap(objs,margin=0.003):
     bpy.context.view_layer.objects.active=objs[0]
     bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.uv.smart_project(angle_limit=math.radians(48),island_margin=margin,area_weight=0.0,correct_aspect=True,scale_to_bounds=False)
+    bpy.ops.uv.select_all(action='SELECT'); bpy.ops.uv.average_islands_scale()
+    bpy.ops.uv.pack_islands(rotate=True,margin=margin*2)   # guarantees no overlapping islands
     bpy.ops.object.mode_set(mode='OBJECT')
 
 def _target(objs,img):
