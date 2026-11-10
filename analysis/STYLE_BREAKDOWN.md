@@ -425,4 +425,13 @@ Rules:
 - `transcripts/*.md`: full transcript of every video, line by line with times, plus **every word with start and end timestamps** and the list of visual-change times
 - `data/*.json`: raw measurements per video (words, visual-change times, per-frame statistics summary)
 
-**Still to add:** the breakdown video (youtu.be/v6fu76wmfjg) could not be loaded because YouTube is blocked in this session's network. Paste its transcript or notes and they can be merged into section 7.
+- `reference_tutorial/`: full analysis of the breakdown video you sent (`TUTORIAL_BREAKDOWN.md`), its timestamped transcript, and key frames
+
+**Update from the breakdown video:** it confirms this report's findings and adds a few production rules, listed below. Details are in `reference_tutorial/TUTORIAL_BREAKDOWN.md`.
+- **Time every word first.** Face swaps, sound effects and framing changes are all pinned to word timestamps.
+- **One shot per location.** About 3 camera framings per shot, gliding between them. Cut only when the place changes: about 11 shots and 33 framings in 60 s.
+- **Look recipe:** Blender EEVEE with toon shading, brush-weight ink outlines, contact shadows, depth of field, motion blur and a colour grade. Characters are stacked 2D cards (head, face and body) with about 49 swappable expressions.
+- **Story sounds land exactly on their word** (the bell on "rings"). Soft hits go at shot changes and word accents, over the music bed.
+- **3–4 characters at most**, each with one signature colour, hat or prop.
+- **Strangest picture in the first 2 s.** Twist in the last few seconds. Every line must have a picture.
+- **Final check, the mute test:** with the sound off, every face should still tell the story.
