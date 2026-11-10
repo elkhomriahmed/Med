@@ -32,7 +32,7 @@ for g,AS,do_ink in groups:
     cv2.imwrite(OUT+'_alb_'+g.name+'.jpg',(np.clip(alb,0,1)[...,::-1]**(1/2.2)*255).astype(np.uint8))
     lit=bake.img_np(bake.bake_pass([g],'DIFFUSE',LS,int(os.environ.get("SPP","256")),['DIRECT','INDIRECT']))
     emi=bake.img_np(bake.bake_pass([g],'EMIT',LS,1))
-    ink=bake.ink_mask([g],AS,int(os.environ.get("INKW","3")),min_angle=55) if do_ink else bake.ink_mask([g],AS,int(os.environ.get("CINKW","3")),min_angle=70)
+    ink=bake.ink_mask([g],AS,int(os.environ.get("INKW","3")),min_angle=int(os.environ.get("INKANG","25"))) if do_ink else bake.ink_mask([g],AS,int(os.environ.get("CINKW","3")),min_angle=70)
     lit=cv2.GaussianBlur(lit,(0,0),0.7)
     if do_ink:
         ao=bake.img_np(bake.bake_pass([g],'AO',LS,32))
