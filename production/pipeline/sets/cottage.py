@@ -58,6 +58,12 @@ def build(time="day"):
     # right wall (mostly off camera, closes the room)
     box((X1,(Y0+Y1)/2,ZT/2),(0.06,Y1-Y0,ZT),upper,0,coll=S,name="rwall")
     box(((X0+X1)/2,Y0-0.4,ZT/2),(X1-X0,0.06,ZT),upper,0,coll=S,name="fwall")
+    # solid backing behind the board walls (stops sky leaking through board gaps)
+    back=mat("backing",(0.08,0.06,0.05),0.9,0.0)
+    wx0,wx1,wz0,wz1=WIN
+    for (a,b,c,d) in [(X0-0.2,wx0,-0.1,ZT+0.1),(wx1,X1+0.2,-0.1,ZT+0.1),(wx0,wx1,-0.1,wz0),(wx0,wx1,wz1,ZT+0.1)]:
+        box(((a+b)/2,Y1+0.06,(c+d)/2),(b-a,0.04,d-c),back,0,coll=S,name="backing")
+    box((X0-0.06,(Y0+Y1)/2,ZT/2),(0.04,Y1-Y0+0.4,ZT+0.2),back,0,coll=S,name="backing")
     # ceiling + beams
     ceilw=wood("ceiling",(0.72,0.52,0.32),(0.5,0.34,0.2),axis="Y",grain=5,bump=0.1)
     xx=X0
@@ -156,7 +162,7 @@ def build(time="day"):
     box((1.65,1.75,0.25),(0.5,0.45,0.5),fwood,0.015,rot=(0,0,0.2),coll=S)
     for k in range(4): torus((1.65,1.75,0.52+k*0.035),0.16-k*0.015,0.025,mat("rope",(0.8,0.65,0.4),0.9,0.1),coll=S)
     # hanging lantern
-    cyl((0.5,-0.2,ZT-0.45),0.006,0.5,dark,verts=6,coll=S); cyl((0.5,-0.2,ZT-0.75),0.08,0.16,mat("lantglass",(1,0.8,0.5),0.3,0.2,emit=8),verts=32,coll=S)
+    cyl((0.5,-0.2,ZT-0.45),0.006,0.5,dark,verts=6,coll=S); cyl((0.5,-0.2,ZT-0.75),0.08,0.16,mat("lantglass",(0.95,0.92,0.85),0.3,0.2,emit=float(os.environ.get("LANTEMIT","0"))),verts=32,coll=S)
     cyl((0.5,-0.2,ZT-0.65),0.1,0.03,dark,verts=12,coll=S); cyl((0.5,-0.2,ZT-0.85),0.1,0.03,dark,verts=12,coll=S)
     # coat hooks with a yellow coat-ish hat on the back wall
     box((1.95,Y1-0.04,1.75),(0.7,0.04,0.1),trim,0.006,coll=S)
@@ -172,9 +178,9 @@ def lights(time="day"):
     tg=bpy.data.objects.new("key_tgt",None); bpy.context.scene.collection.objects.link(tg); tg.location=(-0.3,0.0,0.0)
     cn=sp.constraints.new('TRACK_TO'); cn.target=tg; cn.track_axis='TRACK_NEGATIVE_Z'; cn.up_axis='UP_Y'
     bpy.ops.object.light_add(type='POINT',location=(0.75,-0.45,1.0)); l=bpy.context.object.data; l.energy=float(os.environ.get("LAMP","18")); l.color=(1.0,0.66,0.33); l.shadow_soft_size=0.08
-    bpy.ops.object.light_add(type='POINT',location=(0.5,-0.2,ZT-0.75)); l=bpy.context.object.data; l.energy=60; l.color=(1.0,0.7,0.4); l.shadow_soft_size=0.05
+    bpy.ops.object.light_add(type='POINT',location=(0.5,-0.2,ZT-0.75)); l=bpy.context.object.data; l.energy=float(os.environ.get('LANT','0')); l.color=(1.0,0.7,0.4); l.shadow_soft_size=0.05
     bpy.ops.object.light_add(type='POINT',location=(-1.85,1.2,0.4)); l=bpy.context.object.data; l.energy=40; l.color=(1.0,0.45,0.15)
     # soft overall fill so the room reads bright like the competitors' game-style lighting
     bpy.ops.object.light_add(type='AREA',location=(0.3,-0.8,ZT-0.35),rotation=(0,0,0)); a=bpy.context.object.data; a.energy=float(os.environ.get('FILL','45')); a.size=3.0; a.color=(0.95,0.95,0.95)
     bpy.ops.object.light_add(type='AREA',location=(1.5,-3.2,1.6),rotation=(math.radians(80),0,math.radians(15))); a=bpy.context.object.data; a.energy=float(os.environ.get('FRONT','55')); a.size=2.5; a.color=(0.9,0.92,1.0)
-    w=bpy.data.worlds.new("w"); sc.world=w; w.use_nodes=True; bg=w.node_tree.nodes["Background"]; bg.inputs[0].default_value=(0.45,0.62,0.95,1); bg.inputs[1].default_value=0.4
+    w=bpy.data.worlds.new("w"); sc.world=w; w.use_nodes=True; bg=w.node_tree.nodes["Background"]; bg.inputs[0].default_value=(0.85,0.85,0.82,1); bg.inputs[1].default_value=0.4
