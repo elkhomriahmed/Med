@@ -16,23 +16,6 @@ def striped(name,col,dark,scale,axis='Z',rough=0.6):
     e[0].color=(*dark,1); e[1].position=0.12; e[1].color=(*col,1)
     nt.links.new(tc.outputs['Object'],w.inputs[0]); nt.links.new(w.outputs['Fac'],cr.inputs[0]); nt.links.new(cr.outputs[0],p.inputs['Base Color'])
     return m
-def front_decal(base,path,hw,top,bot):
-    """Copy of material 'base' with a front-projected drawing (pockets, stitches, tie...) over its colour."""
-    m=base.copy(); m.name=base.name+"_dec"; nt=m.node_tree; n=nt.nodes; p=n["Principled BSDF"]
-    src=p.inputs['Base Color'].links[0].from_socket if p.inputs['Base Color'].links else None
-    col=tuple(p.inputs['Base Color'].default_value)
-    tc=n.new('ShaderNodeTexCoord'); sx=n.new('ShaderNodeSeparateXYZ'); nt.links.new(tc.outputs['Object'],sx.inputs[0])
-    u=n.new('ShaderNodeMapRange'); u.inputs[1].default_value=-hw; u.inputs[2].default_value=hw; u.clamp=False; nt.links.new(sx.outputs['X'],u.inputs[0])
-    v=n.new('ShaderNodeMapRange'); v.inputs[1].default_value=bot; v.inputs[2].default_value=top; v.clamp=False; nt.links.new(sx.outputs['Z'],v.inputs[0])
-    cx=n.new('ShaderNodeCombineXYZ'); nt.links.new(u.outputs[0],cx.inputs[0]); nt.links.new(v.outputs[0],cx.inputs[1])
-    tx=n.new('ShaderNodeTexImage'); tx.image=bpy.data.images.load(path,check_existing=True); tx.extension='CLIP'; nt.links.new(cx.outputs[0],tx.inputs[0])
-    fr=n.new('ShaderNodeMath'); fr.operation='LESS_THAN'; fr.inputs[1].default_value=0.0; nt.links.new(sx.outputs['Y'],fr.inputs[0])
-    al=n.new('ShaderNodeMath'); al.operation='MULTIPLY'; nt.links.new(tx.outputs['Alpha'],al.inputs[0]); nt.links.new(fr.outputs[0],al.inputs[1])
-    mx=n.new('ShaderNodeMix'); mx.data_type='RGBA'; nt.links.new(al.outputs[0],mx.inputs['Factor'])
-    if src: nt.links.new(src,mx.inputs['A'])
-    else: mx.inputs['A'].default_value=col
-    nt.links.new(tx.outputs['Color'],mx.inputs['B']); nt.links.new(mx.outputs['Result'],p.inputs['Base Color'])
-    return m
 def ink_ring(o_parent,loc,R,r,rot=(0,0,0)):
     """Thin dark torus = drawn inner line where two parts meet (hat/forehead, hair/forehead)."""
     return torus(loc,R,r,mat("ink",(0.035,0.025,0.02),0.6,0.1),rot=rot)
@@ -61,30 +44,40 @@ class Character:
         _add(o,self.root,self.coll)
         return o
     # ---------- builders ----------
-    def build(self,R=0.25,hip=0.8,torso=0.6,torso_w=0.17,shirt=(0.96,0.96,0.95),legs=(0.035,0.025,0.02),beard=False,decal=None,look=0.0,
+    def build(self,R=0.25,hip=0.8,torso=0.6,torso_w=0.17,shirt=(0.96,0.96,0.95),legs=(0.035,0.025,0.02),beard=False,
               shoes=(0.12,0.08,0.06),hair=None,hat=None,tie=None,coat=None,buttons=0,arms=None,collar=True):
-        self.R=R; self.beard=beard; self.look=look; z_t=hip+torso/2-0.04; decal_objs=[]
+        self.R=R; self.beard=beard; z_t=hip+torso/2-0.04
         body=sph((0,0,z_t),(torso_w,torso_w*0.78,torso/2+0.03),mat(self.name+"_shirt",shirt,0.7,0.25,emit=0.08 if sum(shirt)>2.7 else 0),seg=40)
         self.part(body,0.011)
         if coat:  # long coat flaring to the knees
-            c=cyl((0,0,hip-0.05),torso_w*1.02,0.62,mat(self.name+"_coat",coat,0.8,0.15),verts=40,r2=torso_w*1.45,rot=(math.pi,0,0),bevel=0.0)
-            c.location=(0,0,hip+0.02); self.part(c,0.011); decal_objs=[c]
-            top=sph((0,0,z_t+0.05),(torso_w*1.07,torso_w*0.86,torso/2-0.02),mat(self.name+"_coat",coat,0.8,0.15),seg=40); self.part(top,0.011); decal_objs.append(top)
-            for i in range(0):
+            c=cyl((0,0,hip-0.05),torso_w*1.02,0.62,mat(self.name+"_coat",coat,0.45,0.45),verts=40,r2=torso_w*1.45,rot=(math.pi,0,0),bevel=0.0)
+            c.location=(0,0,hip+0.02); self.part(c,0.011)
+            top=sph((0,0,z_t+0.05),(torso_w*1.07,torso_w*0.86,torso/2-0.02),mat(self.name+"_coat",coat,0.45,0.45),seg=40); self.part(top,0.011)
+            for i in range(buttons):
                 self.part(sph((0.0,-torso_w*0.88,z_t+0.18-i*0.17),(0.018,0.012,0.018),mat("btn",(0.15,0.1,0.06),0.4)))
             if collar:
                 for s in (-1,1):
-                    cl=cyl((s*0.06,-0.07,z_t+torso/2-0.04),0.07,0.02,mat(self.name+"_coat",coat,0.8,0.15),rot=(1.2,0,s*0.6),verts=3); self.part(cl,0.006)
+                    cl=cyl((s*0.06,-0.07,z_t+torso/2-0.04),0.07,0.02,mat(self.name+"_coat",coat,0.45,0.45),rot=(1.2,0,s*0.6),verts=3); self.part(cl,0.006)
         elif collar and not tie:
             for s in (-1,1):
                 cl=cyl((s*0.045,-torso_w*0.62,z_t+torso/2-0.07),0.055,0.015,mat(self.name+"_shirt",shirt,0.7,0.25,emit=0.08 if sum(shirt)>2.7 else 0),rot=(1.35,0,s*0.5),verts=3); self.part(cl,0.006)
-        if decal:
-            targets=[o for o in decal_objs] if decal_objs else [body]
-            m=front_decal(targets[0].data.materials[0],os.path.join(HERE,"assets",decal),hw=torso_w*1.25,top=z_t+torso/2+0.02,bot=hip-(0.55 if coat else 0.02))
-            for o in targets: o.data.materials[0]=m
+        if tie:  # tie painted onto the shirt front (flat, striped, ink outline)
+            m=body.data.materials[0].copy(); m.name=self.name+"_shirt_tie"; nt=m.node_tree; n=nt.nodes; p=n["Principled BSDF"]
+            tc=n.new('ShaderNodeTexCoord'); sx=n.new('ShaderNodeSeparateXYZ'); nt.links.new(tc.outputs['Object'],sx.inputs[0])
+            hw=0.105; top=z_t+torso/2-0.02; bot=z_t-torso/2*0.62
+            u=n.new('ShaderNodeMapRange'); u.inputs[1].default_value=-hw; u.inputs[2].default_value=hw; u.clamp=False; nt.links.new(sx.outputs['X'],u.inputs[0])
+            v=n.new('ShaderNodeMapRange'); v.inputs[1].default_value=bot; v.inputs[2].default_value=top; v.clamp=False; nt.links.new(sx.outputs['Z'],v.inputs[0])
+            cx=n.new('ShaderNodeCombineXYZ'); nt.links.new(u.outputs[0],cx.inputs[0]); nt.links.new(v.outputs[0],cx.inputs[1])
+            tx=n.new('ShaderNodeTexImage'); tx.image=bpy.data.images.load(os.path.join(HERE,"assets","tie.png"),check_existing=True); tx.extension='CLIP'
+            nt.links.new(cx.outputs[0],tx.inputs[0])
+            fr=n.new('ShaderNodeMath'); fr.operation='LESS_THAN'; fr.inputs[1].default_value=0.0; nt.links.new(sx.outputs['Y'],fr.inputs[0])
+            al=n.new('ShaderNodeMath'); al.operation='MULTIPLY'; nt.links.new(tx.outputs['Alpha'],al.inputs[0]); nt.links.new(fr.outputs[0],al.inputs[1])
+            mx=n.new('ShaderNodeMix'); mx.data_type='RGBA'; nt.links.new(al.outputs[0],mx.inputs['Factor']); mx.inputs['A'].default_value=(*shirt,1); nt.links.new(tx.outputs['Color'],mx.inputs['B'])
+            nt.links.new(mx.outputs['Result'],p.inputs['Base Color'])
+            body.data.materials[0]=m
         # head
         hz=z_t+torso/2+R*0.82; self.head_z=hz
-        head=sph((0,0,hz),(R,R*0.93,R*0.97),mat("skin",SKIN,1.0,0.0,emit=0.1),seg=48); self.part(head,0.013)
+        head=sph((0,0,hz),(R,R*0.93,R*0.97),mat("skin",SKIN,0.45,0.45,emit=0.18),seg=48); self.part(head,0.013)
         if hair:
             import bmesh
             o=sph((0,0,hz),(R*1.05,R*0.98,R*1.02),striped(self.name+"_hair",hair,tuple(x*0.45 for x in hair),9,'X',0.5),seg=48)
@@ -118,21 +111,21 @@ class Character:
         me=bpy.data.meshes.new(self.name+"_face"); me.from_pydata([(x*R,y*R,0) for x,y in pts]+[(0,0,0)],[],[[i for i in range(len(pts))]]); me.update()
         uv=me.uv_layers.new()
         for l in me.loops:
-            co=me.vertices[l.vertex_index].co; uv.data[l.index].uv=(co.x/(2.6*R)+0.5-self.look,co.y/(2.6*R)+0.5)
+            co=me.vertices[l.vertex_index].co; uv.data[l.index].uv=(co.x/(2.6*R)+0.5,co.y/(2.6*R)+0.5)
         fp=bpy.data.objects.new(self.name+"_face",me)
         self.faces_coll.objects.link(fp); fp.parent=piv; fp.location=(0,0,R*1.02); fp.visible_shadow=False
-        self.face_mat=image_mat(self.name+"_facemat",f"{FACEDIR}/{self.name}_{self.face_name}.png",emit=0.25,rough=0.9)
+        self.face_mat=image_mat(self.name+"_facemat",f"{FACEDIR}/{self.name}_{self.face_name}.png",emit=0.6,rough=0.9)
         fp.data.materials.append(self.face_mat); self.face_obj=fp
         # legs + shoes
         for s in (-1,1):
-            self.limb(tube([(s*0.065,0.0,hip+0.05),(s*0.07,0.0,0.45),(s*0.075,0.0,0.07)],0.009,mat("limb",legs,0.9,0.0)))
-            self.part(sph((s*0.07,-0.035,0.022),(0.028,0.055,0.022),mat(self.name+"_shoes",shoes,0.9,0.05)),0.0)
+            self.limb(tube([(s*0.065,0.0,hip+0.05),(s*0.07,0.0,0.45),(s*0.075,0.0,0.07)],0.012,mat("limb",legs,0.6)))
+            self.part(sph((s*0.075,-0.04,0.035),(0.045,0.08,0.035),mat(self.name+"_shoes",shoes,0.5,0.3)),0.007)
         self.sh_z=z_t+torso/2-0.16; self.sh_x=torso_w*(1.0 if coat else 0.9)
         for side,pts in zip((-1,1),arms or [None,None]):
             if pts is None: pts=[(0.05,0,-0.02),(0.12,-0.02,-0.25),(0.14,-0.05,-0.5)]
             P=[(side*(self.sh_x+a),b,self.sh_z+c) for a,b,c in pts]
-            self.limb(tube([(side*(self.sh_x-0.04),0,self.sh_z)]+P,0.0085,mat("limb",legs,0.9,0.0)))
-            self.limb(sph(P[-1],(0.02,0.02,0.02),mat("limb",legs,0.9,0.0)))
+            self.limb(tube([(side*(self.sh_x-0.04),0,self.sh_z)]+P,0.011,mat("limb",legs,0.6)))
+            self.limb(sph(P[-1],(0.024,0.024,0.024),mat("limb",legs,0.6)))
         return self
     def set_face(self,face):
         img=bpy.data.images.load(f"{FACEDIR}/{self.name}_{face}.png",check_existing=True)
@@ -150,10 +143,10 @@ POSES={  # per arm (left, right): points relative to the shoulder; x outward, y 
  "hold":   ([(0.03,-0.02,-0.07),(0.06,-0.14,-0.22),(-0.02,-0.26,-0.18)],)*2,
  "thinking":([(0.03,0,-0.06),(0.07,-0.01,-0.24),(0.08,-0.03,-0.42)],[(0.03,-0.03,-0.07),(0.06,-0.14,-0.2),(-0.06,-0.24,0.06)]),
 }
-def keeper(loc,yaw=0,face="smug",arms=None,pose=None,look=0.0):
+def keeper(loc,yaw=0,face="smug",arms=None,pose=None):
     arms=list(POSES[pose]) if pose else arms
-    return Character("keeper",loc,yaw,face=face).build(R=0.3,torso_w=0.16,coat=(0.98,0.74,0.12),buttons=3,hat="beanie",beard=True,decal="coat_details.png",look=look,
+    return Character("keeper",loc,yaw,face=face).build(R=0.3,torso_w=0.16,coat=(0.93,0.68,0.16),buttons=3,hat="beanie",beard=True,
         shirt=(0.93,0.68,0.16),shoes=(0.08,0.06,0.05),arms=arms)
-def engineer(loc,yaw=0,face="happy",arms=None,pose=None,look=0.0):
+def engineer(loc,yaw=0,face="happy",arms=None,pose=None):
     arms=list(POSES[pose]) if pose else arms
-    return Character("engineer",loc,yaw,face=face).build(R=0.29,torso_w=0.15,hair=(0.42,0.25,0.13),tie=None,decal="shirt_details.png",look=look,arms=arms)
+    return Character("engineer",loc,yaw,face=face).build(R=0.29,torso_w=0.15,hair=(0.42,0.25,0.13),tie=(0.24,0.36,0.56),arms=arms)
