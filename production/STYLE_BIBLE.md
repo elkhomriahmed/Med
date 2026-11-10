@@ -1,5 +1,16 @@
 # Style bible (locked)
 
+**Approved reference frame: `look_dev/renders/v10_window_light.png`.** Every location follows its logic:
+- one real light source in the scene (window, lamp, bulb, sun) that actually lights the room and the characters
+- the light comes from that source's side, not from the camera
+- motivated lights only: lamps are off in daylight
+- no ink lines on the set
+- two colour families: cool walls against warm wood
+- solid geometry with no gaps showing the sky
+- soft glow on the source
+
+Colour and 3D detail will keep improving over time.
+
 These are the rules for every video in this project. Change them only on purpose, and record the change here.
 
 ## 1. Characters
