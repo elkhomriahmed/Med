@@ -29,11 +29,11 @@ def boards_h(axis_pos,span,z0,z1,h,m,coll,wall="back",holes=(),th=0.045,gap=0.00
 def build(time="day"):
     random.seed(7); sc=bpy.context.scene
     S=bpy.data.collections.new("set"); sc.collection.children.link(S)
-    upper=painted("upper_wall",(0.56,0.70,0.84),grime=(0.4,0.48,0.56),brush=55)
-    lower=painted("wainscot",(0.12,0.25,0.5),grime=(0.08,0.14,0.26),brush=70)
-    floor=wood("floor",(0.66,0.42,0.22),(0.38,0.21,0.1),axis="Y",grain=5,rough=0.38)
+    upper=mat("upper_wall",(0.62,0.80,0.95),0.6,0.35,vary=0.04)
+    lower=mat("wainscot",(0.16,0.38,0.72),0.35,0.5,vary=0.05)
+    floor=wood("floor",(0.78,0.52,0.28),(0.5,0.3,0.15),axis="Y",grain=5,rough=0.38,bump=0.15)
     trim=mat("trim",(0.88,0.85,0.78),0.5,0.3,vary=0.03)
-    beamm=wood("beam",(0.42,0.27,0.15),(0.22,0.12,0.06),axis="Y",grain=4,bump=0.5)
+    beamm=wood("beam",(0.55,0.36,0.2),(0.36,0.22,0.12),axis="Y",grain=4,bump=0.2)
     # floor boards with staggered ends
     x=X0
     while x<X1:
@@ -59,7 +59,7 @@ def build(time="day"):
     box((X1,(Y0+Y1)/2,ZT/2),(0.06,Y1-Y0,ZT),upper,0,coll=S,name="rwall")
     box(((X0+X1)/2,Y0-0.4,ZT/2),(X1-X0,0.06,ZT),upper,0,coll=S,name="fwall")
     # ceiling + beams
-    ceilw=wood("ceiling",(0.5,0.34,0.2),(0.3,0.19,0.1),axis="Y",grain=5)
+    ceilw=wood("ceiling",(0.72,0.52,0.32),(0.5,0.34,0.2),axis="Y",grain=5,bump=0.1)
     xx=X0
     while xx<X1:
         box((xx+0.12,(Y0+Y1)/2,ZT+0.03),(0.235,Y1-Y0+1,0.06),ceilw,0.008,coll=S,name="ceilboard"); xx+=0.24

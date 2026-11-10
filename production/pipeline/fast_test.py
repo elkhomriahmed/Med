@@ -33,7 +33,7 @@ for g,AS,do_ink in groups:
     lit=bake.img_np(bake.bake_pass([g],'DIFFUSE',LS,int(os.environ.get("SPP","256")),['DIRECT','INDIRECT']))
     emi=bake.img_np(bake.bake_pass([g],'EMIT',LS,1))
     ink=np.zeros(alb.shape[:2],np.float32) if do_ink else bake.ink_mask([g],AS,int(os.environ.get("CINKW","3")),min_angle=70)
-    lit=cv2.GaussianBlur(lit,(0,0),0.7)
+    lit=cv2.GaussianBlur(lit,(0,0),float(os.environ.get("LBLUR","2.5")))
     if do_ink:
         ao=bake.img_np(bake.bake_pass([g],'AO',LS,32))
         ao=cv2.GaussianBlur(ao,(0,0),0.8); lit=lit*(0.35+0.65*ao)
