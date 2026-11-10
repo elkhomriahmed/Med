@@ -155,3 +155,87 @@ def post(path_in,path_out,bloom=0.45,sat=1.08,warm=0.0):
     if warm:
         r,g,b=out.split(); r=r.point(lambda v:min(255,int(v*(1+warm)))); b=b.point(lambda v:int(v*(1-warm*0.6))); out=Image.merge("RGB",(r,g,b))
     out.save(path_out)
+
+# ---------------- surface detail materials (make sets read as real 3D) ----------------
+def _coord(nt,scale=(1,1,1),rand_offset=True):
+    """Object coords (survive join via 'ocoord' remap in bake.join), offset per board by its random value."""
+    n=nt.nodes; tc=n.new('ShaderNodeTexCoord'); mp=n.new('ShaderNodeMapping'); mp.inputs['Scale'].default_value=scale
+    src=tc.outputs['Object']
+    if rand_offset:
+        at=n.new('ShaderNodeAttribute'); at.attribute_name='rand'; at.attribute_type='GEOMETRY'
+        mul=n.new('ShaderNodeVectorMath'); mul.operation='SCALE'; mul.inputs[3].default_value=37.0
+        cv=n.new('ShaderNodeCombineXYZ'); link(nt,at.outputs['Fac'],cv.inputs[0]); link(nt,at.outputs['Fac'],cv.inputs[1]); link(nt,at.outputs['Fac'],cv.inputs[2])
+        link(nt,cv.outputs[0],mul.inputs[0])
+        add=n.new('ShaderNodeVectorMath'); add.operation='ADD'; link(nt,src,add.inputs[0]); link(nt,mul.outputs[0],add.inputs[1]); src=add.outputs[0]
+    link(nt,src,mp.inputs[0]); return mp.outputs[0]
+
+def wood(name,light,dark,axis='Y',grain=6.0,rough=0.55,bump=0.35):
+    """Stylised wood: thin wavy dark grain lines along the board, a few knots, per-board tone, bump into the lighting."""
+    m=bpy.data.materials.new(name); m.use_nodes=True; nt=m.node_tree; n=nt.nodes; p=n["Principled BSDF"]
+    p.inputs["Roughness"].default_value=rough; p.inputs["Specular IOR Level"].default_value=0.25
+    co=_coord(nt,(1,1,1))
+    sep=n.new('ShaderNodeSeparateXYZ'); link(nt,co,sep.inputs[0])
+    across={'X':'Y','Y':'X','Z':'X'}[axis]; across2={'X':'Z','Y':'Z','Z':'Y'}[axis]
+    # slow wobble along the board
+    wob=n.new('ShaderNodeTexNoise'); wob.inputs['Scale'].default_value=1.6; wob.inputs['Detail'].default_value=2; link(nt,co,wob.inputs[0])
+    wv=n.new('ShaderNodeMath'); wv.operation='MULTIPLY'; wv.inputs[1].default_value=0.04; link(nt,wob.outputs['Fac'],wv.inputs[0])
+    sx=n.new('ShaderNodeMath'); sx.operation='ADD'; link(nt,sep.outputs[across],sx.inputs[0]); link(nt,wv.outputs[0],sx.inputs[1])
+    sx2=n.new('ShaderNodeMath'); sx2.operation='ADD'; link(nt,sx.outputs[0],sx2.inputs[0]); link(nt,sep.outputs[across2],sx2.inputs[1])
+    g1=n.new('ShaderNodeMath'); g1.operation='MULTIPLY'; g1.inputs[1].default_value=grain*14; link(nt,sx2.outputs[0],g1.inputs[0])
+    sn=n.new('ShaderNodeMath'); sn.operation='SINE'; link(nt,g1.outputs[0],sn.inputs[0])
+    # second finer grain set
+    g2=n.new('ShaderNodeMath'); g2.operation='MULTIPLY'; g2.inputs[1].default_value=grain*37; link(nt,sx2.outputs[0],g2.inputs[0])
+    sn2=n.new('ShaderNodeMath'); sn2.operation='SINE'; link(nt,g2.outputs[0],sn2.inputs[0])
+    l1=n.new('ShaderNodeMapRange'); l1.inputs[1].default_value=0.88; l1.inputs[2].default_value=1.0; link(nt,sn.outputs[0],l1.inputs[0])
+    l2=n.new('ShaderNodeMapRange'); l2.inputs[1].default_value=0.93; l2.inputs[2].default_value=1.0; l2.inputs[4].default_value=0.55; link(nt,sn2.outputs[0],l2.inputs[0])
+    gl=n.new('ShaderNodeMath'); gl.operation='MAXIMUM'; link(nt,l1.outputs[0],gl.inputs[0]); link(nt,l2.outputs[0],gl.inputs[1])
+    knots=n.new('ShaderNodeTexVoronoi'); knots.inputs['Scale'].default_value=0.9; link(nt,co,knots.inputs[0])
+    kr=n.new('ShaderNodeMapRange'); kr.inputs[1].default_value=0.0; kr.inputs[2].default_value=0.035; kr.inputs[3].default_value=1; kr.inputs[4].default_value=0
+    link(nt,knots.outputs['Distance'],kr.inputs[0])
+    g=n.new('ShaderNodeMath'); g.operation='MAXIMUM'; link(nt,gl.outputs[0],g.inputs[0]); link(nt,kr.outputs[0],g.inputs[1])
+    # soft tonal streaks
+    st=n.new('ShaderNodeTexNoise'); st.inputs['Scale'].default_value=3.0; st.inputs['Detail'].default_value=3; link(nt,co,st.inputs[0])
+    base=n.new('ShaderNodeMix'); base.data_type='RGBA'; link(nt,st.outputs['Fac'],base.inputs['Factor'])
+    base.inputs['A'].default_value=(*[c*0.88 for c in light],1); base.inputs['B'].default_value=(*[min(1,c*1.08) for c in light],1)
+    cr=n.new('ShaderNodeMix'); cr.data_type='RGBA'; link(nt,g.outputs[0],cr.inputs['Factor']); link(nt,base.outputs['Result'],cr.inputs['A']); cr.inputs['B'].default_value=(*dark,1)
+    at=n.new('ShaderNodeAttribute'); at.attribute_name='rand'; at.attribute_type='GEOMETRY'
+    tone=n.new('ShaderNodeMapRange'); tone.inputs[3].default_value=0.84; tone.inputs[4].default_value=1.08; link(nt,at.outputs['Fac'],tone.inputs[0])
+    mul=n.new('ShaderNodeMix'); mul.data_type='RGBA'; mul.blend_type='MULTIPLY'; mul.inputs['Factor'].default_value=1
+    link(nt,cr.outputs['Result'],mul.inputs['A']); link(nt,tone.outputs[0],mul.inputs['B']); link(nt,mul.outputs['Result'],p.inputs['Base Color'])
+    bp=n.new('ShaderNodeBump'); bp.inputs['Strength'].default_value=bump; bp.inputs['Distance'].default_value=0.003; bp.invert=True
+    link(nt,g.outputs[0],bp.inputs['Height']); link(nt,bp.outputs[0],p.inputs['Normal'])
+    return m
+
+def painted(name,col,grime=(0.35,0.3,0.25),rough=0.8,bump=0.25,brush=40.0):
+    """Painted surface: brush-stroke texture, slight dents, grime toward the floor."""
+    m=bpy.data.materials.new(name); m.use_nodes=True; nt=m.node_tree; n=nt.nodes; p=n["Principled BSDF"]
+    p.inputs["Roughness"].default_value=rough; p.inputs["Specular IOR Level"].default_value=0.15
+    co=_coord(nt,(brush,brush,brush*0.25),rand_offset=True)
+    st=n.new('ShaderNodeTexNoise'); st.inputs['Scale'].default_value=1.0; st.inputs['Detail'].default_value=6; st.inputs['Roughness'].default_value=0.6; link(nt,co,st.inputs[0])
+    co2=_coord(nt,(3,3,3),rand_offset=False)
+    big=n.new('ShaderNodeTexNoise'); big.inputs['Scale'].default_value=1.2; big.inputs['Detail'].default_value=3; link(nt,co2,big.inputs[0])
+    # grime: darker toward the floor (z low)
+    tc=n.new('ShaderNodeTexCoord'); sep=n.new('ShaderNodeSeparateXYZ'); link(nt,tc.outputs['Object'],sep.inputs[0])
+    gz=n.new('ShaderNodeMapRange'); gz.inputs[1].default_value=0.0; gz.inputs[2].default_value=0.9; gz.inputs[3].default_value=0.55; gz.inputs[4].default_value=0.0
+    link(nt,sep.outputs['Z'],gz.inputs[0])
+    gm=n.new('ShaderNodeMath'); gm.operation='MULTIPLY'; link(nt,gz.outputs[0],gm.inputs[0]); link(nt,big.outputs['Fac'],gm.inputs[1])
+    c1=n.new('ShaderNodeMix'); c1.data_type='RGBA'; c1.blend_type='MULTIPLY'; c1.inputs['A'].default_value=(*col,1)
+    link(nt,st.outputs['Color'],c1.inputs['B']); c1.inputs['Factor'].default_value=0.12
+    c2=n.new('ShaderNodeMix'); c2.data_type='RGBA'; link(nt,gm.outputs[0],c2.inputs['Factor']); link(nt,c1.outputs['Result'],c2.inputs['A']); c2.inputs['B'].default_value=(*grime,1)
+    link(nt,c2.outputs['Result'],p.inputs['Base Color'])
+    bp=n.new('ShaderNodeBump'); bp.inputs['Strength'].default_value=bump; bp.inputs['Distance'].default_value=0.002
+    link(nt,st.outputs['Fac'],bp.inputs['Height']); link(nt,bp.outputs[0],p.inputs['Normal'])
+    return m
+
+def fabric(name,col,col2,scale=60.0,bump=0.4):
+    """Woven fabric / braided rug texture."""
+    m=bpy.data.materials.new(name); m.use_nodes=True; nt=m.node_tree; n=nt.nodes; p=n["Principled BSDF"]
+    p.inputs["Roughness"].default_value=0.95; p.inputs["Specular IOR Level"].default_value=0.05
+    co=_coord(nt,(scale,scale,scale),rand_offset=False)
+    ch=n.new('ShaderNodeTexChecker'); ch.inputs['Scale'].default_value=1.0; ch.inputs['Color1'].default_value=(*col,1); ch.inputs['Color2'].default_value=(*col2,1); link(nt,co,ch.inputs[0])
+    nz=n.new('ShaderNodeTexNoise'); nz.inputs['Scale'].default_value=0.3; link(nt,co,nz.inputs[0])
+    mx=n.new('ShaderNodeMix'); mx.data_type='RGBA'; mx.blend_type='MULTIPLY'; mx.inputs['Factor'].default_value=0.25
+    link(nt,ch.outputs['Color'],mx.inputs['A']); link(nt,nz.outputs['Color'],mx.inputs['B']); link(nt,mx.outputs['Result'],p.inputs['Base Color'])
+    bp=n.new('ShaderNodeBump'); bp.inputs['Strength'].default_value=bump; bp.inputs['Distance'].default_value=0.002
+    link(nt,ch.outputs['Fac'],bp.inputs['Height']); link(nt,bp.outputs[0],p.inputs['Normal'])
+    return m

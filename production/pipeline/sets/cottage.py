@@ -29,11 +29,11 @@ def boards_h(axis_pos,span,z0,z1,h,m,coll,wall="back",holes=(),th=0.045,gap=0.00
 def build(time="day"):
     random.seed(7); sc=bpy.context.scene
     S=bpy.data.collections.new("set"); sc.collection.children.link(S)
-    upper=mat("upper_wall",(0.66,0.70,0.68),0.8,0.15,vary=0.05)
-    lower=mat("wainscot",(0.20,0.36,0.38),0.6,0.25,vary=0.08)
-    floor=mat("floor",(0.50,0.31,0.17),0.55,0.3,vary=0.16)
+    upper=painted("upper_wall",(0.66,0.70,0.68),brush=55)
+    lower=painted("wainscot",(0.20,0.36,0.38),grime=(0.1,0.14,0.13),brush=70)
+    floor=wood("floor",(0.56,0.36,0.2),(0.3,0.17,0.08),axis="Y",grain=5)
     trim=mat("trim",(0.88,0.85,0.78),0.5,0.3,vary=0.03)
-    beamm=mat("beam",(0.36,0.23,0.14),0.6,0.2,vary=0.1)
+    beamm=wood("beam",(0.42,0.27,0.15),(0.22,0.12,0.06),axis="Y",grain=4,bump=0.5)
     # floor boards with staggered ends
     x=X0
     while x<X1:
@@ -59,7 +59,10 @@ def build(time="day"):
     box((X1,(Y0+Y1)/2,ZT/2),(0.06,Y1-Y0,ZT),upper,0,coll=S,name="rwall")
     box(((X0+X1)/2,Y0-0.4,ZT/2),(X1-X0,0.06,ZT),upper,0,coll=S,name="fwall")
     # ceiling + beams
-    box(((X0+X1)/2,(Y0+Y1)/2,ZT+0.03),(X1-X0,Y1-Y0+1,0.06),lower,0,coll=S,name="ceiling")
+    ceilw=wood("ceiling",(0.5,0.34,0.2),(0.3,0.19,0.1),axis="Y",grain=5)
+    xx=X0
+    while xx<X1:
+        box((xx+0.12,(Y0+Y1)/2,ZT+0.03),(0.235,Y1-Y0+1,0.06),ceilw,0.008,coll=S,name="ceilboard"); xx+=0.24
     for bx in (-1.9,-0.7,0.5,1.7): box((bx,(Y0+Y1)/2,ZT-0.1),(0.2,Y1-Y0+1,0.2),beamm,0.012,coll=S,name="beam")
     # baseboards
     box(((X0+X1)/2,Y1-0.05,0.07),(X1-X0,0.04,0.14),trim,0.006,coll=S); box((X0+0.05,(Y0+Y1)/2,0.07),(0.04,Y1-Y0,0.14),trim,0.006,coll=S)
@@ -80,12 +83,12 @@ def build(time="day"):
     for c in v.users_collection: c.objects.unlink(v)
     S.objects.link(v)
     # ---- props ----
-    wood=mat("furniture",(0.55,0.3,0.14),0.55,0.3,vary=0.08); dark=mat("iron",(0.12,0.11,0.11),0.4,0.5)
+    fwood=wood("furniture",(0.58,0.35,0.18),(0.33,0.18,0.08),axis="X",grain=7); dark=mat("iron",(0.12,0.11,0.11),0.4,0.5)
     # table + cloth + lamp + mug + bread
     tx,ty=1.35,-0.6
-    box((tx,ty,0.76),(1.2,0.8,0.06),wood,0.012,coll=S,name="tabletop")
+    box((tx,ty,0.76),(1.2,0.8,0.06),fwood,0.012,coll=S,name="tabletop")
     for dx in (-0.52,0.52):
-        for dy in (-0.32,0.32): cyl((tx+dx,ty+dy,0.37),0.035,0.74,wood,verts=12,coll=S)
+        for dy in (-0.32,0.32): cyl((tx+dx,ty+dy,0.37),0.035,0.74,fwood,verts=12,coll=S)
     cl=mat("cloth",(0.85,0.22,0.2),0.8,0.1)
     for i in range(6):
         for j in range(4):
@@ -97,12 +100,12 @@ def build(time="day"):
     cyl((tx+0.05,ty+0.1,0.81),0.15,0.015,mat("plate",(0.95,0.95,0.92),0.4,0.4),coll=S); sph((tx+0.05,ty+0.1,0.85),(0.1,0.06,0.045),mat("bread",(0.8,0.5,0.2),0.7),coll=S)
     for s in (-1,1):  # chairs
         chx,chy=tx+s*0.45,ty+(0.62 if s<0 else -0.62)
-        box((chx,chy,0.46),(0.42,0.42,0.05),wood,0.01,coll=S)
+        box((chx,chy,0.46),(0.42,0.42,0.05),fwood,0.01,coll=S)
         for dx in (-0.17,0.17):
-            for dy in (-0.17,0.17): cyl((chx+dx,chy+dy,0.23),0.025,0.46,wood,verts=10,coll=S)
+            for dy in (-0.17,0.17): cyl((chx+dx,chy+dy,0.23),0.025,0.46,fwood,verts=10,coll=S)
         by=chy+0.19*(1 if s<0 else -1)
-        for dx in (-0.17,0.17): cyl((chx+dx,by,0.75),0.025,0.6,wood,verts=10,coll=S)
-        box((chx,by,1.0),(0.4,0.04,0.12),wood,0.008,coll=S)
+        for dx in (-0.17,0.17): cyl((chx+dx,by,0.75),0.025,0.6,fwood,verts=10,coll=S)
+        box((chx,by,1.0),(0.4,0.04,0.12),fwood,0.008,coll=S)
     # cast-iron stove with pipe in back-left corner
     sx,sy=-1.85,1.6
     cyl((sx,sy,0.45),0.33,0.7,dark,coll=S); cyl((sx,sy,0.83),0.36,0.06,dark,coll=S); cyl((sx,sy,1.8),0.07,2.0,dark,verts=16,coll=S)
@@ -111,7 +114,7 @@ def build(time="day"):
         for dy in (-0.2,0.2): cyl((sx+dx,sy+dy,0.06),0.04,0.12,dark,verts=8,coll=S)
     cyl((sx+0.22,sy-0.05,0.93),0.11,0.16,mat("kettle",(0.2,0.45,0.4),0.35,0.5),coll=S)
     # shelf on left wall with jars and books
-    box((X0+0.15,0.2,1.55),(0.26,1.5,0.04),wood,0.006,coll=S); box((X0+0.15,0.2,1.15),(0.26,1.5,0.04),wood,0.006,coll=S)
+    box((X0+0.15,0.2,1.55),(0.26,1.5,0.04),fwood,0.006,coll=S); box((X0+0.15,0.2,1.15),(0.26,1.5,0.04),fwood,0.006,coll=S)
     cols=[(0.3,0.55,0.35),(0.75,0.3,0.2),(0.85,0.7,0.3),(0.3,0.4,0.75),(0.65,0.6,0.55),(0.5,0.25,0.5)]
     for i in range(6):
         cyl((X0+0.15,-0.4+i*0.24,1.64 if i%2 else 1.62),0.07,0.16 if i%2 else 0.12,mat(f"jar{i}",cols[i],0.25,0.6),coll=S)
@@ -134,7 +137,7 @@ def build(time="day"):
     for c_ in pc.users_collection: c_.objects.unlink(pc)
     S.objects.link(pc)
     # rocking chair near the stove
-    rx,ry=-1.0,1.1; rw=mat("rocker",(0.5,0.26,0.12),0.55,0.3)
+    rx,ry=-1.0,1.1; rw=wood("rocker",(0.52,0.3,0.15),(0.3,0.15,0.07),axis="Z",grain=8)
     box((rx,ry,0.5),(0.5,0.48,0.05),rw,0.01,rot=(0,0,0.4),coll=S)
     for k in range(5): cyl((rx-0.2+k*0.1+0.08*math.sin(0.4)*0,ry+0.22,0.88),0.02,0.7,rw,verts=8,coll=S)
     box((rx,ry+0.22,1.24),(0.52,0.05,0.1),rw,0.01,coll=S)
@@ -143,20 +146,14 @@ def build(time="day"):
         for dy in (-0.2,0.2): cyl((rx+s*0.22,ry+dy,0.27),0.022,0.45,rw,verts=8,coll=S)
     # braided round rug: one disc with ring pattern (no stacked edges -> no heavy rings of ink)
     bpy.ops.mesh.primitive_cylinder_add(radius=1.1,depth=0.015,location=(-0.1,0.2,0.008),vertices=96); rug=bpy.context.object; rug.scale=(1.25,0.85,1)
-    rm=bpy.data.materials.new("rug"); rm.use_nodes=True; nt=rm.node_tree; p=nt.nodes["Principled BSDF"]; p.inputs["Roughness"].default_value=0.95
-    tc=nt.nodes.new('ShaderNodeTexCoord'); w=nt.nodes.new('ShaderNodeTexWave'); w.wave_type='RINGS'; w.wave_profile='SAW'; w.inputs['Scale'].default_value=3.2; w.inputs['Distortion'].default_value=0.0; w.inputs['Detail'].default_value=1
-    cr=nt.nodes.new('ShaderNodeValToRGB'); cr.color_ramp.interpolation='CONSTANT'; els=cr.color_ramp.elements
-    cols=[(0.55,0.27,0.2),(0.82,0.74,0.58),(0.3,0.42,0.48),(0.66,0.5,0.34)]
-    els[0].color=(*cols[0],1); els[1].position=0.25; els[1].color=(*cols[1],1)
-    for i,c_ in enumerate(cols[2:]): e=els.new(0.5+0.25*i); e.color=(*c_,1)
-    nt.links.new(tc.outputs['Object'],w.inputs[0]); nt.links.new(w.outputs['Fac'],cr.inputs[0]); nt.links.new(cr.outputs[0],p.inputs['Base Color'])
+    rm=fabric("rug",(0.62,0.34,0.24),(0.78,0.66,0.48),scale=90)
     rug.data.materials.append(rm)
     for c_ in rug.users_collection: c_.objects.unlink(rug)
     S.objects.link(rug)
     # barrel, crate, rope coil in the corners
-    cyl((2.15,1.65,0.4),0.3,0.8,mat("barrel",(0.55,0.32,0.15),0.6,0.2),coll=S)
+    cyl((2.15,1.65,0.4),0.3,0.8,wood("barrel",(0.55,0.33,0.17),(0.3,0.17,0.08),axis="Z",grain=10),coll=S)
     for z in (0.15,0.65): cyl((2.15,1.65,z),0.31,0.05,dark,coll=S)
-    box((1.65,1.75,0.25),(0.5,0.45,0.5),wood,0.015,rot=(0,0,0.2),coll=S)
+    box((1.65,1.75,0.25),(0.5,0.45,0.5),fwood,0.015,rot=(0,0,0.2),coll=S)
     for k in range(4): torus((1.65,1.75,0.52+k*0.035),0.16-k*0.015,0.025,mat("rope",(0.8,0.65,0.4),0.9,0.1),coll=S)
     # hanging lantern
     cyl((0.5,-0.2,ZT-0.45),0.006,0.5,dark,verts=6,coll=S); cyl((0.5,-0.2,ZT-0.75),0.08,0.16,mat("lantglass",(1,0.8,0.5),0.3,0.2,emit=8),verts=32,coll=S)

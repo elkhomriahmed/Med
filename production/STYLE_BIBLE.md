@@ -13,6 +13,7 @@ These are the rules for every video in this project. Change them only on purpose
 - **Expressions (14):** neutral, smug, happy, laugh, shock, scream, angry, furious, worried, skeptical, sleepy, evil, proud, talk. Swap the expression on the exact word it reacts to.
 - **Hair and knitwear:** drawn strand or rib lines in a darker tone.
 - **Beards, moustaches, ties:** drawn flat on the face or shirt with an ink outline, not sculpted.
+- **Status:** the design is **locked** (approved). The final sign-off on expressions, lip sync and movement comes after the first video.
 - **Identity:** one signature item per character, readable from across the room (a hat, a colour or a prop). Use 3–4 characters per video at most.
 - **Poses:** rest, hips, explain, point, shrug, panic, wave, hold, thinking. Arms come out of the side of the torso, bend gently, and keep the hands near the body unless pointing or panicking.
 
@@ -21,6 +22,11 @@ These are the rules for every video in this project. Change them only on purpose
 - **Rounded, toy-like edges** on everything (bevelled), the same softness as the character torsos. No razor-sharp boxes.
 - **Ink lines** on the set's edges, thinner than the character outlines.
 - **Dressed with props** that tell the story: signs, labels, clocks, lamps, tools.
+- **Real surface texture, not flat colour:**
+  - wood: thin wavy grain lines, knots, a different tone per board
+  - painted walls: brush texture and grime toward the floor
+  - fabric: a weave
+- That texture also bumps the lighting, and contact shadows (ambient occlusion) darken corners and the spots under furniture. Together these make places read as real 3D, not just colour plus outlines.
 
 ## 3. Colour and light
 - **Calm, not neon.** Saturation is never pushed. Pair one warm and one cool family per location, e.g. warm wood with sage/teal walls, or blue night with warm lamps.
@@ -34,6 +40,12 @@ These are the rules for every video in this project. Change them only on purpose
 - **Inside a place, the camera never sits still.** It glides quickly from one point of focus to the next, about every 2 s on a new line. Example: from someone sawing a rail, straight down the same track to its unfinished end.
 - **Dive into objects** to change scene without a cut: push into a box on the desk, a model, a window or a picture, and come out inside that place. Example: the guard at the desk, then into the small pink box on the desk, then inside the pink cell.
 - **Wide establishing shots** only to set a new place, then straight back to close framing.
+- **Big places to explore:** each location is built big enough to hold several points of interest, so the camera can travel between them as the narration moves on.
+
+## 4b. Transitions and their sounds
+- **New place or new scene:** a camera-shutter (click) sound on a quick cut or flash.
+- **Same place, new focus:** a whoosh on a fast camera move.
+- **Dive into an object:** a whoosh while pushing in, then the new place opens up.
 
 ## 5. Captions, audio, timing
 - **Captions:** 1–3 words, white bold rounded sans with a thin black outline and small shadow, centred at about 70% height.
@@ -49,8 +61,8 @@ These are the rules for every video in this project. Change them only on purpose
 5. Glow pass and captions in post, then mux with the audio.
 
 **Still open:**
-- Background blur through Workbench triples frame time (about 3 s). The plan is a cheap depth-based blur in post instead, to stay inside the time limit.
-- Frame rate: 24 fps keeps a 60 s video under about 40 min. 30 fps is about 47 min. To be decided.
+- Background blur through Workbench roughly triples frame time (about 3–5 s per frame). The plan is a cheap depth-based blur in post instead, to stay inside the time limit.
+- **Frame rate: 30 fps (decided).** That's about 47 min to render a 60 s video.
 
 ## Locked assets
 - `pipeline/faces.py`: expression set (`renders/v4_faces.jpg`)

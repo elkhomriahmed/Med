@@ -47,9 +47,9 @@ def unwrap(objs,margin=0.003):
     for o in objs: o.select_set(True)
     bpy.context.view_layer.objects.active=objs[0]
     bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT')
-    bpy.ops.uv.smart_project(angle_limit=math.radians(48),island_margin=margin,area_weight=0.0,correct_aspect=True,scale_to_bounds=False)
+    bpy.ops.uv.smart_project(angle_limit=math.radians(66),island_margin=0.0,area_weight=0.0,correct_aspect=True,scale_to_bounds=False)
     bpy.ops.uv.select_all(action='SELECT'); bpy.ops.uv.average_islands_scale()
-    bpy.ops.uv.pack_islands(rotate=True,margin=margin*2)   # guarantees no overlapping islands
+    bpy.ops.uv.pack_islands(rotate=True,margin=margin,shape_method='CONCAVE') if True else None   # guarantees no overlapping islands
     bpy.ops.object.mode_set(mode='OBJECT')
 
 def _target(objs,img):

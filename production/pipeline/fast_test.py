@@ -25,14 +25,18 @@ setobjs=[o for o in allobjs if o.name not in names_c]; chobjs=[o for o in allobj
 groups=[(bake.join(setobjs,"world"),int(os.environ.get("ATLAS","4096")),True),(bake.join(chobjs,"cast"),int(os.environ.get("CATLAS","2048")),False)]
 import cv2, numpy as np
 for g,AS,do_ink in groups:
-    bake.unwrap([g],margin=0.004)
+    bake.unwrap([g],margin=0.0012 if do_ink else 0.003)
 for g,AS,do_ink in groups:
-    LS=AS//4 if do_ink else AS//2
+    LS=min(AS//2,int(os.environ.get("LMAX","2048")))
     alb=bake.img_np(bake.bake_pass([g],'DIFFUSE',AS,1,['COLOR']))
+    cv2.imwrite(OUT+'_alb_'+g.name+'.jpg',(np.clip(alb,0,1)[...,::-1]**(1/2.2)*255).astype(np.uint8))
     lit=bake.img_np(bake.bake_pass([g],'DIFFUSE',LS,int(os.environ.get("SPP","256")),['DIRECT','INDIRECT']))
     emi=bake.img_np(bake.bake_pass([g],'EMIT',LS,1))
     ink=bake.ink_mask([g],AS,int(os.environ.get("INKW","3")),min_angle=55) if do_ink else bake.ink_mask([g],AS,int(os.environ.get("CINKW","3")),min_angle=70)
-    lit=cv2.GaussianBlur(lit,(0,0),1.0)
+    lit=cv2.GaussianBlur(lit,(0,0),0.7)
+    if do_ink:
+        ao=bake.img_np(bake.bake_pass([g],'AO',LS,32))
+        ao=cv2.GaussianBlur(ao,(0,0),0.8); lit=lit*(0.35+0.65*ao)
     final=bake.compose(alb,lit,emi,ink,exposure=float(os.environ.get("EXPO","1.15")),sat=float(os.environ.get("SAT","1.25")),contrast=float(os.environ.get("CON","1.15")))
     bake.apply_baked([g],final,name="atlas_"+g.name)
 bake.ink_shell([groups[0][0]],float(os.environ.get("INKSHELL","0.008")))
@@ -41,6 +45,6 @@ bake.workbench(sc)
 sc.display.shading.use_dof=True if hasattr(sc.display.shading,'use_dof') else None
 bpy.ops.wm.save_as_mainfile(filepath=OUT+".blend")
 print("PREP TOTAL",round(time.time()-T0,1),flush=True)
-for i,dof in enumerate((True,True,False,False)):
+for i,dof in enumerate((True,False)):
     sc.display.shading.use_dof=dof
     sc.render.filepath=f"{OUT}_f{i}.png"; t=time.time(); bpy.ops.render.render(write_still=True); print("FRAME dof" if dof else "FRAME nodof",round(time.time()-t,2),flush=True)
