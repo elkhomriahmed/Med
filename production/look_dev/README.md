@@ -1,12 +1,13 @@
 # Look development
 
-How the competitors' look is rebuilt in Blender (rendered in the cloud, no local install needed).
+## v2 (current): `production/pipeline/`
+- `toon.py`: shared toolkit (materials, ink lines, lights, render settings, glow pass)
+- `faces.py`: draws 8 expressions per character (smug, happy, neutral, shock, angry, worried, laugh, sleepy)
+- `characters.py`: 3D characters (shaded sphere head, bean body, 3D clothes and hats, thin ink limbs, cast shadows) with a drawn face that always faces the camera
+- `sets/cottage.py`: lighthouse keeper's cottage built board by board, plus props and lighting
+- `look_test.py`: renders the test shots. Settings come from environment variables (SHOT, KF/EF faces, PCT, SAMPLES, KEY, FILL, FRONT, EXPO, SAT, SLINE, CLINE)
 
-- **Sets** are real 3D rooms: modelled walls, floor, beams, window, furniture. Wood and wall boards come from procedural textures. Ink outlines are drawn by Blender's Freestyle line renderer.
-- **Characters** are flat drawn cards (body, head, face) that always turn to face the camera, with thin 3D ink limbs. This matches the competitors and the tutorial's diagrams. Faces are separate layers, so expressions swap without distortion.
-- **Light** tells the story: moonlight through the window, a warm lamp, a blue fill.
+Renders: `renders/comparison_v2.jpg`, `renders/v2_wide.png`, `renders/v2_close.png`.
 
-Files:
-- `chars.py` draws the character layers (heads, bodies, expressions).
-- `scene.py` builds and renders the test room. Use `SHOT=wide|close`, `KFACE=` and `EFACE=` to pick the shot and the expressions.
-- `renders/comparison.jpg`: competitor frames next to ours.
+## v1 (rejected)
+Flat card characters in a simple room: `scene.py`, `chars.py`, `renders/comparison.jpg`.
