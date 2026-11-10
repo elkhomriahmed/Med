@@ -16,7 +16,8 @@ def join(objs,name):
     for o in objs:
         a=o.data.attributes.get("rand") or o.data.attributes.new("rand",'FLOAT','POINT')
         r=random.random(); a.data.foreach_set("value",[r]*len(o.data.vertices))
-        o.data.uv_layers[0].name="UVMap" if len(o.data.uv_layers) else None
+        if len(o.data.uv_layers): o.data.uv_layers[0].name="UVMap"
+        else: o.data.uv_layers.new(name="UVMap")
     bpy.ops.object.select_all(action='DESELECT')
     for o in objs: o.select_set(True)
     bpy.context.view_layer.objects.active=objs[0]
@@ -50,7 +51,7 @@ def _target(objs,img):
 
 def bake_pass(objs,kind,size,samples,filt=None,float_buf=True):
     img=bpy.data.images.new(f"bake_{kind}_{'_'.join(sorted(filt or []))}",size,size,float_buffer=float_buf,alpha=False)
-    _target(objs,img); sc=bpy.context.scene; sc.render.engine='CYCLES'; sc.cycles.samples=samples; sc.cycles.use_denoising=False
+    _target(objs,img); sc=bpy.context.scene; sc.render.engine='CYCLES'; sc.cycles.samples=samples; sc.cycles.use_denoising=False; sc.cycles.sample_clamp_direct=6; sc.cycles.sample_clamp_indirect=1.5
     sc.render.bake.margin=6; sc.render.bake.use_clear=True
     bpy.ops.object.select_all(action='DESELECT')
     for o in objs: o.select_set(True)
@@ -62,7 +63,7 @@ def bake_pass(objs,kind,size,samples,filt=None,float_buf=True):
     return img
 
 def img_np(img):
-    a=np.empty(img.size[0]*img.size[1]*4,np.float32); img.pixels.foreach_get(a); return a.reshape(img.size[1],img.size[0],4)[...,:3]
+    a=np.empty(img.size[0]*img.size[1]*4,np.float32); img.pixels.foreach_get(a); return a.reshape(img.size[1],img.size[0],4)[::-1,:,:3].copy()   # top row first (matches ink mask + PIL)
 
 def ink_mask(objs,size,width_px,min_angle=40,skip=()):
     """Rasterise sharp edges (crease > min_angle, or open borders) in bake-UV space -> ink line mask."""
@@ -82,7 +83,7 @@ def ink_mask(objs,size,width_px,min_angle=40,skip=()):
         bm.free()
     return np.asarray(m,np.float32)/255.0
 
-def compose(alb,light,emit,ink,exposure=1.0,sat=1.15):
+def compose(alb,light,emit,ink,exposure=1.0,sat=1.15,contrast=1.12):
     """final = albedo * light + emission, gentle filmic curve, saturation, ink lines."""
     import cv2  # only for fast resize
     H=alb.shape[0]
@@ -90,6 +91,7 @@ def compose(alb,light,emit,ink,exposure=1.0,sat=1.15):
     c=alb*L*exposure+E
     c=c/(1+0.35*c)*1.35            # soft shoulder so lamps/sun don't clip harshly
     c=np.clip(c,0,1)**(1/2.2)      # linear -> display
+    c=np.clip(0.5+(c-0.5)*contrast,0,1)  # contrast around mid-grey
     g=c.mean(-1,keepdims=True); c=np.clip(g+(c-g)*sat,0,1)
     k=cv2.GaussianBlur(ink,(0,0),0.8)[...,None]
     c=c*(1-k)+np.array([x**(1/2.2) for x in INK])*k
@@ -105,7 +107,9 @@ def apply_baked(objs,final,name="atlas"):
     t=n.new('ShaderNodeTexImage'); t.image=img; nt.links.new(uv.outputs[0],t.inputs[0]); nt.links.new(t.outputs[0],em.inputs[0]); nt.links.new(em.outputs[0],out.inputs[0]); n.active=t
     for o in objs:
         o.data.materials.clear(); o.data.materials.append(m)
-        o.data.uv_layers["bake"].active_render=True
+        o.data.polygons.foreach_set("material_index",[0]*len(o.data.polygons))
+        for l in [l.name for l in o.data.uv_layers if l.name!="bake"]: o.data.uv_layers.remove(o.data.uv_layers[l])
+        o.data.uv_layers["bake"].active=True; o.data.uv_layers["bake"].active_render=True
     return m
 
 def ink_shell(objs,thick=0.008,min_dim=0.0):

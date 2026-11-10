@@ -62,7 +62,7 @@ def glasses(d,ex=0.3,ey=0.1):
 def make(path,e,m,b=None,extra=()):
     im=Image.new("RGBA",(S,S),(0,0,0,0)); d=ImageDraw.Draw(im)
     if "beard" in extra: moustache(d)
-    eyes(d,e); brows(d,b) if b else None; mouth(d,m,-0.5 if "beard" in extra else -0.42)
+    eyes(d,e); brows(d,b) if b else None; mouth(d,m,-0.42)
     if "glasses" in extra: glasses(d)
     im.resize((1024,1024),Image.LANCZOS).save(path)
 EXPR={"smug":("smug","smirk","flat"),"happy":("happy","grin",None),"neutral":("dot","flat","flat"),

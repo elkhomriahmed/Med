@@ -34,7 +34,7 @@ class Character:
     def build(self,R=0.25,hip=0.8,torso=0.6,torso_w=0.17,shirt=(0.96,0.96,0.95),legs=(0.035,0.025,0.02),beard=False,
               shoes=(0.12,0.08,0.06),hair=None,hat=None,tie=None,coat=None,buttons=0,arms=None,collar=True):
         self.R=R; self.beard=beard; z_t=hip+torso/2-0.04
-        body=sph((0,0,z_t),(torso_w,torso_w*0.78,torso/2+0.03),mat(self.name+"_shirt",shirt,0.7,0.25,emit=0.25 if sum(shirt)>2.7 else 0),seg=40)
+        body=sph((0,0,z_t),(torso_w,torso_w*0.78,torso/2+0.03),mat(self.name+"_shirt",shirt,0.7,0.25,emit=0.08 if sum(shirt)>2.7 else 0),seg=40)
         self.part(body,0.011)
         if coat:  # long coat flaring to the knees
             c=cyl((0,0,hip-0.05),torso_w*1.02,0.62,mat(self.name+"_coat",coat,0.45,0.45),verts=40,r2=torso_w*1.45,rot=(math.pi,0,0),bevel=0.0)
@@ -45,21 +45,24 @@ class Character:
             if collar:
                 for s in (-1,1):
                     cl=cyl((s*0.06,-0.07,z_t+torso/2-0.04),0.07,0.02,mat(self.name+"_coat",coat,0.45,0.45),rot=(1.2,0,s*0.6),verts=3); self.part(cl,0.006)
-        elif collar:
+        elif collar and not tie:
             for s in (-1,1):
-                cl=cyl((s*0.045,-torso_w*0.62,z_t+torso/2-0.07),0.055,0.015,mat(self.name+"_shirt",shirt,0.7,0.25,emit=0.25 if sum(shirt)>2.7 else 0),rot=(1.35,0,s*0.5),verts=3); self.part(cl,0.006)
+                cl=cyl((s*0.045,-torso_w*0.62,z_t+torso/2-0.07),0.055,0.015,mat(self.name+"_shirt",shirt,0.7,0.25,emit=0.08 if sum(shirt)>2.7 else 0),rot=(1.35,0,s*0.5),verts=3); self.part(cl,0.006)
         if tie:
-            t=cyl((0,-torso_w*0.8,z_t+0.02),0.045,0.34,mat(self.name+"_tie",tie,0.5,0.3),rot=(math.pi+0.12,0,0),verts=4,r2=0.02,bevel=0.004)
-            t.scale=(1,0.35,1); self.part(t,0.006)
+            # flat tie hugging the shirt front: kite shape
+            me=bpy.data.meshes.new("tie"); yy=-torso_w*0.79
+            me.from_pydata([(0,yy,z_t+0.2),(0.035,yy,z_t+0.12),(0.045,yy-0.02,z_t-0.16),(0,yy-0.025,z_t-0.22),(-0.045,yy-0.02,z_t-0.16),(-0.035,yy,z_t+0.12)],[],[[0,1,2,3,4,5]]); me.update()
+            t=bpy.data.objects.new("tie",me); bpy.context.collection.objects.link(t); t.data.materials.append(mat(self.name+"_tie",tie,0.5,0.3))
+            s_=t.modifiers.new("th",'SOLIDIFY'); s_.thickness=0.012; self.part(t)
             self.part(sph((0,-torso_w*0.74,z_t+0.2),(0.03,0.02,0.028),mat(self.name+"_tie",tie,0.5,0.3)),0.005)
         # head
         hz=z_t+torso/2+R*0.82; self.head_z=hz
-        head=sph((0,0,hz),(R,R*0.93,R*0.97),mat("skin",SKIN,0.45,0.45,emit=0.55),seg=48); self.part(head,0.013)
+        head=sph((0,0,hz),(R,R*0.93,R*0.97),mat("skin",SKIN,0.45,0.45,emit=0.18),seg=48); self.part(head,0.013)
         if hair:
             import bmesh
             o=sph((0,0,hz),(R*1.05,R*0.98,R*1.02),mat(self.name+"_hair",hair,0.5,0.4),seg=48)
             bm=bmesh.new(); bm.from_mesh(o.data)
-            cut=bmesh.ops.bisect_plane(bm,geom=bm.verts[:]+bm.edges[:]+bm.faces[:],plane_co=(0,0,R*0.18),plane_no=(0,-0.45,1.0),clear_inner=True)
+            cut=bmesh.ops.bisect_plane(bm,geom=bm.verts[:]+bm.edges[:]+bm.faces[:],plane_co=(0,0,hz+R*0.3),plane_no=(0,0.55,1.0),clear_inner=True)
             bm.to_mesh(o.data); bm.free(); self.part(o)
             sol=o.modifiers.new("th",'SOLIDIFY'); sol.thickness=R*0.06; sol.offset=1
             o["no_ink"]=1
@@ -71,18 +74,19 @@ class Character:
             bc=mat(self.name+"_beanie",(0.82,0.12,0.12),0.85,0.1)
             import bmesh
             o=sph((0,0,hz),(R*1.06,R*1.02,R*1.12),bc,seg=48); bm=bmesh.new(); bm.from_mesh(o.data)
-            bmesh.ops.bisect_plane(bm,geom=bm.verts[:]+bm.edges[:]+bm.faces[:],plane_co=(0,0,R*0.38),plane_no=(0,-0.15,1),clear_inner=True); bm.to_mesh(o.data); bm.free(); self.part(o)
-            cuff=cyl((0,0.01,hz+R*0.42),R*1.09,R*0.32,mat(self.name+"_cuff",(0.72,0.08,0.08),0.9,0.05),verts=48,rot=(-0.15,0,0),bevel=0); self.part(cuff)
-            self.part(sph((0,0.03,hz+R*1.18),(R*0.24,R*0.24,R*0.24),mat(self.name+"_pom",(0.97,0.95,0.9),0.95,0.05),seg=20))
+            bmesh.ops.bisect_plane(bm,geom=bm.verts[:]+bm.edges[:]+bm.faces[:],plane_co=(0,0,hz+R*0.55),plane_no=(0,-0.1,1),clear_inner=True); bm.to_mesh(o.data); bm.free(); self.part(o)
+            cuff=cyl((0,0.01,hz+R*0.6),R*1.0,R*0.3,mat(self.name+"_cuff",(0.72,0.08,0.08),0.9,0.05),verts=48,rot=(-0.15,0,0),bevel=0); self.part(cuff)
+            self.part(sph((0,0.03,hz+R*1.2),(R*0.24,R*0.24,R*0.24),mat(self.name+"_pom",(0.97,0.95,0.9),0.95,0.05),seg=20))
         if hat=="souwester":
             hc=(1.0,0.66,0.02); m=mat(self.name+"_hat",hc,0.35,0.5)
             self.part(sph((0,0.04,hz+R*0.62),(R*1.0,R*0.96,R*0.66),m,seg=40),0.012)
             brim=cyl((0,0.1,hz+R*0.62),R*1.3,0.07,m,verts=48,r2=R*0.98,rot=(-0.3,0,0)); self.part(brim,0.01)
         if self.beard:
-            bw=mat("beard",(0.97,0.96,0.93),0.9,0.1,emit=0.35)
-            self.part(sph((0,-R*0.3,hz-R*0.5),(R*0.92,R*0.62,R*0.72),bw,seg=40))
-            for k,(bx,bz) in enumerate([(-0.55,-0.95),(0,-1.1),(0.55,-0.95)]):
-                self.part(sph((R*bx,-R*0.35,hz+R*bz),(R*0.36,R*0.32,R*0.3),bw,seg=24))
+            bw=mat("beard",(0.97,0.96,0.93),0.9,0.1,emit=0.12)
+            # beard wraps only the lower jaw; three small scallops at the chin
+            self.part(sph((0,-R*0.18,hz-R*0.62),(R*0.88,R*0.72,R*0.5),bw,seg=40))
+            for bx,bz in [(-0.42,-1.0),(0,-1.08),(0.42,-1.0)]:
+                self.part(sph((R*bx,-R*0.3,hz+R*bz),(R*0.26,R*0.22,R*0.22),bw,seg=20))
         # face decal: always looks at the camera
         piv=bpy.data.objects.new(self.name+"_facepiv",None); self.faces_coll.objects.link(piv); piv.parent=self.root; piv.location=(0,0,hz)
         con=piv.constraints.new('TRACK_TO'); con.target=bpy.context.scene.camera; con.track_axis='TRACK_Z'; con.up_axis='UP_Y'
@@ -130,4 +134,4 @@ def keeper(loc,yaw=0,face="smug",arms=None,pose=None):
         shirt=(1.0,0.66,0.02),shoes=(0.08,0.06,0.05),arms=arms)
 def engineer(loc,yaw=0,face="happy",arms=None,pose=None):
     arms=list(POSES[pose]) if pose else arms
-    return Character("engineer",loc,yaw,face=face).build(R=0.29,torso_w=0.15,hair=(0.4,0.22,0.1),tie=(0.17,0.32,0.68),arms=arms)
+    return Character("engineer",loc,yaw,face=face).build(R=0.29,torso_w=0.15,hair=(0.4,0.22,0.1),tie=(0.62,0.12,0.1),arms=arms)
