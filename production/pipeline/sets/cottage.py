@@ -85,7 +85,7 @@ def build(time="day"):
     pot=cyl((x0+0.25,Y1-0.12,z0+0.08),0.07,0.12,mat("pot",(0.75,0.35,0.2),0.7),r2=0.09,coll=S)
     for k in range(5): sph((x0+0.25+random.uniform(-0.06,0.06),Y1-0.12+random.uniform(-0.04,0.04),z0+0.2+random.uniform(0,0.1)),(0.06,0.05,0.07),mat("leaf",(0.25,0.55,0.2),0.6),seg=12,coll=S)
     bpy.ops.mesh.primitive_plane_add(size=1,location=(cx+0.3,Y1+1.6,1.6),rotation=(math.pi/2,0,0)); v=bpy.context.object; v.scale=(4.8,3.6,1)
-    v.data.materials.append(image_mat("view",f"{A}/sky_day.png",emit=1.1,alpha=False)); v.visible_shadow=False
+    v.data.materials.append(image_mat("view",f"{A}/sky_day.png",emit=float(os.environ.get("VIEWEMIT","3.0")),alpha=False)); v.visible_shadow=False
     for c in v.users_collection: c.objects.unlink(v)
     S.objects.link(v)
     # ---- props ----
@@ -183,4 +183,8 @@ def lights(time="day"):
     # soft overall fill so the room reads bright like the competitors' game-style lighting
     bpy.ops.object.light_add(type='AREA',location=(0.3,-0.8,ZT-0.35),rotation=(0,0,0)); a=bpy.context.object.data; a.energy=float(os.environ.get('FILL','45')); a.size=3.0; a.color=(0.95,0.95,0.95)
     bpy.ops.object.light_add(type='AREA',location=(1.5,-3.2,1.6),rotation=(math.radians(80),0,math.radians(15))); a=bpy.context.object.data; a.energy=float(os.environ.get('FRONT','55')); a.size=2.5; a.color=(0.9,0.92,1.0)
+    # window = real light source: area light filling the opening, shining into the room
+    x0,x1,z0,z1=WIN
+    bpy.ops.object.light_add(type='AREA',location=((x0+x1)/2,Y1-0.05,(z0+z1)/2),rotation=(-math.pi/2,0,0))
+    wl=bpy.context.object.data; wl.shape='RECTANGLE'; wl.size=x1-x0; wl.size_y=z1-z0; wl.energy=float(os.environ.get("WINL","600")); wl.color=(1.0,0.97,0.92)
     w=bpy.data.worlds.new("w"); sc.world=w; w.use_nodes=True; bg=w.node_tree.nodes["Background"]; bg.inputs[0].default_value=(0.85,0.85,0.82,1); bg.inputs[1].default_value=0.4
