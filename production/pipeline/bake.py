@@ -96,12 +96,13 @@ def ink_mask(objs,size,width_px,min_angle=40,skip=()):
         bm.free()
     return np.asarray(m,np.float32)/255.0
 
-def compose(alb,light,emit,ink,exposure=1.0,sat=1.15,contrast=1.12):
+def compose(alb,light,emit,ink,exposure=1.0,sat=1.15,contrast=1.12,gloss=None):
     """final = albedo * light + emission, gentle filmic curve, saturation, ink lines."""
     import cv2  # only for fast resize
     H=alb.shape[0]
     L=cv2.resize(light,(H,H),interpolation=cv2.INTER_CUBIC); E=cv2.resize(emit,(H,H),interpolation=cv2.INTER_CUBIC)
     c=alb*L*exposure+E
+    if gloss is not None: c=c+cv2.resize(gloss,(H,H),interpolation=cv2.INTER_CUBIC)*exposure
     c=c/(1+0.35*c)*1.35            # soft shoulder so lamps/sun don't clip harshly
     c=np.clip(c,0,1)**(1/2.2)      # linear -> display
     c=np.clip(0.5+(c-0.5)*contrast,0,1)  # contrast around mid-grey
@@ -125,13 +126,19 @@ def apply_baked(objs,final,name="atlas"):
         o.data.uv_layers["bake"].active=True; o.data.uv_layers["bake"].active_render=True
     return m
 
-def ink_shell(objs,thick=0.008,min_dim=0.0):
+def ink_shell(objs,thick=0.008,min_dim=0.0,wobble=0.0):
     """Inverted-hull silhouette lines; with Workbench backface culling only the back shell shows -> outline."""
     hm=bpy.data.materials.get("inkshell") or bpy.data.materials.new("inkshell")
     hm.diffuse_color=(*INK,1)
     for o in objs:
         if o.get("no_shell"): continue
-        o.data.materials.append(hm); s=o.modifiers.new("shell",'SOLIDIFY'); s.thickness=thick; s.offset=1; s.use_flip_normals=True; s.material_offset=len(o.data.materials)-1; s.use_rim=False
+        o.data.materials.append(hm); s=o.modifiers.new("shell",'SOLIDIFY'); s.thickness=thick
+        if wobble:   # hand-drawn line: thickness varies smoothly along the outline
+            from mathutils import noise, Vector
+            vg=o.vertex_groups.new(name="inkw")
+            for v in o.data.vertices:
+                w=0.5+0.5*noise.noise(Vector(v.co)*9.0); vg.add([v.index],max(0.0,min(1.0,w)),'REPLACE')
+            s.vertex_group="inkw"; s.thickness_vertex_group=1.0-wobble; s.offset=1; s.use_flip_normals=True; s.material_offset=len(o.data.materials)-1; s.use_rim=False
 
 def workbench(sc,aa='8'):
     sc.render.engine='BLENDER_WORKBENCH'; sh=sc.display.shading

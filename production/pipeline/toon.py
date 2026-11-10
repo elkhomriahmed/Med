@@ -12,7 +12,7 @@ def reset(res=(1080,1920),pct=50):
 
 def link(nt,a,b): nt.links.new(a,b)
 
-def mat(name,col,rough=0.75,spec=0.2,emit=0.0,vary=0.0,ink=False):
+def mat(name,col,rough=0.75,spec=0.2,emit=0.0,vary=0.0,ink=False,metal=0.0):
     """Soft 'game-toon' material. vary>0 gives each object a slightly different shade (per-board variation)."""
     key=(name,col,rough,spec,emit,vary)
     if key in _mats: return _mats[key]
@@ -216,7 +216,7 @@ def painted(name,col,grime=(0.35,0.3,0.25),rough=0.8,bump=0.25,brush=40.0):
     big=n.new('ShaderNodeTexNoise'); big.inputs['Scale'].default_value=1.2; big.inputs['Detail'].default_value=3; link(nt,co2,big.inputs[0])
     # grime: darker toward the floor (z low)
     tc=n.new('ShaderNodeTexCoord'); sep=n.new('ShaderNodeSeparateXYZ'); link(nt,tc.outputs['Object'],sep.inputs[0])
-    gz=n.new('ShaderNodeMapRange'); gz.inputs[1].default_value=0.0; gz.inputs[2].default_value=0.9; gz.inputs[3].default_value=0.55; gz.inputs[4].default_value=0.0
+    gz=n.new('ShaderNodeMapRange'); gz.inputs[1].default_value=0.0; gz.inputs[2].default_value=0.9; gz.inputs[3].default_value=0.22; gz.inputs[4].default_value=0.0
     link(nt,sep.outputs['Z'],gz.inputs[0])
     gm=n.new('ShaderNodeMath'); gm.operation='MULTIPLY'; link(nt,gz.outputs[0],gm.inputs[0]); link(nt,big.outputs['Fac'],gm.inputs[1])
     c1=n.new('ShaderNodeMix'); c1.data_type='RGBA'; c1.blend_type='MULTIPLY'; c1.inputs['A'].default_value=(*col,1)

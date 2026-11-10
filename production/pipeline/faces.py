@@ -2,15 +2,19 @@
 brush-like tapered strokes. Canvas = 2.6 x head radius, centred on the head. Drawn at 2x, downsampled."""
 from PIL import Image, ImageDraw
 import math, os
-INK=(32,22,20,255); WHITE=(255,255,255,255); MOUTH=(120,36,34,255); TEETH=(250,248,244,255); BEARD=(244,242,236,255)
+INK=(32,22,20,255); WHITE=(255,255,255,255); MOUTH=(120,36,34,255); TEETH=(250,248,244,255); BEARD=(168,170,182,255)
 S=2048; C=S//2; RP=S/2.6
-def P(x,y): return (C+x*RP*1.12, C-y*RP*1.12)
+FS=0.92
+def P(x,y): return (C+x*RP*FS, C-y*RP*FS)
 SC=1.35
 def W(w): return max(2,int(w*RP*1.35))
 
 def stroke(d,pts,w0,w1=None,w_mid=None):
     """Tapered brush stroke along points (head-radius units). Width: w0 at start, w_mid in the middle, w1 at end."""
     w1=w0 if w1 is None else w1; w_mid=max(w0,w1) if w_mid is None else w_mid
+    import random
+    rnd=random.Random(int(sum(abs(a)+abs(b) for a,b in pts)*1000))
+    pts=[(a+rnd.uniform(-0.006,0.006),b+rnd.uniform(-0.006,0.006)) for a,b in pts]   # hand-drawn wobble
     n=len(pts)
     for i in range(n-1):
         t=(i+0.5)/(n-1); w=(w0*(1-2*t)+w_mid*2*t) if t<0.5 else (w_mid*(2-2*t)+w1*(2*t-1))
@@ -21,7 +25,7 @@ def blob(d,pts,fill,outline=True,w=0.055):
     d.polygon([P(*p) for p in pts],fill=fill)
     if outline: stroke(d,pts+[pts[0]],w)
 
-EX,EY=0.27,0.05
+EX,EY=0.25,0.07
 def eye(d,x,kind,s):
     if kind=="open":        # small oval pupil
         d.ellipse([*P(x-0.075,EY+0.1),*P(x+0.075,EY-0.1)],fill=INK)
@@ -40,6 +44,8 @@ def eye(d,x,kind,s):
         stroke(d,[(x-0.12,EY+0.02),(x+0.12,EY-0.01)],0.04,0.04,0.07)
 def brow(d,x,kind,s):
     by=EY+0.22; i=-s   # i: +1 toward the nose
+    if kind=="cocked":   # asymmetric: right brow raised, left flat
+        kind="raised" if s>0 else "calm"
     shapes={
      "calm":   [(x-0.13*s*-1,by-0.01),(x,by+0.02),(x+0.13*s*-1,by)],
      "raised": [(x-0.13*s*-1,by+0.04),(x,by+0.1),(x+0.13*s*-1,by+0.05)],
@@ -70,6 +76,13 @@ def mouth(d,kind):
         for k in (-0.08,0,0.08): stroke(d,[(k,MY+0.04),(k,MY-0.07)],0.012)
         stroke(d,[(-0.16,MY-0.015),(0.16,MY-0.015)],0.012)
 def beard(d):
+    # compact chin beard + moustache (small, like the competitors' facial hair)
+    pts=[(-0.26,-0.33),(-0.12,-0.31),(0.0,-0.33),(0.12,-0.31),(0.26,-0.33),(0.24,-0.42),(0.17,-0.5),(0.1,-0.47),(0.05,-0.56),(0.0,-0.5),(-0.05,-0.56),(-0.1,-0.47),(-0.17,-0.5),(-0.24,-0.42)]
+    blob(d,pts,BEARD,True,0.045)
+    for s in (-1,1):
+        blob(d,[(0.0,-0.2),(s*0.09,-0.15),(s*0.2,-0.17),(s*0.25,-0.24),(s*0.15,-0.27),(s*0.03,-0.25)],BEARD,True,0.035)
+    return
+def _old_beard(d):
     # drawn beard inside the head silhouette, scalloped lower edge, ink outline -> clean inner line
     top=[(-0.56,-0.37),(-0.4,-0.22),(-0.2,-0.2),(-0.08,-0.23),(0.08,-0.23),(0.2,-0.2),(0.4,-0.22),(0.56,-0.37)]
     bot=[]
@@ -93,10 +106,10 @@ def glasses(d):
     stroke(d,[(-0.16,EY+0.02),(0.16,EY+0.02)],0.03)
 
 EXPR={ # eyes, brows, mouth
- "neutral":("open","calm","flat"), "smug":("lidded","calm","smirk"), "happy":("happy","raised","grin"),
+ "neutral":("open","calm","flat"), "smug":("lidded","cocked","smirk"), "happy":("happy","raised","grin"),
  "laugh":("happy","raised","open"), "shock":("wide","raised","o"), "scream":("wide","raised","shout"),
  "angry":("open","angry","grit"), "furious":("squint","angry","shout"), "worried":("open","worried","frown"),
- "skeptical":("lidded","raised","flat"), "sleepy":("closed","calm","flat"), "evil":("lidded","angry","smirk"),
+ "skeptical":("lidded","cocked","flat"), "sleepy":("closed","calm","flat"), "evil":("lidded","angry","smirk"),
  "proud":("closed","raised","smile"), "talk":("open","calm","o"),
 }
 def make(path,expr,extra=()):

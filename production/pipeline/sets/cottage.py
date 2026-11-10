@@ -29,9 +29,9 @@ def boards_h(axis_pos,span,z0,z1,h,m,coll,wall="back",holes=(),th=0.045,gap=0.00
 def build(time="day"):
     random.seed(7); sc=bpy.context.scene
     S=bpy.data.collections.new("set"); sc.collection.children.link(S)
-    upper=painted("upper_wall",(0.66,0.70,0.68),brush=55)
-    lower=painted("wainscot",(0.20,0.36,0.38),grime=(0.1,0.14,0.13),brush=70)
-    floor=wood("floor",(0.56,0.36,0.2),(0.3,0.17,0.08),axis="Y",grain=5)
+    upper=painted("upper_wall",(0.56,0.70,0.84),grime=(0.4,0.48,0.56),brush=55)
+    lower=painted("wainscot",(0.12,0.25,0.5),grime=(0.08,0.14,0.26),brush=70)
+    floor=wood("floor",(0.66,0.42,0.22),(0.38,0.21,0.1),axis="Y",grain=5,rough=0.38)
     trim=mat("trim",(0.88,0.85,0.78),0.5,0.3,vary=0.03)
     beamm=wood("beam",(0.42,0.27,0.15),(0.22,0.12,0.06),axis="Y",grain=4,bump=0.5)
     # floor boards with staggered ends
@@ -72,18 +72,18 @@ def build(time="day"):
     for xw in (x0,x1): box((xw,Y1-0.02,(z0+z1)/2),(0.08,0.14,z1-z0+0.08),fm,0.01,coll=S,name="wframe")
     box((cx,Y1,(z0+z1)/2),(0.04,0.05,z1-z0),fm,0.006,coll=S); box((cx,Y1,(z0+z1)/2),(x1-x0,0.05,0.04),fm,0.006,coll=S)
     box((cx,Y1-0.12,z0-0.03),(x1-x0+0.3,0.26,0.05),fm,0.01,coll=S,name="sill")
-    cur=mat("curtain",(0.66,0.24,0.2),0.8,0.1)
+    cur=mat("curtain",(0.78,0.16,0.14),0.85,0.1)
     for s,xc in ((-1,x0-0.12),(1,x1+0.12)):
         for k in range(4): cyl((xc+s*0.04*k,Y1-0.1-0.02*(k%2),(z0+z1)/2+0.1),0.05,1.25,cur,verts=12,bevel=0,coll=S,name="curtain")
     cyl((cx,Y1-0.12,z1+0.18),0.02,x1-x0+0.7,mat("brass",(0.85,0.6,0.15),0.3,0.6),rot=(0,math.pi/2,0),coll=S)
     pot=cyl((x0+0.25,Y1-0.12,z0+0.08),0.07,0.12,mat("pot",(0.75,0.35,0.2),0.7),r2=0.09,coll=S)
     for k in range(5): sph((x0+0.25+random.uniform(-0.06,0.06),Y1-0.12+random.uniform(-0.04,0.04),z0+0.2+random.uniform(0,0.1)),(0.06,0.05,0.07),mat("leaf",(0.25,0.55,0.2),0.6),seg=12,coll=S)
     bpy.ops.mesh.primitive_plane_add(size=1,location=(cx+0.3,Y1+1.6,1.6),rotation=(math.pi/2,0,0)); v=bpy.context.object; v.scale=(4.8,3.6,1)
-    v.data.materials.append(image_mat("view",f"{A}/sky_golden.png",emit=0.9,alpha=False)); v.visible_shadow=False
+    v.data.materials.append(image_mat("view",f"{A}/sky_day.png",emit=1.1,alpha=False)); v.visible_shadow=False
     for c in v.users_collection: c.objects.unlink(v)
     S.objects.link(v)
     # ---- props ----
-    fwood=wood("furniture",(0.58,0.35,0.18),(0.33,0.18,0.08),axis="X",grain=7); dark=mat("iron",(0.12,0.11,0.11),0.4,0.5)
+    fwood=wood("furniture",(0.58,0.35,0.18),(0.33,0.18,0.08),axis="X",grain=7); dark=mat("iron",(0.1,0.1,0.11),0.25,0.8)
     # table + cloth + lamp + mug + bread
     tx,ty=1.35,-0.6
     box((tx,ty,0.76),(1.2,0.8,0.06),fwood,0.012,coll=S,name="tabletop")
@@ -93,10 +93,10 @@ def build(time="day"):
     for i in range(6):
         for j in range(4):
             box((tx-0.45+i*0.18,ty-0.27+j*0.18,0.795),(0.18,0.18,0.008),cl if (i+j)%2 else mat("cloth2",(0.95,0.93,0.88),0.8,0.1),0,coll=S)
-    brass=mat("brass",(0.85,0.6,0.15),0.3,0.6); glow=mat("lampglow",(1.0,0.7,0.35),0.4,0.2,emit=12)
+    brass=mat("brass",(0.9,0.66,0.2),0.18,0.9); glow=mat("lampglow",(1.0,0.7,0.35),0.4,0.2,emit=12)
     cyl((tx-0.3,ty+0.15,0.83),0.09,0.06,brass,coll=S); cyl((tx-0.3,ty+0.15,0.88),0.03,0.06,brass,coll=S)
     sph((tx-0.3,ty+0.15,1.0),(0.075,0.075,0.11),glow,coll=S,name="lampglass"); cyl((tx-0.3,ty+0.15,1.13),0.045,0.04,brass,coll=S)
-    mug=cyl((tx+0.25,ty-0.1,0.86),0.055,0.12,mat("mug",(0.25,0.45,0.7),0.5,0.4),coll=S); torus((tx+0.31,ty-0.1,0.86),0.035,0.01,mat("mug",(0.25,0.45,0.7),0.5,0.4),rot=(math.pi/2,0,0),coll=S)
+    mug=cyl((tx+0.25,ty-0.1,0.86),0.055,0.12,mat("mug",(0.85,0.15,0.12),0.15,0.9),coll=S); torus((tx+0.31,ty-0.1,0.86),0.035,0.01,mat("mug",(0.85,0.15,0.12),0.15,0.9),rot=(math.pi/2,0,0),coll=S)
     cyl((tx+0.05,ty+0.1,0.81),0.15,0.015,mat("plate",(0.95,0.95,0.92),0.4,0.4),coll=S); sph((tx+0.05,ty+0.1,0.85),(0.1,0.06,0.045),mat("bread",(0.8,0.5,0.2),0.7),coll=S)
     for s in (-1,1):  # chairs
         chx,chy=tx+s*0.45,ty+(0.62 if s<0 else -0.62)
@@ -112,7 +112,7 @@ def build(time="day"):
     box((sx,sy-0.33,0.4),(0.24,0.03,0.2),mat("stoveglow",(1.0,0.45,0.1),0.5,0.1,emit=6),0.004,coll=S)
     for dx in (-0.2,0.2):
         for dy in (-0.2,0.2): cyl((sx+dx,sy+dy,0.06),0.04,0.12,dark,verts=8,coll=S)
-    cyl((sx+0.22,sy-0.05,0.93),0.11,0.16,mat("kettle",(0.2,0.45,0.4),0.35,0.5),coll=S)
+    cyl((sx+0.22,sy-0.05,0.93),0.11,0.16,mat("kettle",(0.1,0.35,0.6),0.12,0.9),coll=S)
     # shelf on left wall with jars and books
     box((X0+0.15,0.2,1.55),(0.26,1.5,0.04),fwood,0.006,coll=S); box((X0+0.15,0.2,1.15),(0.26,1.5,0.04),fwood,0.006,coll=S)
     cols=[(0.3,0.55,0.35),(0.75,0.3,0.2),(0.85,0.7,0.3),(0.3,0.4,0.75),(0.65,0.6,0.55),(0.5,0.25,0.5)]
@@ -146,7 +146,7 @@ def build(time="day"):
         for dy in (-0.2,0.2): cyl((rx+s*0.22,ry+dy,0.27),0.022,0.45,rw,verts=8,coll=S)
     # braided round rug: one disc with ring pattern (no stacked edges -> no heavy rings of ink)
     bpy.ops.mesh.primitive_cylinder_add(radius=1.1,depth=0.015,location=(-0.1,0.2,0.008),vertices=96); rug=bpy.context.object; rug.scale=(1.25,0.85,1)
-    rm=fabric("rug",(0.62,0.34,0.24),(0.78,0.66,0.48),scale=90)
+    rm=fabric("rug",(0.75,0.2,0.16),(0.9,0.82,0.66),scale=90)
     rug.data.materials.append(rm)
     for c_ in rug.users_collection: c_.objects.unlink(rug)
     S.objects.link(rug)
@@ -166,15 +166,15 @@ def build(time="day"):
 def lights(time="day"):
     sc=bpy.context.scene
     bpy.ops.object.light_add(type='SUN',rotation=(math.radians(-52),0,math.radians(-30)))
-    sun=bpy.context.object.data; sun.energy=float(os.environ.get('SUN','6')); sun.color=(1.0,0.78,0.52); sun.angle=math.radians(2.5)
-    bpy.ops.object.light_add(type='SPOT',location=(0.9,4.6,3.6)); sp=bpy.context.object; sp.data.energy=float(os.environ.get('KEY','2500')); sp.data.color=(1.0,0.86,0.68)
+    sun=bpy.context.object.data; sun.energy=float(os.environ.get('SUN','6')); sun.color=(1.0,0.95,0.86); sun.angle=math.radians(2.5)
+    bpy.ops.object.light_add(type='SPOT',location=(0.9,4.6,3.6)); sp=bpy.context.object; sp.data.energy=float(os.environ.get('KEY','2500')); sp.data.color=(1.0,0.9,0.72)
     sp.data.spot_size=math.radians(38); sp.data.spot_blend=0.15; sp.data.shadow_soft_size=0.05
     tg=bpy.data.objects.new("key_tgt",None); bpy.context.scene.collection.objects.link(tg); tg.location=(-0.3,0.0,0.0)
     cn=sp.constraints.new('TRACK_TO'); cn.target=tg; cn.track_axis='TRACK_NEGATIVE_Z'; cn.up_axis='UP_Y'
-    bpy.ops.object.light_add(type='POINT',location=(0.75,-0.45,1.0)); l=bpy.context.object.data; l.energy=70; l.color=(1.0,0.66,0.33); l.shadow_soft_size=0.08
+    bpy.ops.object.light_add(type='POINT',location=(0.75,-0.45,1.0)); l=bpy.context.object.data; l.energy=float(os.environ.get("LAMP","18")); l.color=(1.0,0.66,0.33); l.shadow_soft_size=0.08
     bpy.ops.object.light_add(type='POINT',location=(0.5,-0.2,ZT-0.75)); l=bpy.context.object.data; l.energy=60; l.color=(1.0,0.7,0.4); l.shadow_soft_size=0.05
     bpy.ops.object.light_add(type='POINT',location=(-1.85,1.2,0.4)); l=bpy.context.object.data; l.energy=40; l.color=(1.0,0.45,0.15)
     # soft overall fill so the room reads bright like the competitors' game-style lighting
     bpy.ops.object.light_add(type='AREA',location=(0.3,-0.8,ZT-0.35),rotation=(0,0,0)); a=bpy.context.object.data; a.energy=float(os.environ.get('FILL','45')); a.size=3.0; a.color=(0.95,0.95,0.95)
     bpy.ops.object.light_add(type='AREA',location=(1.5,-3.2,1.6),rotation=(math.radians(80),0,math.radians(15))); a=bpy.context.object.data; a.energy=float(os.environ.get('FRONT','55')); a.size=2.5; a.color=(0.9,0.92,1.0)
-    w=bpy.data.worlds.new("w"); sc.world=w; w.use_nodes=True; bg=w.node_tree.nodes["Background"]; bg.inputs[0].default_value=(0.75,0.82,0.95,1); bg.inputs[1].default_value=0.4
+    w=bpy.data.worlds.new("w"); sc.world=w; w.use_nodes=True; bg=w.node_tree.nodes["Background"]; bg.inputs[0].default_value=(0.45,0.62,0.95,1); bg.inputs[1].default_value=0.4
