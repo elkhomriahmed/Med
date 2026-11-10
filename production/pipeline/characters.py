@@ -55,15 +55,34 @@ class Character:
         # head
         hz=z_t+torso/2+R*0.82; self.head_z=hz
         head=sph((0,0,hz),(R,R*0.93,R*0.97),mat("skin",SKIN,0.45,0.45,emit=0.55),seg=48); self.part(head,0.013)
-        if hair: self.part(sph((0,0.04,hz+R*0.25),(R*1.04,R*0.98,R*0.78),mat(self.name+"_hair",hair,0.55,0.35),seg=40),0.012)
+        if hair:
+            import bmesh
+            o=sph((0,0,hz),(R*1.05,R*0.98,R*1.02),mat(self.name+"_hair",hair,0.5,0.4),seg=48)
+            bm=bmesh.new(); bm.from_mesh(o.data)
+            cut=bmesh.ops.bisect_plane(bm,geom=bm.verts[:]+bm.edges[:]+bm.faces[:],plane_co=(0,0,R*0.18),plane_no=(0,-0.45,1.0),clear_inner=True)
+            bm.to_mesh(o.data); bm.free(); self.part(o)
+            sol=o.modifiers.new("th",'SOLIDIFY'); sol.thickness=R*0.06; sol.offset=1
+            o["no_ink"]=1
         if hat=="cap":
             hc=(0.17,0.3,0.62); self.part(sph((0,0.01,hz+R*0.5),(R*1.02,R*0.98,R*0.62),mat(self.name+"_cap",hc,0.5,0.3),seg=40),0.012)
             bill=cyl((0,-R*0.95,hz+R*0.42),R*0.62,0.025,mat(self.name+"_cap",hc,0.5,0.3),verts=40,rot=(0.15,0,0)); bill.scale=(1,0.55,1); self.part(bill,0.008)
             self.part(sph((0,-R*0.92,hz+R*0.72),(0.03,0.012,0.03),mat("brass",(0.85,0.6,0.15),0.3,0.6)))
+        if hat=="beanie":
+            bc=mat(self.name+"_beanie",(0.82,0.12,0.12),0.85,0.1)
+            import bmesh
+            o=sph((0,0,hz),(R*1.06,R*1.02,R*1.12),bc,seg=48); bm=bmesh.new(); bm.from_mesh(o.data)
+            bmesh.ops.bisect_plane(bm,geom=bm.verts[:]+bm.edges[:]+bm.faces[:],plane_co=(0,0,R*0.38),plane_no=(0,-0.15,1),clear_inner=True); bm.to_mesh(o.data); bm.free(); self.part(o)
+            cuff=cyl((0,0.01,hz+R*0.42),R*1.09,R*0.32,mat(self.name+"_cuff",(0.72,0.08,0.08),0.9,0.05),verts=48,rot=(-0.15,0,0),bevel=0); self.part(cuff)
+            self.part(sph((0,0.03,hz+R*1.18),(R*0.24,R*0.24,R*0.24),mat(self.name+"_pom",(0.97,0.95,0.9),0.95,0.05),seg=20))
         if hat=="souwester":
             hc=(1.0,0.66,0.02); m=mat(self.name+"_hat",hc,0.35,0.5)
             self.part(sph((0,0.04,hz+R*0.62),(R*1.0,R*0.96,R*0.66),m,seg=40),0.012)
             brim=cyl((0,0.1,hz+R*0.62),R*1.3,0.07,m,verts=48,r2=R*0.98,rot=(-0.3,0,0)); self.part(brim,0.01)
+        if self.beard:
+            bw=mat("beard",(0.97,0.96,0.93),0.9,0.1,emit=0.35)
+            self.part(sph((0,-R*0.3,hz-R*0.5),(R*0.92,R*0.62,R*0.72),bw,seg=40))
+            for k,(bx,bz) in enumerate([(-0.55,-0.95),(0,-1.1),(0.55,-0.95)]):
+                self.part(sph((R*bx,-R*0.35,hz+R*bz),(R*0.36,R*0.32,R*0.3),bw,seg=24))
         # face decal: always looks at the camera
         piv=bpy.data.objects.new(self.name+"_facepiv",None); self.faces_coll.objects.link(piv); piv.parent=self.root; piv.location=(0,0,hz)
         con=piv.constraints.new('TRACK_TO'); con.target=bpy.context.scene.camera; con.track_axis='TRACK_Z'; con.up_axis='UP_Y'
@@ -76,7 +95,7 @@ class Character:
         for l in me.loops:
             co=me.vertices[l.vertex_index].co; uv.data[l.index].uv=(co.x/(2.6*R)+0.5,co.y/(2.6*R)+0.5)
         fp=bpy.data.objects.new(self.name+"_face",me)
-        self.faces_coll.objects.link(fp); fp.parent=piv; fp.location=(0,0,R*1.03); fp.visible_shadow=False
+        self.faces_coll.objects.link(fp); fp.parent=piv; fp.location=(0,0,R*(1.12 if self.beard else 1.03)); fp.visible_shadow=False
         self.face_mat=image_mat(self.name+"_facemat",f"{FACEDIR}/{self.name}_{self.face_name}.png",emit=0.6,rough=0.9)
         fp.data.materials.append(self.face_mat); self.face_obj=fp
         # legs + shoes
@@ -88,15 +107,27 @@ class Character:
             if pts is None: pts=[(0.05,0,-0.02),(0.12,-0.02,-0.25),(0.14,-0.05,-0.5)]
             P=[(side*(self.sh_x+a),b,self.sh_z+c) for a,b,c in pts]
             self.limb(tube([(side*(self.sh_x-0.04),0,self.sh_z)]+P,0.011,mat("limb",legs,0.6)))
-            self.limb(sph(P[-1],(0.03,0.03,0.03),mat("limb",legs,0.6)))
+            self.limb(sph(P[-1],(0.017,0.017,0.017),mat("limb",legs,0.6)))
         return self
     def set_face(self,face):
         img=bpy.data.images.load(f"{FACEDIR}/{self.name}_{face}.png",check_existing=True)
         for n in self.face_mat.node_tree.nodes:
             if n.type=='TEX_IMAGE': n.image=img
 
-def keeper(loc,yaw=0,face="smug",arms=None):
-    return Character("keeper",loc,yaw,face=face).build(R=0.26,coat=(1.0,0.66,0.02),buttons=3,hat="souwester",beard=True,
+POSES={  # per arm: points relative to the shoulder (x outward, y forward is negative, z up)
+ "rest":  ([(0.05,0,-0.05),(0.1,-0.02,-0.28),(0.12,-0.04,-0.5)],)*2,
+ "hips":  ([(0.08,0,-0.06),(0.2,0.02,-0.2),(0.04,-0.04,-0.36)],)*2,
+ "shrug": ([(0.08,0,-0.06),(0.17,-0.02,-0.22),(0.32,-0.08,-0.08)],)*2,
+ "panic": ([(0.08,0,0.02),(0.16,-0.04,0.2),(0.2,-0.08,0.44)],)*2,
+ "hold":  ([(0.05,-0.04,-0.06),(0.08,-0.18,-0.22),(0.0,-0.34,-0.16)],)*2,
+ "point": ([(0.05,0,-0.05),(0.1,-0.02,-0.28),(0.12,-0.04,-0.5)],[(0.08,-0.06,-0.02),(0.18,-0.22,0.02),(0.3,-0.42,0.1)]),
+ "wave":  ([(0.05,0,-0.05),(0.1,-0.02,-0.28),(0.12,-0.04,-0.5)],[(0.08,0,0.0),(0.2,-0.02,0.08),(0.26,-0.06,0.34)]),
+ "explain":([(0.05,-0.03,-0.06),(0.12,-0.16,-0.18),(0.24,-0.3,-0.08)],[(0.05,0,-0.05),(0.1,-0.02,-0.28),(0.12,-0.04,-0.5)]),
+}
+def keeper(loc,yaw=0,face="smug",arms=None,pose=None):
+    arms=list(POSES[pose]) if pose else arms
+    return Character("keeper",loc,yaw,face=face).build(R=0.3,torso_w=0.16,coat=(1.0,0.66,0.02),buttons=3,hat="beanie",beard=True,
         shirt=(1.0,0.66,0.02),shoes=(0.08,0.06,0.05),arms=arms)
-def engineer(loc,yaw=0,face="happy",arms=None):
-    return Character("engineer",loc,yaw,face=face).build(R=0.25,hat="cap",tie=(0.17,0.32,0.68),arms=arms)
+def engineer(loc,yaw=0,face="happy",arms=None,pose=None):
+    arms=list(POSES[pose]) if pose else arms
+    return Character("engineer",loc,yaw,face=face).build(R=0.29,torso_w=0.15,hair=(0.4,0.22,0.1),tie=(0.17,0.32,0.68),arms=arms)

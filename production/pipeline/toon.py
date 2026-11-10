@@ -44,9 +44,10 @@ def image_mat(name,path,emit=0.0,alpha=True,rough=0.8):
     if alpha: link(nt,t.outputs['Alpha'],p.inputs['Alpha'])
     return m
 
+FAST=os.environ.get('FAST','1')=='1'   # fast pipeline: crisp boxes (no bevels), ink lines get baked into textures
 def _finish(o,m,bevel,coll):
     if m: o.data.materials.append(m)
-    if bevel:
+    if bevel and not FAST:
         b=o.modifiers.new("bevel",'BEVEL'); b.width=bevel; b.segments=2; b.limit_method='ANGLE'
     if coll:
         for c in o.users_collection: c.objects.unlink(o)
