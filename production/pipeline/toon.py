@@ -19,8 +19,8 @@ def mat(name,col,rough=0.75,spec=0.2,emit=0.0,vary=0.0,ink=False):
     m=bpy.data.materials.new(name); m.use_nodes=True; nt=m.node_tree; n=nt.nodes; p=n["Principled BSDF"]
     p.inputs["Roughness"].default_value=rough; p.inputs["Specular IOR Level"].default_value=spec
     if vary:
-        oi=n.new('ShaderNodeObjectInfo'); mr=n.new('ShaderNodeMapRange'); mr.inputs[3].default_value=1-vary; mr.inputs[4].default_value=1+vary*0.6
-        link(nt,oi.outputs['Random'],mr.inputs[0])
+        oi=n.new('ShaderNodeAttribute'); oi.attribute_name='rand'; oi.attribute_type='GEOMETRY'; mr=n.new('ShaderNodeMapRange'); mr.inputs[3].default_value=1-vary; mr.inputs[4].default_value=1+vary*0.6
+        link(nt,oi.outputs['Fac'],mr.inputs[0])
         mx=n.new('ShaderNodeMix'); mx.data_type='RGBA'; mx.blend_type='MULTIPLY'; mx.inputs['Factor'].default_value=1
         mx.inputs['A'].default_value=(*col,1); link(nt,mr.outputs[0],mx.inputs['B'])
         # faint grain so surfaces are not dead flat

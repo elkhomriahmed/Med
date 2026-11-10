@@ -14,13 +14,16 @@ ch.engineer((0.5,0.65,0),yaw=math.radians(-40),face="happy",arms=[[(0.05,-0.02,-
 faces=set(bpy.data.collections["faces"].all_objects)
 objs=[o for o in sc.objects if o.type in ('MESH','CURVE') and o not in faces]
 objs=bake.to_mesh(objs); objs=[o for o in objs if o.type=='MESH']
+for o in objs:   # unparent with transforms kept so the merged mesh stays in place
+    mw=o.matrix_world.copy(); o.parent=None; o.matrix_world=mw
+objs=[bake.join(objs,"world")]
 print("objects",len(objs),"build",round(time.time()-T0,1),flush=True)
 t=time.time(); bake.unwrap(objs); print("UNWRAP",round(time.time()-t,1),flush=True)
 AS=int(os.environ.get("ATLAS","4096")); LS=int(os.environ.get("LIGHT","2048")); SPP=int(os.environ.get("SPP","32"))
 alb=bake.img_np(bake.bake_pass(objs,'DIFFUSE',AS,1,['COLOR']))
 lit=bake.img_np(bake.bake_pass(objs,'DIFFUSE',LS,SPP,['DIRECT','INDIRECT']))
 emi=bake.img_np(bake.bake_pass(objs,'EMIT',LS,1))
-t=time.time(); ink=bake.ink_mask(objs,AS,int(os.environ.get("INKW","5")),skip=("view","keeper","engineer","limb","tube","rug","curtain"))
+t=time.time(); ink=bake.ink_mask(objs,AS,int(os.environ.get("INKW","5")),skip=())
 print("INK",round(time.time()-t,1),flush=True)
 # light can be noisy at low spp: smooth it a little (shadow edges stay readable)
 import cv2, numpy as np

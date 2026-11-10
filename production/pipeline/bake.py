@@ -10,6 +10,20 @@ def to_mesh(objs):
     bpy.ops.object.convert(target='MESH')
     return [o for o in bpy.context.selected_objects]
 
+def join(objs,name):
+    """Merge into one mesh (Cycles bakes one object fast, hundreds slowly). Per-object random shade kept as attribute 'rand'."""
+    import random
+    for o in objs:
+        a=o.data.attributes.get("rand") or o.data.attributes.new("rand",'FLOAT','POINT')
+        r=random.random(); a.data.foreach_set("value",[r]*len(o.data.vertices))
+        o.data.uv_layers[0].name="UVMap" if len(o.data.uv_layers) else None
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in objs: o.select_set(True)
+    bpy.context.view_layer.objects.active=objs[0]
+    bpy.ops.object.join(); j=bpy.context.view_layer.objects.active; j.name=name
+    bpy.ops.object.transform_apply(location=False,rotation=False,scale=False)
+    return j
+
 def unwrap(objs,margin=0.003):
     for o in objs:
         if "bake" not in o.data.uv_layers:
