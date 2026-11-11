@@ -116,6 +116,8 @@ for r in rigs.values():
     ms=r["mesh"].data.materials
     for i,m in enumerate(ms):
         if m and m.name.startswith("inkshell"): ms[i]=INKM
+    bpy.ops.object.select_all(action='DESELECT'); r["mesh"].select_set(True); bpy.context.view_layer.objects.active=r["mesh"]
+    bpy.ops.object.modifier_apply(modifier="shell")
     mw=r["mesh"].matrix_world.copy(); r["mesh"].parent=r["A"]; r["mesh"].matrix_world=mw
 bake.workbench(sc); sc.display.shading.use_dof=False; sc.display.render_aa=E("AA","8")
 print("PREP TOTAL",round(time.time()-T0,1),flush=True)
@@ -127,14 +129,19 @@ def pulse(t,t0,up=0.08,down=0.25):   # 0->1->0 quick bump
     return 1-ss((t-t0-up)/down)
 T_HID,T_COIN,T_HOUSE=tw("hid"),tw("coin"),tw("house")
 T_SON,T_YEARS,T_TEAR,T_OUT=tw("son"),tw("years"),tw("tearing"),tw("out")
-REL=T_HID+0.12; LAND=T_COIN+0.12
-CAMK=[ # t, cam, tgt, lens
- (0.00,(1.7,-3.1,2.5),(-1.2,0.3,1.2),22),
- (0.30,(-0.62,-1.05,1.38),(-1.25,0.32,1.27),33),
- (REL,(-0.5,-1.25,1.3),(-1.2,0.3,1.15),32),
- (LAND+0.05,(-0.45,-1.5,1.38),(-1.1,0.12,0.88),27),
- (1.08,(-0.42,-1.55,1.36),(-1.1,0.12,0.86),28),
- (1.33,(-2.1,-1.85,0.95),(-1.55,-1.0,0.03),30),
+T_UNDER,T_FLOOR=tw("under"),tw("floorboard")
+REL=T_UNDER-0.05; LAND=T_FLOOR+0.12
+KF=Vector((-1.35,0.35,1.55))
+CAMK=[ # t, cam, tgt, lens  -- close on the keeper's face, punch-ins on his expressions
+ (0.00,(1.7,-3.1,2.5),(-1.2,0.3,1.3),22),
+ (0.30,(-0.95,-0.55,1.58),(-1.33,0.33,1.5),34),
+ (T_HID+0.08,(-0.97,-0.5,1.58),(-1.33,0.33,1.5),40),
+ (T_COIN,(-0.97,-0.48,1.58),(-1.33,0.33,1.52),40),
+ (T_COIN+0.1,(-0.95,-0.55,1.56),(-1.33,0.33,1.5),46),
+ (REL,(-0.92,-0.62,1.52),(-1.3,0.33,1.45),38),
+ (LAND,(-0.5,-1.5,1.35),(-1.1,0.12,0.8),27),
+ (1.98,(-0.48,-1.55,1.33),(-1.1,0.12,0.78),28),
+ (2.22,(-2.1,-1.85,0.95),(-1.55,-1.0,0.03),30),
  (T_HOUSE,(-0.6,-1.92,0.9),(-0.75,-1.0,0.03),31),
  (T_HOUSE+0.12,(-0.5,-1.75,0.8),(-0.7,-1.0,0.03),35),
  (3.02,(-0.25,-1.85,0.85),(-0.55,-1.0,0.03),34),
@@ -150,9 +157,9 @@ def camstate(t):
             u=ss((t-a)/(b-a)); L=lambda p,q: Vector(p).lerp(Vector(q),u); return L(c0,c1),L(t0,t1),l0+(l1-l0)*u
     k=CAMK[-1]; return Vector(k[1]),Vector(k[2]),k[3]
 rng=np.random.default_rng(5); SHAKE=rng.standard_normal((NF+5,3))
-FACES={"keeper":[(0,"smug"),(T_HID,"evil"),(LAND,"proud"),(1.3,"smug")],
+FACES={"keeper":[(0,"smug"),(T_HID,"evil"),(T_COIN,"smug"),(REL,"evil"),(LAND,"proud")],
        "engineer":[(0,"worried"),(T_YEARS,"sleepy"),(T_TEAR,"furious"),(T_OUT,"angry")]}
-EV=[("whoosh",0.0),("whoosh",1.08),("whoosh",3.02),("clink",LAND),("pop",T_HID),("pop",T_HOUSE),("crack",T_TEAR),("pop",T_OUT)]
+EV=[("whoosh",0.0),("whoosh",1.98),("whoosh",3.02),("clink",LAND),("pop",T_HID),("pop",T_COIN),("pop",T_HOUSE),("crack",T_TEAR),("pop",T_OUT)]
 json.dump(EV,open(OUT+"/sfx.json","w"))
 KA=rigs["keeper"]; NA=rigs["engineer"]
 k0=(KA["A"].location.copy(),KA["A"].rotation_euler.copy()); n0=(NA["A"].location.copy(),NA["A"].rotation_euler.copy())
@@ -211,4 +218,15 @@ if E("KEYS"):
         sc.frame_set(f); sc.render.filepath=f"{OUT}/k_{f:04d}.png"; bpy.ops.render.render(write_still=True)
     sys.exit(0)
 sc.render.filepath=OUT+"/f_"; sc.render.image_settings.file_format='PNG'
+NP=int(E("NPROC","2"))
+if NP>1:
+    import subprocess
+    json.dump({n:[(s,os.path.join(ch.FACEDIR,f"{n}_{fc}.png")) for s,fc in seq] for n,seq in FACES.items()},open(OUT+"/faces.json","w"))
+    bpy.ops.wm.save_as_mainfile(filepath=OUT+"/scene.blend")
+    t=time.time(); step=math.ceil(NF/NP); procs=[]
+    for i in range(NP):
+        a=1+i*step; b=min(NF,(i+1)*step)
+        procs.append(subprocess.Popen([sys.executable,os.path.join(os.path.dirname(os.path.abspath(__file__)),"render_range.py"),OUT,str(a),str(b)],env=dict(os.environ)))
+    for p in procs: p.wait()
+    print("FRAMES",NF,round(time.time()-t,1),flush=True); sys.exit(0)
 t=time.time(); bpy.ops.render.render(animation=True); print("FRAMES",NF,round(time.time()-t,1),flush=True)
