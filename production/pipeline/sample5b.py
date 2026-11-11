@@ -140,12 +140,9 @@ CAMK=[ # t, cam, tgt, lens  -- keeper full body (like v3), punch-ins on his expr
  (T_COIN,(-0.65,-0.98,1.38),(-1.25,0.32,1.16),33),
  (T_COIN+0.1,(-0.66,-0.95,1.38),(-1.25,0.32,1.18),37),
  (REL,(-0.6,-1.15,1.35),(-1.22,0.3,1.08),31),
- (LAND,(-0.55,-2.0,1.25),(-1.15,-0.6,0.35),27),
- (1.98,(-0.55,-2.05,1.22),(-1.18,-0.7,0.3),28),
- (2.22,(-2.1,-1.85,0.95),(-1.55,-1.0,0.03),30),
- (T_HOUSE,(-0.6,-1.92,0.9),(-0.75,-1.0,0.03),31),
- (T_HOUSE+0.12,(-0.5,-1.75,0.8),(-0.7,-1.0,0.03),35),
- (3.02,(-0.25,-1.85,0.85),(-0.55,-1.0,0.03),34),
+ (LAND+0.3,(LANDP[0]+0.3,LANDP[1]-0.85,0.42),(LANDP[0],LANDP[1],0.02),30),
+ (T_HOUSE,(LANDP[0]+0.55,LANDP[1]-0.9,0.45),(LANDP[0]+0.35,LANDP[1],0.02),31),
+ (3.02,(-0.2,-1.8,0.6),(-0.45,-0.95,0.02),33),
  (3.27,(-0.15,-0.95,1.25),(0.38,0.8,1.08),30),
  (T_TEAR,(-0.06,-0.8,1.28),(0.38,0.85,1.12),33),
  (T_TEAR+0.1,(0.02,-0.6,1.3),(0.38,0.85,1.25),40),
@@ -160,9 +157,11 @@ def camstate(t):
 rng=np.random.default_rng(5); SHAKE=rng.standard_normal((NF+5,3))
 FACES={"keeper":[(0,"smug"),(T_HID,"evil"),(T_COIN,"smug"),(REL,"evil"),(LAND,"proud")],
        "engineer":[(0,"worried"),(T_YEARS,"sleepy"),(T_TEAR,"furious"),(T_OUT,"angry")]}
-EV=[("whoosh",0.0),("whoosh",1.98),("whoosh",3.02),("clink",LAND),("pop",T_HID),("pop",T_COIN),("pop",T_HOUSE),("crack",T_TEAR),("pop",T_OUT)]
+EV=[("whoosh",0.0),("whoosh",REL),("whoosh",3.02),("clink",LAND),("pop",T_HID),("pop",T_COIN),("pop",T_HOUSE),("crack",T_TEAR),("pop",T_OUT)]
 json.dump(EV,open(OUT+"/sfx.json","w"))
 KA=rigs["keeper"]; NA=rigs["engineer"]
+bpy.context.view_layer.update()
+THROWP=max(KA["piv"],key=lambda q:q[2].matrix_world.translation.x)[0]   # arm on the camera's right (visible)
 k0=(KA["A"].location.copy(),KA["A"].rotation_euler.copy()); n0=(NA["A"].location.copy(),NA["A"].rotation_euler.copy())
 def arm(P,side,raise_,fwd=0.0): P.rotation_euler=(fwd,-side*raise_,0)
 for f in range(1,NF+1):
@@ -178,7 +177,9 @@ for f in range(1,NF+1):
     A.location=k0[0]+Vector((0,0,bob+0.03*throw)); A.rotation_euler=(k0[1].x-0.18*hid+0.1*throw,k0[1].y+0.05*math.sin(2*math.pi*1.2*t),k0[1].z)
     A.scale=(1+0.05*hid,1+0.05*hid,1-0.07*hid+0.05*throw)
     for P,side,h in KA["piv"]:
-        if side>0: arm(P,side,0.45+0.6*wind+0.5*throw,fwd=-0.5*wind+0.9*throw)
+        if P==THROWP:
+            hold=1-ss((t-(REL-0.22))/0.1)
+            arm(P,side,0.2*hold+0.5*wind+0.4*throw,fwd=-0.6*hold+0.8*wind-1.2*throw)
         else: arm(P,side,0.55+0.3*hid+0.12*math.sin(2*math.pi*1.5*t))
     # engineer: tired slump, then the yank
     A=NA["A"]; bob=0.012*math.sin(2*math.pi*2.1*t+1); sl=ss((t-T_YEARS)/0.25)*(1-ss((t-T_TEAR)/0.05))
@@ -191,22 +192,26 @@ for f in range(1,NF+1):
             o.keyframe_insert("location",frame=f); o.keyframe_insert("rotation_euler",frame=f); o.keyframe_insert("scale",frame=f)
     # coin toss: from keeper's throwing hand to the open board
     bpy.context.view_layer.update()
-    rh=[h for P,s,h in KA["piv"] if s>0][0].matrix_world.translation
-    if t<REL: coin.scale=(1,1,1); coin.location=rh; coin.rotation_euler=(1.4,0,0)
+    rh=[h for P,s,h in KA["piv"] if P==THROWP][0].matrix_world.translation
+    A_=KA["A"]; hold_pt=A_.location+Vector((0.2,-0.28,0.98))+Vector((0.04,0.06,0.28))*wind
+    rh=hold_pt
+    if t<REL:
+        coin.scale=(1,1,1); coin.location=hold_pt; coin.rotation_euler=(math.pi/2,0,math.radians(25))
     else:
         u=min(1,(t-REL)/(LAND-REL)); p0=Vector(rh) if u==0 else coin.get("p0",None)
         if "p0" not in coin: coin["p0"]=list(rh)
         a=Vector(coin["p0"]); b=Vector((LANDP[0],LANDP[1],0.022)); p=a.lerp(b,u); p.z+=0.35*math.sin(math.pi*u)
         if t>LAND:
             v=t-LAND; p.z+=abs(math.sin(v*18))*0.06*math.exp(-v*9)
-        coin.location=p; coin.rotation_euler=(1.4+min(u,1)*10,min(u,1)*5,0); coin.scale=(1,1,1)
-    # camera follows the coin during the flight
-    if REL-0.05<=t<=LAND+0.25:
-        w=ss((t-(REL-0.05))/0.12)*(1-ss((t-LAND-0.1)/0.15))
-        tgt.location=tgt.location.lerp(coin.location,0.75*w); cam.data.lens=cam.data.lens*(1-w)+26*w
-        cam.data.dof.focus_distance=(cam.location-tgt.location).length
-        tgt.keyframe_insert("location",frame=f); cam.data.keyframe_insert("lens",frame=f)
+        coin.location=p; coin.rotation_euler=(math.pi/2+0.5*math.sin(min(u,1)*12),0,math.radians(25)+min(u,1)*2.5); coin.scale=(1,1,1)
     coin.keyframe_insert("location",frame=f); coin.keyframe_insert("rotation_euler",frame=f); coin.keyframe_insert("scale",frame=f)
+    # camera locks onto the coin: from the throw until it settles beside the others
+    w=ss((t-(REL-0.02))/0.1)*(1-ss((t-(LAND+0.3))/0.2))
+    if w>0:
+        cpos=coin.location.copy(); off=Vector((0.3,-0.85,0.4))
+        cam.location=cam.location.lerp(cpos+off,w); tgt.location=tgt.location.lerp(cpos,w); cam.data.lens=cam.data.lens*(1-w)+30*w
+        cam.data.dof.focus_distance=(cam.location-tgt.location).length
+        cam.keyframe_insert("location",frame=f); tgt.keyframe_insert("location",frame=f); cam.data.keyframe_insert("lens",frame=f)
 for fc_owner in (cam,tgt,coin,cam.data,cam.data.dof):
     ad=getattr(fc_owner,"animation_data",None)
 chars={"keeper":K,"engineer":N}
@@ -216,7 +221,7 @@ def on_frame(scene,*a):
 bpy.app.handlers.frame_change_pre.append(on_frame)
 if E("KEYS"):
     for f in map(int,E("KEYS").split(",")):
-        sc.frame_set(f); sc.render.filepath=f"{OUT}/k_{f:04d}.png"; bpy.ops.render.render(write_still=True)
+        sc.frame_set(f); print('CDBG',f,tuple(round(x,2) for x in coin.matrix_world.translation),tuple(round(x,2) for x in coin.scale),tuple(round(x,2) for x in tgt.location),coin.hide_render,coin.visible_get(),[c.name for c in coin.users_collection],len(coin.data.polygons),[m.name for m in coin.data.materials]); sc.render.filepath=f"{OUT}/k_{f:04d}.png"; bpy.ops.render.render(write_still=True)
     sys.exit(0)
 sc.render.filepath=OUT+"/f_"; sc.render.image_settings.file_format='PNG'
 NP=int(E("NPROC","2"))
