@@ -161,7 +161,11 @@ EV=[("whoosh",0.0),("whoosh",REL),("whoosh",3.02),("clink",LAND),("pop",T_HID),(
 json.dump(EV,open(OUT+"/sfx.json","w"))
 KA=rigs["keeper"]; NA=rigs["engineer"]
 bpy.context.view_layer.update()
-THROWP=max(KA["piv"],key=lambda q:q[2].matrix_world.translation.x)[0]   # arm on the camera's right (visible)
+THROWP,_,THROWH=max(KA["piv"],key=lambda q:q[2].matrix_world.translation.x)   # arm on the camera's right (visible)
+from mathutils import Quaternion, Euler
+ARot0=KA["A"].matrix_world.to_quaternion()
+V0=ARot0.inverted()@(THROWH.matrix_world.translation-THROWP.matrix_world.translation)   # rest arm vector, A-local
+THROWP.rotation_mode='QUATERNION'
 k0=(KA["A"].location.copy(),KA["A"].rotation_euler.copy()); n0=(NA["A"].location.copy(),NA["A"].rotation_euler.copy())
 def arm(P,side,raise_,fwd=0.0): P.rotation_euler=(fwd,-side*raise_,0)
 for f in range(1,NF+1):
@@ -178,8 +182,14 @@ for f in range(1,NF+1):
     A.scale=(1+0.05*hid,1+0.05*hid,1-0.07*hid+0.05*throw)
     for P,side,h in KA["piv"]:
         if P==THROWP:
-            hold=1-ss((t-(REL-0.22))/0.1)
-            arm(P,side,0.2*hold+0.5*wind+0.4*throw,fwd=-0.6*hold+0.8*wind-1.2*throw)
+            bpy.context.view_layer.update()
+            Arot=A.matrix_world.to_quaternion(); sh=P.matrix_world.translation.copy()
+            aim=A.location+Vector((0.2,-0.28,0.98))+Vector((0.04,0.06,0.28))*wind     # in front of the chest, lifted on wind-up
+            want=Arot.inverted()@(aim-sh)
+            q_aim=V0.rotation_difference(want)
+            q_thr=Euler((-1.2*throw+0.8*wind,-side*(0.5*wind+0.4*throw),0)).to_quaternion()
+            P.rotation_quaternion=q_aim if t<REL else q_thr
+            P.keyframe_insert("rotation_quaternion",frame=f)
         else: arm(P,side,0.55+0.3*hid+0.12*math.sin(2*math.pi*1.5*t))
     # engineer: tired slump, then the yank
     A=NA["A"]; bob=0.012*math.sin(2*math.pi*2.1*t+1); sl=ss((t-T_YEARS)/0.25)*(1-ss((t-T_TEAR)/0.05))
@@ -193,7 +203,7 @@ for f in range(1,NF+1):
     # coin toss: from keeper's throwing hand to the open board
     bpy.context.view_layer.update()
     rh=[h for P,s,h in KA["piv"] if P==THROWP][0].matrix_world.translation
-    A_=KA["A"]; hold_pt=A_.location+Vector((0.2,-0.28,0.98))+Vector((0.04,0.06,0.28))*wind
+    hold_pt=THROWH.matrix_world.translation.copy()+Vector((0,-0.03,0))   # coin sits in the hand
     rh=hold_pt
     if t<REL:
         coin.scale=(1,1,1); coin.location=hold_pt; coin.rotation_euler=(math.pi/2,0,math.radians(25))
@@ -229,9 +239,9 @@ if NP>1:
     import subprocess
     json.dump({n:[(s,os.path.join(ch.FACEDIR,f"{n}_{fc}.png")) for s,fc in seq] for n,seq in FACES.items()},open(OUT+"/faces.json","w"))
     bpy.ops.wm.save_as_mainfile(filepath=OUT+"/scene.blend")
-    t=time.time(); step=math.ceil(NF/NP); procs=[]
+    t=time.time(); NFR=min(NF,int(E('FMAX',str(NF)))); step=math.ceil(NFR/NP); procs=[]
     for i in range(NP):
-        a=1+i*step; b=min(NF,(i+1)*step)
+        a=1+i*step; b=min(NFR,(i+1)*step)
         procs.append(subprocess.Popen([sys.executable,os.path.join(os.path.dirname(os.path.abspath(__file__)),"render_range.py"),OUT,str(a),str(b)],env=dict(os.environ)))
     for p in procs: p.wait()
     print("FRAMES",NF,round(time.time()-t,1),flush=True); sys.exit(0)
