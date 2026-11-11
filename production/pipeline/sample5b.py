@@ -83,8 +83,8 @@ if E("DBG"):
     sys.exit(0)
 # live props
 coin=bpy.data.objects.new("tosscoin",bpy.data.meshes.new("tc")); sc.collection.objects.link(coin)
-bpy.ops.mesh.primitive_cylinder_add(radius=0.05,depth=0.012,vertices=24); tc=bpy.context.object; coin.data=tc.data; bpy.data.objects.remove(tc)
-coin.data.materials.append(solid("goldsolid",(1.0,0.8,0.25))); coin.scale=(0,0,0)
+bpy.ops.mesh.primitive_cylinder_add(radius=0.085,depth=0.018,vertices=32); tc=bpy.context.object; coin.data=tc.data; bpy.data.objects.remove(tc)
+coin.data.materials.append(solid("goldsolid",(1.0,0.85,0.2))); coin.scale=(1,1,1)
 # ---------- bake: set + each character body ----------
 faces=set(bpy.data.collections["faces"].all_objects); live={coin}|{o for r in rigs.values() for P,_,h in r["piv"] for o in (h,)}
 armset={c for r in rigs.values() for P,_,_ in r["piv"] for c in P.children}
@@ -110,11 +110,14 @@ def do(g,AS,LS,is_set):
         ao=cv2.GaussianBlur(bake.img_np(bake.bake_pass([g],'AO',LS,32)),(0,0),0.8); lit=lit*(0.3+0.7*ao)
     ink=np.zeros(alb.shape[:2],np.float32) if is_set else bake.ink_mask([g],AS,3,min_angle=70)
     bake.apply_baked([g],bake.compose(alb,lit,emi,ink,exposure=1.0,sat=1.15,contrast=1.1),name="atlas_"+g.name)
-do(setg,4096,1024,True)
+do(setg,int(E('ATLAS','2048')),512,True)
 for r in rigs.values():
-    do(r["mesh"],2048,512,False); bake.ink_shell([r["mesh"]],float(E("CSHELL","0.017")))
+    do(r["mesh"],1024,512,False); bake.ink_shell([r["mesh"]],float(E("CSHELL","0.017")))
+    ms=r["mesh"].data.materials
+    for i,m in enumerate(ms):
+        if m and m.name.startswith("inkshell"): ms[i]=INKM
     mw=r["mesh"].matrix_world.copy(); r["mesh"].parent=r["A"]; r["mesh"].matrix_world=mw
-bake.workbench(sc); sc.display.shading.use_dof=True; sc.display.render_aa=E("AA","5")
+bake.workbench(sc); sc.display.shading.use_dof=False; sc.display.render_aa=E("AA","8")
 print("PREP TOTAL",round(time.time()-T0,1),flush=True)
 # ---------- animation (procedural, keyed per frame) ----------
 def ss(x): x=min(1,max(0,x)); return x*x*(3-2*x)
@@ -124,11 +127,11 @@ def pulse(t,t0,up=0.08,down=0.25):   # 0->1->0 quick bump
     return 1-ss((t-t0-up)/down)
 T_HID,T_COIN,T_HOUSE=tw("hid"),tw("coin"),tw("house")
 T_SON,T_YEARS,T_TEAR,T_OUT=tw("son"),tw("years"),tw("tearing"),tw("out")
-REL=T_COIN-0.28; LAND=T_COIN+0.05
+REL=T_HID+0.12; LAND=T_COIN+0.12
 CAMK=[ # t, cam, tgt, lens
  (0.00,(1.7,-3.1,2.5),(-1.2,0.3,1.2),22),
  (0.30,(-0.62,-1.05,1.38),(-1.25,0.32,1.27),33),
- (REL,(-0.6,-1.1,1.36),(-1.25,0.32,1.25),36),
+ (REL,(-0.5,-1.25,1.3),(-1.2,0.3,1.15),32),
  (LAND+0.05,(-0.45,-1.5,1.38),(-1.1,0.12,0.88),27),
  (1.08,(-0.42,-1.55,1.36),(-1.1,0.12,0.86),28),
  (1.33,(-2.1,-1.85,0.95),(-1.55,-1.0,0.03),30),
@@ -181,13 +184,20 @@ for f in range(1,NF+1):
     # coin toss: from keeper's throwing hand to the open board
     bpy.context.view_layer.update()
     rh=[h for P,s,h in KA["piv"] if s>0][0].matrix_world.translation
-    if t<REL-0.25: coin.scale=(0,0,0); coin.location=rh
-    elif t<REL: coin.scale=(1,1,1); coin.location=rh; coin.rotation_euler=(1.4,0,0)
+    if t<REL: coin.scale=(1,1,1); coin.location=rh; coin.rotation_euler=(1.4,0,0)
     else:
         u=min(1,(t-REL)/(LAND-REL)); p0=Vector(rh) if u==0 else coin.get("p0",None)
         if "p0" not in coin: coin["p0"]=list(rh)
         a=Vector(coin["p0"]); b=Vector((HOLE[0],HOLE[1],0.02)); p=a.lerp(b,u); p.z+=0.35*math.sin(math.pi*u)
-        coin.location=p; coin.rotation_euler=(1.4+u*14,u*6,0); coin.scale=(1,1,1)
+        if t>LAND:
+            v=t-LAND; p.z+=abs(math.sin(v*18))*0.06*math.exp(-v*9)
+        coin.location=p; coin.rotation_euler=(1.4+min(u,1)*10,min(u,1)*5,0); coin.scale=(1,1,1)
+    # camera follows the coin during the flight
+    if REL-0.05<=t<=LAND+0.25:
+        w=ss((t-(REL-0.05))/0.12)*(1-ss((t-LAND-0.1)/0.15))
+        tgt.location=tgt.location.lerp(coin.location,0.75*w); cam.data.lens=cam.data.lens*(1-w)+26*w
+        cam.data.dof.focus_distance=(cam.location-tgt.location).length
+        tgt.keyframe_insert("location",frame=f); cam.data.keyframe_insert("lens",frame=f)
     coin.keyframe_insert("location",frame=f); coin.keyframe_insert("rotation_euler",frame=f); coin.keyframe_insert("scale",frame=f)
 for fc_owner in (cam,tgt,coin,cam.data,cam.data.dof):
     ad=getattr(fc_owner,"animation_data",None)
