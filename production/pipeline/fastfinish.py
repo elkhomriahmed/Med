@@ -12,7 +12,7 @@ for k,tm in json.load(open(FR+"/sfx.json")): s,g,o=F[k]; add(s,tm-o,g)
 sfx/=np.abs(sfx).max()
 with wave.open(FR+"/sfx.wav","wb") as w: w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((sfx*0.6*32767).astype(np.int16).tobytes())
 font="/usr/share/fonts/opentype/inter/InterDisplay-Black.otf"
-dt=",".join(f"drawtext=fontfile={font}:text='{w.replace(chr(39),'').replace(',','\\,')}':fontsize=120:fontcolor=white:borderw=11:bordercolor=black:shadowx=4:shadowy=6:shadowcolor=black@0.5:x=(w-text_w)/2:y=h*0.68-34*exp(-(t-{a:.3f})*22)*abs(cos((t-{a:.3f})*28)):enable='between(t,{a:.3f},{(W[i+1][0] if i+1<len(W) else b+0.3):.3f})'" for i,(a,b,w) in enumerate(W))
+dt=",".join(f"drawtext=fontfile={font}:text='{w.replace(chr(39),'').replace(',','\\,')}':fontsize='120*max(0.15\,1-exp(-(t-{a:.3f})*14)*cos((t-{a:.3f})*22))':fontcolor=white:borderw=11:bordercolor=black:shadowx=4:shadowy=6:shadowcolor=black@0.5:x=(w-text_w)/2:y=h*0.68+60-text_h/2:enable='between(t,{a:.3f},{(W[i+1][0] if i+1<len(W) else b+0.3):.3f})'" for i,(a,b,w) in enumerate(W))
 subprocess.run(["ffmpeg","-v","error","-y","-framerate","30","-i",FR+"/f_%04d.png","-i",VO,"-i",FR+"/sfx.wav","-filter_complex",
  f"[0:v]{dt}[v];[2:a]volume=0.35[s];[1:a][s]amix=inputs=2:duration=first:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=7[a]",
  "-map","[v]","-map","[a]","-c:v","libx264","-preset","veryfast","-crf","18","-pix_fmt","yuv420p","-c:a","aac","-b:a","192k","-shortest",OUT],check=True)

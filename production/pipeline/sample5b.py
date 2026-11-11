@@ -131,16 +131,17 @@ T_HID,T_COIN,T_HOUSE=tw("hid"),tw("coin"),tw("house")
 T_SON,T_YEARS,T_TEAR,T_OUT=tw("son"),tw("years"),tw("tearing"),tw("out")
 T_UNDER,T_FLOOR=tw("under"),tw("floorboard")
 REL=T_UNDER-0.05; LAND=T_FLOOR+0.12
+LANDP=(-1.27,-0.88)   # next to the coins in the open board of the row
 KF=Vector((-1.35,0.35,1.55))
-CAMK=[ # t, cam, tgt, lens  -- close on the keeper's face, punch-ins on his expressions
- (0.00,(1.7,-3.1,2.5),(-1.2,0.3,1.3),22),
- (0.30,(-0.95,-0.55,1.58),(-1.33,0.33,1.5),34),
- (T_HID+0.08,(-0.97,-0.5,1.58),(-1.33,0.33,1.5),40),
- (T_COIN,(-0.97,-0.48,1.58),(-1.33,0.33,1.52),40),
- (T_COIN+0.1,(-0.95,-0.55,1.56),(-1.33,0.33,1.5),46),
- (REL,(-0.92,-0.62,1.52),(-1.3,0.33,1.45),38),
- (LAND,(-0.5,-1.5,1.35),(-1.1,0.12,0.8),27),
- (1.98,(-0.48,-1.55,1.33),(-1.1,0.12,0.78),28),
+CAMK=[ # t, cam, tgt, lens  -- keeper full body (like v3), punch-ins on his expressions
+ (0.00,(1.7,-3.1,2.5),(-1.2,0.3,1.2),22),
+ (0.30,(-0.62,-1.05,1.38),(-1.25,0.32,1.12),30),
+ (T_HID+0.08,(-0.64,-1.0,1.38),(-1.25,0.32,1.15),33),
+ (T_COIN,(-0.65,-0.98,1.38),(-1.25,0.32,1.16),33),
+ (T_COIN+0.1,(-0.66,-0.95,1.38),(-1.25,0.32,1.18),37),
+ (REL,(-0.6,-1.15,1.35),(-1.22,0.3,1.08),31),
+ (LAND,(-0.55,-2.0,1.25),(-1.15,-0.6,0.35),27),
+ (1.98,(-0.55,-2.05,1.22),(-1.18,-0.7,0.3),28),
  (2.22,(-2.1,-1.85,0.95),(-1.55,-1.0,0.03),30),
  (T_HOUSE,(-0.6,-1.92,0.9),(-0.75,-1.0,0.03),31),
  (T_HOUSE+0.12,(-0.5,-1.75,0.8),(-0.7,-1.0,0.03),35),
@@ -195,7 +196,7 @@ for f in range(1,NF+1):
     else:
         u=min(1,(t-REL)/(LAND-REL)); p0=Vector(rh) if u==0 else coin.get("p0",None)
         if "p0" not in coin: coin["p0"]=list(rh)
-        a=Vector(coin["p0"]); b=Vector((HOLE[0],HOLE[1],0.02)); p=a.lerp(b,u); p.z+=0.35*math.sin(math.pi*u)
+        a=Vector(coin["p0"]); b=Vector((LANDP[0],LANDP[1],0.022)); p=a.lerp(b,u); p.z+=0.35*math.sin(math.pi*u)
         if t>LAND:
             v=t-LAND; p.z+=abs(math.sin(v*18))*0.06*math.exp(-v*9)
         coin.location=p; coin.rotation_euler=(1.4+min(u,1)*10,min(u,1)*5,0); coin.scale=(1,1,1)

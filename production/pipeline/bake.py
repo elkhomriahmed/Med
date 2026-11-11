@@ -138,7 +138,8 @@ def ink_shell(objs,thick=0.008,min_dim=0.0,wobble=0.0):
             vg=o.vertex_groups.new(name="inkw")
             for v in o.data.vertices:
                 w=0.5+0.5*noise.noise(Vector(v.co)*9.0); vg.add([v.index],max(0.0,min(1.0,w)),'REPLACE')
-            s.vertex_group="inkw"; s.thickness_vertex_group=1.0-wobble; s.offset=1; s.use_flip_normals=True; s.material_offset=len(o.data.materials)-1; s.use_rim=False
+            s.vertex_group="inkw"; s.thickness_vertex_group=1.0-wobble
+        s.offset=1; s.use_flip_normals=True; s.material_offset=len(o.data.materials)-1; s.use_rim=False
 
 def workbench(sc,aa='8'):
     sc.render.engine='BLENDER_WORKBENCH'; sh=sc.display.shading
