@@ -83,7 +83,7 @@ if E("DBG"):
     sys.exit(0)
 # live props
 coin=bpy.data.objects.new("tosscoin",bpy.data.meshes.new("tc")); sc.collection.objects.link(coin)
-bpy.ops.mesh.primitive_cylinder_add(radius=0.085,depth=0.018,vertices=32); tc=bpy.context.object; coin.data=tc.data; bpy.data.objects.remove(tc)
+bpy.ops.mesh.primitive_cylinder_add(radius=0.05,depth=0.012,vertices=32); tc=bpy.context.object; coin.data=tc.data; bpy.data.objects.remove(tc)
 coin.data.materials.append(solid("goldsolid",(1.0,0.85,0.2))); coin.scale=(1,1,1)
 # ---------- bake: set + each character body ----------
 faces=set(bpy.data.collections["faces"].all_objects); live={coin}|{o for r in rigs.values() for P,_,h in r["piv"] for o in (h,)}
@@ -140,7 +140,7 @@ CAMK=[ # t, cam, tgt, lens  -- keeper full body (like v3), punch-ins on his expr
  (T_COIN,(-0.65,-0.98,1.38),(-1.25,0.32,1.16),33),
  (T_COIN+0.1,(-0.66,-0.95,1.38),(-1.25,0.32,1.18),37),
  (REL,(-0.6,-1.15,1.35),(-1.22,0.3,1.08),31),
- (LAND+0.3,(LANDP[0]+0.3,LANDP[1]-0.85,0.42),(LANDP[0],LANDP[1],0.02),30),
+ (LAND+0.3,(LANDP[0]+0.45,LANDP[1]-1.45,0.67),(LANDP[0],LANDP[1],0.02),30),
  (T_HOUSE,(LANDP[0]+0.55,LANDP[1]-0.9,0.45),(LANDP[0]+0.35,LANDP[1],0.02),31),
  (3.02,(-0.2,-1.8,0.6),(-0.45,-0.95,0.02),33),
  (3.27,(-0.15,-0.95,1.25),(0.38,0.8,1.08),30),
@@ -161,10 +161,12 @@ EV=[("whoosh",0.0),("whoosh",REL),("whoosh",3.02),("clink",LAND),("pop",T_HID),(
 json.dump(EV,open(OUT+"/sfx.json","w"))
 KA=rigs["keeper"]; NA=rigs["engineer"]
 bpy.context.view_layer.update()
-THROWP,_,THROWH=max(KA["piv"],key=lambda q:q[2].matrix_world.translation.x)   # arm on the camera's right (visible)
+def HP(h):   # where the hand is actually drawn (its origin is offset from the mesh)
+    bb=[h.matrix_world@Vector(c) for c in h.bound_box]; return sum(bb,Vector())/8
+THROWP,_,THROWH=max(KA["piv"],key=lambda q:HP(q[2]).x)   # hand drawn on the camera's right (visible)
 from mathutils import Quaternion, Euler
 ARot0=KA["A"].matrix_world.to_quaternion()
-V0=ARot0.inverted()@(THROWH.matrix_world.translation-THROWP.matrix_world.translation)   # rest arm vector, A-local
+V0=ARot0.inverted()@(HP(THROWH)-THROWP.matrix_world.translation)   # rest arm vector, A-local
 THROWP.rotation_mode='QUATERNION'
 k0=(KA["A"].location.copy(),KA["A"].rotation_euler.copy()); n0=(NA["A"].location.copy(),NA["A"].rotation_euler.copy())
 def arm(P,side,raise_,fwd=0.0): P.rotation_euler=(fwd,-side*raise_,0)
@@ -203,7 +205,7 @@ for f in range(1,NF+1):
     # coin toss: from keeper's throwing hand to the open board
     bpy.context.view_layer.update()
     rh=[h for P,s,h in KA["piv"] if P==THROWP][0].matrix_world.translation
-    hold_pt=THROWH.matrix_world.translation.copy()+Vector((0,-0.03,0))   # coin sits in the hand
+    hold_pt=HP(THROWH)+Vector((0,-0.035,0.01))   # coin sits in the drawn hand
     rh=hold_pt
     if t<REL:
         coin.scale=(1,1,1); coin.location=hold_pt; coin.rotation_euler=(math.pi/2,0,math.radians(25))
@@ -218,7 +220,7 @@ for f in range(1,NF+1):
     # camera locks onto the coin: from the throw until it settles beside the others
     w=ss((t-(REL-0.02))/0.1)*(1-ss((t-(LAND+0.3))/0.2))
     if w>0:
-        cpos=coin.location.copy(); off=Vector((0.3,-0.85,0.4))
+        cpos=coin.location.copy(); off=Vector((0.45,-1.45,0.65))
         cam.location=cam.location.lerp(cpos+off,w); tgt.location=tgt.location.lerp(cpos,w); cam.data.lens=cam.data.lens*(1-w)+30*w
         cam.data.dof.focus_distance=(cam.location-tgt.location).length
         cam.keyframe_insert("location",frame=f); tgt.keyframe_insert("location",frame=f); cam.data.keyframe_insert("lens",frame=f)
@@ -231,7 +233,14 @@ def on_frame(scene,*a):
 bpy.app.handlers.frame_change_pre.append(on_frame)
 if E("KEYS"):
     for f in map(int,E("KEYS").split(",")):
-        sc.frame_set(f); print('CDBG',f,tuple(round(x,2) for x in coin.matrix_world.translation),tuple(round(x,2) for x in coin.scale),tuple(round(x,2) for x in tgt.location),coin.hide_render,coin.visible_get(),[c.name for c in coin.users_collection],len(coin.data.polygons),[m.name for m in coin.data.materials]); sc.render.filepath=f"{OUT}/k_{f:04d}.png"; bpy.ops.render.render(write_still=True)
+        sc.frame_set(f); bpy.context.view_layer.update()
+        from bpy_extras.object_utils import world_to_camera_view as w2c
+        rx,ry=sc.render.resolution_x*sc.render.resolution_percentage/100,sc.render.resolution_y*sc.render.resolution_percentage/100
+        for nm,ob in (("coin",coin),("shoulder",THROWP)):
+            p=w2c(sc,cam,ob.matrix_world.translation); print("PROJ",f,nm,tuple(round(x,2) for x in ob.matrix_world.translation),"px",int(p.x*rx),int((1-p.y)*ry))
+        for P,s,h in KA["piv"]:
+            bb=[h.matrix_world@Vector(c) for c in h.bound_box]; cen=sum(bb,Vector())/8; p=w2c(sc,cam,cen); print("PROJ",f,"hand_bbox",h.name,P==THROWP,tuple(round(x,2) for x in cen),"px",int(p.x*rx),int((1-p.y)*ry))
+        print('CDBG',f,tuple(round(x,2) for x in coin.matrix_world.translation),tuple(round(x,2) for x in coin.scale),tuple(round(x,2) for x in tgt.location),coin.hide_render,coin.visible_get(),[c.name for c in coin.users_collection],len(coin.data.polygons),[m.name for m in coin.data.materials]); sc.render.filepath=f"{OUT}/k_{f:04d}.png"; bpy.ops.render.render(write_still=True)
     sys.exit(0)
 sc.render.filepath=OUT+"/f_"; sc.render.image_settings.file_format='PNG'
 NP=int(E("NPROC","2"))
