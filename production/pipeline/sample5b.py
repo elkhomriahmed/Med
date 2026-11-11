@@ -155,7 +155,7 @@ def camstate(t):
             u=ss((t-a)/(b-a)); L=lambda p,q: Vector(p).lerp(Vector(q),u); return L(c0,c1),L(t0,t1),l0+(l1-l0)*u
     k=CAMK[-1]; return Vector(k[1]),Vector(k[2]),k[3]
 rng=np.random.default_rng(5); SHAKE=rng.standard_normal((NF+5,3))
-FACES={"keeper":[(0,"smug"),(T_HID,"evil"),(T_COIN,"smug"),(REL,"evil"),(LAND,"proud")],
+FACES={"keeper":[(0,"smug"),(T_HID,"evil"),(T_COIN,"smug"),(REL-0.18,"evil"),(LAND,"proud")],
        "engineer":[(0,"worried"),(T_YEARS,"sleepy"),(T_TEAR,"furious"),(T_OUT,"angry")]}
 EV=[("whoosh",0.0),("whoosh",REL),("whoosh",3.02),("clink",LAND),("pop",T_HID),("pop",T_COIN),("pop",T_HOUSE),("crack",T_TEAR),("pop",T_OUT)]
 json.dump(EV,open(OUT+"/sfx.json","w"))
@@ -179,7 +179,7 @@ for f in range(1,NF+1):
     cam.data.keyframe_insert("lens",frame=f); cam.data.dof.keyframe_insert("focus_distance",frame=f)
     # keeper: bob, sway, lean-in on 'hid', wind-up + throw
     A=KA["A"]; bob=0.014*math.sin(2*math.pi*2.4*t); hid=pulse(t,T_HID,0.1,0.35)
-    wind=ss((t-(REL-0.22))/0.18)*(1-ss((t-REL)/0.06)); throw=ss((t-REL)/0.12)*(1-ss((t-REL-0.35)/0.3))
+    wind=ss((t-(REL-0.25))/0.2)*(1-ss((t-REL)/0.15)); throw=ss((t-(REL-0.03))/0.15)*(1-ss((t-REL-0.35)/0.3))
     A.location=k0[0]+Vector((0,0,bob+0.03*throw)); A.rotation_euler=(k0[1].x-0.18*hid+0.1*throw,k0[1].y+0.05*math.sin(2*math.pi*1.2*t),k0[1].z)
     A.scale=(1+0.05*hid,1+0.05*hid,1-0.07*hid+0.05*throw)
     for P,side,h in KA["piv"]:
@@ -190,7 +190,7 @@ for f in range(1,NF+1):
             want=Arot.inverted()@(aim-sh)
             q_aim=V0.rotation_difference(want)
             q_thr=Euler((-1.2*throw+0.8*wind,-side*(0.5*wind+0.4*throw),0)).to_quaternion()
-            P.rotation_quaternion=q_aim if t<REL else q_thr
+            P.rotation_quaternion=q_aim.slerp(q_thr,ss((t-(REL-0.2))/0.25))   # blend hold -> throw, no snap
             P.keyframe_insert("rotation_quaternion",frame=f)
         else: arm(P,side,0.55+0.3*hid+0.12*math.sin(2*math.pi*1.5*t))
     # engineer: tired slump, then the yank
@@ -218,7 +218,7 @@ for f in range(1,NF+1):
         coin.location=p; coin.rotation_euler=(math.pi/2+0.5*math.sin(min(u,1)*12),0,math.radians(25)+min(u,1)*2.5); coin.scale=(1,1,1)
     coin.keyframe_insert("location",frame=f); coin.keyframe_insert("rotation_euler",frame=f); coin.keyframe_insert("scale",frame=f)
     # camera locks onto the coin: from the throw until it settles beside the others
-    w=ss((t-(REL-0.02))/0.1)*(1-ss((t-(LAND+0.3))/0.2))
+    w=ss((t-(REL-0.15))/0.35)*(1-ss((t-(LAND+0.3))/0.25))
     if w>0:
         cpos=coin.location.copy(); off=Vector((0.45,-1.45,0.65))
         cam.location=cam.location.lerp(cpos+off,w); tgt.location=tgt.location.lerp(cpos,w); cam.data.lens=cam.data.lens*(1-w)+30*w
