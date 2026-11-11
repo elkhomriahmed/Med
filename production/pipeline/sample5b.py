@@ -50,11 +50,18 @@ for name,C in (("keeper",K),("engineer",N)):
     body=[o for o in C.coll.all_objects if o.type in('MESH','CURVE')]+[o for o in L if o not in arms and o not in hands]
     A=bpy.data.objects.new(name+"_anim",None); sc.collection.objects.link(A); A.location=C.root.location.copy(); A.rotation_euler=C.root.rotation_euler.copy()
     piv=[]
+    ends=[]; used=set()
     for a in arms:
         sp=a.data.splines[0]; p0=a.matrix_world@(sp.bezier_points[0].co if len(sp.bezier_points) else sp.points[0].co.xyz)
         pend=a.matrix_world@(sp.bezier_points[-1].co if len(sp.bezier_points) else sp.points[-1].co.xyz)
-        h=min(hands,key=lambda o:(o.matrix_world.translation-pend).length)
-        P=bpy.data.objects.new(name+"_shoulder",None); sc.collection.objects.link(P); P.location=p0
+        ends.append((p0,pend))
+    arms=[o for o in bake.to_mesh(arms)]
+    for a in arms:
+        mw=a.matrix_world.copy(); a.parent=None; a.matrix_world=mw
+    for a,(p0,pend) in zip(arms,ends):
+        h=min([o for o in hands if o not in used],key=lambda o:(o.matrix_world.translation-pend).length); used.add(h)
+        mw=h.matrix_world.copy(); h.parent=None; h.matrix_world=mw
+        P=bpy.data.objects.new(name+"_shoulder",None); sc.collection.objects.link(P); P.location=p0; bpy.context.view_layer.update()
         for o in (a,h):
             mw=o.matrix_world.copy(); o.parent=P; o.matrix_world=mw
             o.data.materials.clear(); o.data.materials.append(INKM)
@@ -66,6 +73,14 @@ for r in rigs.values():
     for P,_,_ in r["piv"]:
         mw=P.matrix_world.copy(); P.parent=r["A"]; P.matrix_world=mw
     fp=bpy.data.objects[r["face"].name+"_facepiv"]; mw=fp.matrix_world.copy(); fp.parent=r["A"]; fp.matrix_world=mw
+if E("DBG"):
+    for n,r in rigs.items():
+        for P,side,h in r["piv"]:
+            for c in P.children:
+                bb=[c.matrix_world@Vector(x) for x in c.bound_box]; print("DBG",n,c.name,c.type,side,[round(min(v[i] for v in bb),2) for i in range(3)],[round(max(v[i] for v in bb),2) for i in range(3)],"P",tuple(round(x,2) for x in P.matrix_world.translation))
+    fp=bpy.data.objects["engineer_facepiv"]; print("DBG face",[ (o.name,o.type) for o in fp.children])
+    print("DBG faces coll",[o.name for o in bpy.data.collections["faces"].all_objects])
+    sys.exit(0)
 # live props
 coin=bpy.data.objects.new("tosscoin",bpy.data.meshes.new("tc")); sc.collection.objects.link(coin)
 bpy.ops.mesh.primitive_cylinder_add(radius=0.05,depth=0.012,vertices=24); tc=bpy.context.object; coin.data=tc.data; bpy.data.objects.remove(tc)
@@ -153,7 +168,7 @@ for f in range(1,NF+1):
     A.scale=(1+0.05*hid,1+0.05*hid,1-0.07*hid+0.05*throw)
     for P,side,h in KA["piv"]:
         if side>0: arm(P,side,0.45+0.6*wind+0.5*throw,fwd=-0.5*wind+0.9*throw)
-        else: arm(P,side,0.45+0.3*hid+0.12*math.sin(2*math.pi*1.5*t))
+        else: arm(P,side,0.55+0.3*hid+0.12*math.sin(2*math.pi*1.5*t))
     # engineer: tired slump, then the yank
     A=NA["A"]; bob=0.012*math.sin(2*math.pi*2.1*t+1); sl=ss((t-T_YEARS)/0.25)*(1-ss((t-T_TEAR)/0.05))
     yk=ss((t-T_TEAR)/0.1); shk=0.09*math.sin(2*math.pi*9*t)*max(0,1-(t-T_TEAR)/0.5) if t>T_TEAR else 0; fl_=ss((t-T_OUT)/0.12)
