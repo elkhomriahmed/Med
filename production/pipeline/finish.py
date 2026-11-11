@@ -7,11 +7,11 @@ FR,WORDS,VO,OUT=sys.argv[1:5]; FPS=30
 W=json.load(open(WORDS))
 CH=[[0,1],[2,3,4],[5,6],[7],[8,9,10],[11,12,13],[14,15],[16],[17],[18,19]]  # word index groups (1-3 words)
 chunks=[(W[g[0]][0],(W[CH[i+1][0]][0] if i+1<len(CH) else W[g[-1]][1]+0.3)," ".join(W[j][2] for j in g)) for i,g in enumerate(CH)]
-FONT=ImageFont.truetype("/usr/share/fonts/opentype/inter/InterDisplay-Black.otf",78)
+FONT=ImageFont.truetype("/usr/share/fonts/opentype/inter/InterDisplay-Black.otf",96)
 def caption(img,text):
     d=ImageDraw.Draw(img); w=d.textlength(text,font=FONT); x=(img.width-w)/2; y=int(img.height*0.68)
     sh=Image.new("RGBA",img.size,(0,0,0,0)); ds=ImageDraw.Draw(sh); ds.text((x+4,y+6),text,font=FONT,fill=(0,0,0,150)); sh=sh.filter(ImageFilter.GaussianBlur(4))
-    img.alpha_composite(sh); d=ImageDraw.Draw(img); d.text((x,y),text,font=FONT,fill=(255,255,255,255),stroke_width=7,stroke_fill=(0,0,0,255))
+    img.alpha_composite(sh); d=ImageDraw.Draw(img); d.text((x,y),text,font=FONT,fill=(255,255,255,255),stroke_width=9,stroke_fill=(0,0,0,255))
 os.makedirs(FR+"/post",exist_ok=True)
 fs=sorted(glob.glob(FR+"/f_*.png"))
 for i,f in enumerate(fs):

@@ -27,12 +27,12 @@ for i,x in enumerate((-1.75,-1.3,-0.85,-0.4)): lifted(x,-1.0,side=1 if i%2 else 
 # keeper's board (shot 1)
 lifted(-1.05,0.0)
 # torn-out area around the son (shot 3)
-for x in (0.35,0.75,1.15): lifted(x,0.15,coin=False,side=-1)
+for x in (-0.05,0.35,0.75): lifted(x,0.35,coin=False,side=-1)
 for k in range(6):
-    box((random.uniform(0.0,1.5),random.uniform(-0.45,0.6),0.03+0.05*k),(0.19,random.uniform(0.5,0.9),0.05),fl,0.008,rot=(random.uniform(-0.2,0.2),random.uniform(-0.2,0.2),random.uniform(0,3.1)),coll=S,name="torn")
+    box((random.uniform(-0.3,0.8),random.uniform(0.0,0.6),0.03+0.05*k),(0.19,random.uniform(0.5,0.9),0.05),fl,0.008,rot=(random.uniform(-0.2,0.2),random.uniform(-0.2,0.2),random.uniform(0,3.1)),coll=S,name="torn")
 # characters (approved design)
 K=ch.Character("keeper",(-1.35,0.35,0),math.radians(25),face="smug").build(R=0.3,torso_w=0.16,coat=(0.93,0.68,0.16),buttons=3,hat="beanie",beard=True,shirt=(0.93,0.68,0.16),shoes=(0.08,0.06,0.05),arms=list(ch.POSES["hold"]))
-Sn=ch.Character("engineer",(0.75,0.75,0),math.radians(-15),face="worried").build(R=0.29,torso_w=0.15,hair=(0.42,0.25,0.13),tie=(0.24,0.36,0.56),arms=list(ch.POSES["hold"]))
+Sn=ch.Character("engineer",(0.38,0.95,0),math.radians(-15),face="worried").build(R=0.29,torso_w=0.15,hair=(0.42,0.25,0.13),tie=(0.24,0.36,0.56),arms=list(ch.POSES["hold"]))
 bpy.context.view_layer.update()
 def hands(root):
     hs=[o for o in bpy.data.collections["limbs"].objects if o.parent==root and o.type=='MESH' and max(o.dimensions)<0.06]
@@ -42,9 +42,9 @@ sh=hands(Sn.root); m2=sum(sh,Vector())/len(sh); box((m2.x,m2.y-0.12,m2.z+0.02),(
 # ---------- camera: 3 shots, fast whoosh moves between them ----------
 KH=Vector((-1.35,0.35,1.55)); SH=Vector((0.75,0.75,1.5))
 shots=[ # (t_start, t_end, cam_from, cam_to, tgt_from, tgt_to, lens, focus)
- (0.0, 1.45, (-0.45,-1.15,1.0),(-0.6,-0.85,1.08), (-1.15,0.15,0.8),(-1.2,0.2,0.92), 30),
+ (0.0, 1.45, (-0.55,-1.35,1.3),(-0.7,-1.05,1.35), (-1.2,0.3,1.12),(-1.25,0.32,1.2), 30),
  (1.70, 3.40,(-2.1,-1.85,0.95),(-0.15,-1.95,0.95),(-1.55,-1.0,0.03),(-0.55,-1.0,0.03), 30),
- (3.65, DUR, (0.3,-1.05,0.95),(0.45,-0.75,1.02),(0.75,0.4,0.72),(0.75,0.5,0.88), 30)]
+ (3.65, DUR, (-0.15,-0.95,1.25),(-0.05,-0.7,1.3),(0.38,0.8,1.05),(0.38,0.85,1.15), 30)]
 def ease(t): return t*t*(3-2*t)
 def keyf(obj,frame,loc):
     obj.location=loc; obj.keyframe_insert("location",frame=frame)
