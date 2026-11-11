@@ -159,6 +159,7 @@ FACES={"keeper":[(0,"smug"),(T_HID,"evil"),(T_COIN,"smug"),(REL-0.18,"evil"),(LA
        "engineer":[(0,"worried"),(T_YEARS,"sleepy"),(T_TEAR,"furious"),(T_OUT,"angry")]}
 EV=[("whoosh",0.0),("whoosh",REL),("whoosh",3.02),("clink",LAND),("pop",T_HID),("pop",T_COIN),("pop",T_HOUSE),("crack",T_TEAR),("pop",T_OUT)]
 json.dump(EV,open(OUT+"/sfx.json","w"))
+BOUNCES=[]
 KA=rigs["keeper"]; NA=rigs["engineer"]
 bpy.context.view_layer.update()
 def HP(h):   # where the hand is actually drawn (its origin is offset from the mesh)
@@ -210,12 +211,26 @@ for f in range(1,NF+1):
     if t<REL:
         coin.scale=(1,1,1); coin.location=hold_pt; coin.rotation_euler=(math.pi/2,0,math.radians(25))
     else:
-        u=min(1,(t-REL)/(LAND-REL)); p0=Vector(rh) if u==0 else coin.get("p0",None)
+        # real ballistic flight: constant horizontal speed, gravity, small toss up, then bounces that die out
         if "p0" not in coin: coin["p0"]=list(rh)
-        a=Vector(coin["p0"]); b=Vector((LANDP[0],LANDP[1],0.022)); p=a.lerp(b,u); p.z+=0.35*math.sin(math.pi*u)
-        if t>LAND:
-            v=t-LAND; p.z+=abs(math.sin(v*18))*0.06*math.exp(-v*9)
-        coin.location=p; coin.rotation_euler=(math.pi/2+0.5*math.sin(min(u,1)*12),0,math.radians(25)+min(u,1)*2.5); coin.scale=(1,1,1)
+        G=9.81; a=Vector(coin["p0"]); b=Vector((LANDP[0],LANDP[1],0.022)); T=LAND-REL; tau=t-REL
+        v0=(b.z-a.z+0.5*G*T*T)/T; vh=(b.xy-a.xy)/T
+        om=(3*math.pi-math.pi/2)/T                       # tumbles 1.25 turns, arrives flat
+        if tau<=T:
+            p=Vector((a.x+vh.x*tau,a.y+vh.y*tau,a.z+v0*tau-0.5*G*tau*tau)); rx=math.pi/2+om*tau; rz=math.radians(25)+2.0*tau
+        else:
+            vi=abs(v0-G*T); tb=tau-T; z=0.0; drift=0.0; e=0.32; tstart=0.0; wob=0.0
+            if not BOUNCES: 
+                tt_=T
+                for k in range(3):
+                    vi_k=vi*e**(k+1); BOUNCES.append(REL+tt_+2*vi_k/G); tt_+=2*vi_k/G
+            for k in range(3):
+                vk=vi*e**(k+1); dur=2*vk/G
+                if tb<tstart+dur:
+                    s=tb-tstart; z=vk*s-0.5*G*s*s; drift=tstart*0.05+s*0.05*(0.5**k); wob=0.5*(0.5**k)*math.sin(s/dur*math.pi); break
+                tstart+=dur; drift=tstart*0.05
+            p=Vector((b.x+vh.x*drift,b.y+vh.y*drift,b.z+z)); rx=wob; rz=math.radians(25)+2.0*T
+        coin.location=p; coin.rotation_euler=(rx,0,rz); coin.scale=(1,1,1)
     coin.keyframe_insert("location",frame=f); coin.keyframe_insert("rotation_euler",frame=f); coin.keyframe_insert("scale",frame=f)
     # camera locks onto the coin: from the throw until it settles beside the others
     w=ss((t-(REL-0.15))/0.35)*(1-ss((t-(LAND+0.3))/0.25))
@@ -224,6 +239,7 @@ for f in range(1,NF+1):
         cam.location=cam.location.lerp(cpos+off,w); tgt.location=tgt.location.lerp(cpos,w); cam.data.lens=cam.data.lens*(1-w)+30*w
         cam.data.dof.focus_distance=(cam.location-tgt.location).length
         cam.keyframe_insert("location",frame=f); tgt.keyframe_insert("location",frame=f); cam.data.keyframe_insert("lens",frame=f)
+json.dump(EV+[("clink2",b_) for b_ in BOUNCES[:2]],open(OUT+"/sfx.json","w"))
 for fc_owner in (cam,tgt,coin,cam.data,cam.data.dof):
     ad=getattr(fc_owner,"animation_data",None)
 chars={"keeper":K,"engineer":N}

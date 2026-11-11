@@ -7,7 +7,7 @@ def whoosh(L=0.38):
 tt=np.arange(int(SR*0.5))/SR; clink=(np.sin(2*np.pi*3150*tt)+0.6*np.sin(2*np.pi*4730*tt))*np.exp(-tt*9)*0.5
 t2=np.arange(int(SR*0.35))/SR; crack=np.convolve(rng.standard_normal(len(t2))*np.exp(-t2*14),np.ones(6)/6,'same')+0.6*np.sin(2*np.pi*110*t2)*np.exp(-t2*10)
 t3=np.arange(int(SR*0.12))/SR; pop=np.sin(2*np.pi*(500-2500*t3)*t3)*np.exp(-t3*35)
-F={"whoosh":(whoosh(),0.9,0.18),"clink":(clink,0.55,0),"crack":(crack,0.8,0),"pop":(pop,0.25,0)}
+F={"whoosh":(whoosh(),0.9,0.18),"clink":(clink,0.55,0),"clink2":(clink,0.22,0),"crack":(crack,0.8,0),"pop":(pop,0.25,0)}
 for k,tm in json.load(open(FR+"/sfx.json")): s,g,o=F[k]; add(s,tm-o,g)
 sfx/=np.abs(sfx).max()
 with wave.open(FR+"/sfx.wav","wb") as w: w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((sfx*0.6*32767).astype(np.int16).tobytes())
