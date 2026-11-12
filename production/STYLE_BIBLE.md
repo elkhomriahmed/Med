@@ -1,4 +1,24 @@
-# STYLE FORMULA v9 (current — overrides anything below that conflicts)
+# STYLE FORMULA v10 (current — overrides anything below that conflicts)
+
+Built on v2–v9 (nothing removed). From the v9 deep comparison (metrics vs 4 competitor videos):
+- **Clothes are fabric, not plastic:** muted fabric colours, patterns (sewn seams on raincoats, tweed check on waistcoats),
+  painted seams/hems, a clearly darker shadow tone on bodies (52% of lit) while heads keep the soft 64% tone.
+  Torsos shorter and fuller (≈0.72 m tall, 0.21 m wide).
+- **Warm vs cool at night:** every night scene has a warm gold source (the lamp glows gold through the lens) against the cool
+  moonlit room. Night grade brighter (median ≈130–150) — never a dim blue world.
+- **Movement logic:**
+  - turns are led by the eyes and head; the body follows more slowly; feet keep their own direction and step round
+    (no spinning on the spot); the hips shift over the standing foot while the other foot steps;
+  - standing up from a seat = lean forward over the feet, hands on knees, push up, then walk;
+  - sitting = knees forward, optional crossed leg (`cross`), hands resting on the thigh or holding the prop;
+  - props are put down on real surfaces before the hands are used for anything else.
+- **Every shot is dressed:** a sign/board joke placed where the camera actually sees it (DAYS WITHOUT A SHIPWRECK: 3),
+  foreground props near the camera paths (blurred by the lens), background props in view.
+- **Framing:** two-shots keep both characters fully in frame; faces ≈30–45% of frame width; push in only on a beat.
+- **Sound:** gesture swishes, footsteps, put-down clinks, sitting creaks — an effect on every action, over the ambience bed.
+
+# (v9 notes)
+# STYLE FORMULA v9
 
 Built on everything above (v2–v8) — nothing removed. Additions from the "Mirror Rigged a Horse Race" breakdown
 (`research/breakdown_mirror_horse_race.md`):

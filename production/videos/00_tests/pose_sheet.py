@@ -13,17 +13,15 @@ who=os.environ.get("WHO","keeper")
 p=PP.Puppet(who,(0,0,0),float(os.environ.get('YAW','0.85')),cam=cam)
 bake.workbench(sc)
 POSES=[("rest",{},"neutral"),
- ("sneak",dict(crouch=0.55,bend=0.55,lean=0.15,nod=-0.3,arms={1:("body",(0.10,0.25,-0.05)),-1:("body",(0.16,0.10,-0.12))}),"evil"),
- ("lean-in-curious",dict(bend=0.7,lean=0.1,tilt=0.25,arms={1:("body",(-0.02,0.12,-0.40)),-1:("body",(-0.02,0.12,-0.40))}),"skeptical"),
- ("laugh-back",dict(bend=-0.55,lean=-0.1,nod=-0.25,arms={1:("body",(0.0,0.17,-0.24)),-1:("body",(0.0,0.17,-0.30))}),"laugh"),
- ("knee-slap",dict(crouch=0.4,bend=0.85,lean=0.25,tilt=-0.15,arms={1:("body",(0.0,0.42,-0.55)),-1:("body",(0.2,0.05,0.12))}),"laugh"),
- ("hip-cocked",dict(sbend=0.3,side=0.06,tilt=-0.2,arms={1:("body",(0.13,-0.02,-0.30)),-1:("rest",)}),"smug"),
- ("slump",dict(bend=0.5,crouch=0.15,nod=0.35,arms={1:("rest",),-1:("rest",)}),"sleepy"),
- ("point-lean",dict(bend=0.25,sbend=-0.2,lean=0.08,arms={1:("body",(0.25,0.40,0.15)),-1:("rest",)}),"angry")]
+ ("sit",dict(crouch=0.92,feetfwd=0.30,bend=0.05,arms={1:("body",(0.0,0.30,-0.40)),-1:("body",(0.0,0.30,-0.40))}),"smug"),
+ ("sit-crossed",dict(crouch=0.92,feetfwd=0.30,cross=1.0,bend=-0.05,tilt=0.1,arms={1:("body",(0.0,0.30,-0.40)),-1:("body",(0.02,0.22,-0.22))}),"happy"),
+ ("talk-gesture",dict(tilt=0.1,arms={-1:("body",(0.22,0.24,-0.02)),1:("rest",)}),"talk"),
+ ("hands-hips",dict(sbend=0.15,arms={1:("body",(0.14,-0.02,-0.32)),-1:("body",(0.14,-0.02,-0.32))}),"skeptical"),
+ ("lean-in",dict(bend=0.35,tilt=-0.1,arms={-1:("body",(0.12,0.36,0.04)),1:("rest",)}),"angry")]
 for i,(nm,k,face) in enumerate(POSES):
     k=dict(k); k['yaw']=float(os.environ.get('YAW','0.85'))
     p.keys=[(0.0,{'yaw':k['yaw']}),(0.2,k)]; p.feet={}; p.step={}; p.spr={c:PP.Spring() for c in PP.CH}; p.hspr={}; p.t_prev=None; p.spr['yaw'].x=float(os.environ.get('YAW','0.85'))
-    p.settle(3.0,90)
+    p.settle(3.0,120)
     img=bpy.data.images.load(f"{PP.FACEDIR}/{p.face_char}_{face}.png",check_existing=True)
     for n in p.face_mat.node_tree.nodes:
         if n.type=='TEX_IMAGE': n.image=img

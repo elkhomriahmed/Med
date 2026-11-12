@@ -82,7 +82,7 @@ def build(state="night"):
     box((1.85,-0.75,1.0),(0.12,0.6,0.04),trim,0.004,rot=(0,0,math.radians(-25)),coll=S,name="shelf")
     for k,c in enumerate(((0.2,0.45,0.25),(0.75,0.2,0.15))): cyl((1.86-0.06*k,-0.9+0.25*k,1.1),0.06,0.16,mat(f"lr_can{k}",c,0.4,0.4),coll=S,name="can")
     # LENS: beehive of glass rings with brass ribs and two bullseye panels, lamp inside
-    glass=mat("lens_glass",(0.62,0.84,0.92),0.08,0.9,emit=0.08 if state=="night" else 0.0)
+    glass=mat("lens_glass",(0.98,0.84,0.55),0.08,0.9,emit=0.22 if state=="night" else 0.0)   # warm lamp glow through the glass
     lamp=mat("lens_lamp",(1.0,0.86,0.55),0.4,0.2,emit=30.0 if state=="night" else 0.0)
     base_z=POOL_Z+0.02; H=1.5; lens=[]
     lens.append(cyl((lx,ly,base_z+0.04),0.58,0.08,brass,verts=48,coll=M,name="MOV_lens"))

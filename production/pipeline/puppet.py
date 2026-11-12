@@ -25,17 +25,17 @@ def back_out(u,s=1.5):
 # ------------------------------------------------------------------ OUTFITS
 # All sizes in metres. Body faces -Y (towards a default camera). Root at the floor between the feet.
 BASE=dict(R=0.29, hip=0.64, torso_h=0.80, torso_w=0.20, torso_d=0.165, upper=0.27, fore=0.27, thigh=0.32, shin=0.32,
-          arm_w=0.012, leg_w=0.013, hand_r=0.029, boot=(0.042,0.085,0.04), boot_col=(0.16,0.10,0.06))
+          arm_w=0.012, leg_w=0.013, hand_r=0.029, boot=(0.036,0.07,0.032), boot_col=(0.16,0.10,0.06))
 
 OUTFITS={
- "keeper":dict(coat=(0.96,0.72,0.12),coat_dark=(0.50,0.27,0.015),hat="beanie",hair=None,
-               details=["collar","placket","toggles","pockets","hem"],face="keeper"),
+ "keeper":dict(coat=(0.70,0.48,0.07),coat_dark=(0.36,0.20,0.02),hat="beanie",hair=None,pattern=("seams",(0.30,0.17,0.02)),
+               details=["collar","placket","toggles","pockets","hem"],face="keeper",torso_h=0.72,torso_w=0.215,torso_d=0.17),
  "engineer":dict(coat=(0.20,0.085,0.03),coat_dark=(0.10,0.04,0.015),shirt=(0.70,0.71,0.70),hat=None,hair=(0.26,0.13,0.05),
                  details=["shirt_collar","vest","tie","belt","trousers","vest_buttons"],tie=(0.22,0.36,0.62),trousers=(0.045,0.055,0.085),face="engineer",
-                 R=0.285,torso_w=0.195),
+                 R=0.285,torso_w=0.205,torso_h=0.72,torso_d=0.165,pattern=("plaid",(0.11,0.045,0.015))),
 }
 
-def painted_mat(name,base,bands=(),stripe=None,vary=0.05):
+def painted_mat(name,base,bands=(),stripe=None,vary=0.05,pattern=None):
     """Fabric colour with painted details: horizontal bands [(z0,z1,col)] (hems, belts, trousers) and an optional
     front stripe (half_width,col) - drawn on the cloth like the competitors' clothes, not floating rings."""
     m=mat(name,base,0.6,0.3,vary=vary); nt=m.node_tree; n=nt.nodes; p=n["Principled BSDF"]
@@ -58,6 +58,20 @@ def painted_mat(name,base,bands=(),stripe=None,vary=0.05):
         a=n.new('ShaderNodeMath'); a.operation='LESS_THAN'; a.inputs[1].default_value=hw; nt.links.new(ax.outputs[0],a.inputs[0])
         f=n.new('ShaderNodeMath'); f.operation='LESS_THAN'; f.inputs[1].default_value=0.0; nt.links.new(sx.outputs['Y'],f.inputs[0])
         c=n.new('ShaderNodeMath'); c.operation='MULTIPLY'; nt.links.new(a.outputs[0],c.inputs[0]); nt.links.new(f.outputs[0],c.inputs[1]); mix_in(c.outputs[0],col)
+    if pattern:   # woven / sewn fabric look (competitor clothes have patterns and seams)
+        kind,col=pattern
+        def bandsock(axis,scale,width):
+            w=n.new('ShaderNodeMath'); w.operation='MULTIPLY'; w.inputs[1].default_value=scale; nt.links.new(sx.outputs[axis],w.inputs[0])
+            fr=n.new('ShaderNodeMath'); fr.operation='FRACT'; nt.links.new(w.outputs[0],fr.inputs[0])
+            lt=n.new('ShaderNodeMath'); lt.operation='LESS_THAN'; lt.inputs[1].default_value=width; nt.links.new(fr.outputs[0],lt.inputs[0]); return lt.outputs[0]
+        if kind=="seams":   # sewn panels: thin dark seam lines around the body and down the sides
+            mix_in(bandsock('Z',5.5,0.045),col)
+            ax=n.new('ShaderNodeMath'); ax.operation='ABSOLUTE'; nt.links.new(sx.outputs['X'],ax.inputs[0])
+            gt=n.new('ShaderNodeMath'); gt.operation='GREATER_THAN'; gt.inputs[1].default_value=0.17; nt.links.new(ax.outputs[0],gt.inputs[0])
+            lt=n.new('ShaderNodeMath'); lt.operation='LESS_THAN'; lt.inputs[1].default_value=0.182; nt.links.new(ax.outputs[0],lt.inputs[0])
+            c=n.new('ShaderNodeMath'); c.operation='MULTIPLY'; nt.links.new(gt.outputs[0],c.inputs[0]); nt.links.new(lt.outputs[0],c.inputs[1]); mix_in(c.outputs[0],col)
+        if kind=="plaid":   # tweed check: crossing thin lines
+            mix_in(bandsock('X',16.0,0.16),col); mix_in(bandsock('Z',16.0,0.16),col)
     nt.links.new(cur,p.inputs['Base Color']); return m
 
 def _pup_dims(name):
@@ -86,7 +100,7 @@ def build_puppet(name):
     if "belt" in O["details"]: bands.append((hip+0.07,hip+0.115,(0.16,0.07,0.02)))
     if "placket" in O["details"]: stripe=(0.016,O["coat_dark"])
     if "vest" in O["details"]: stripe=(0.055,O["shirt"])
-    coat=painted_mat(name+"_coat",O["coat"],bands,stripe)
+    coat=painted_mat(name+"_coat",O["coat"],bands,stripe,pattern=O.get("pattern"))
     ink=mat("pup_ink",INKC,0.6,0.1)
     body,zc=_bean(D,coat); parts_t.append(body)
     top=D["hip"]-0.05+D["torso_h"]; D["torso_top"]=top
@@ -195,7 +209,8 @@ def bake_puppet(name,spp=48,size=1024,light="neutral"):
         lit=cv2.GaussianBlur(bake.img_np(bake.bake_pass([g],'DIFFUSE',512,spp,['DIRECT','INDIRECT'])),(0,0),2.0)
         # 2D look with a touch of 3D: soft two-tone (lit / shadow) instead of smooth 3D shading
         lum=lit.mean(-1); ref=max(1e-4,float(np.percentile(lum,97))); nl=lum/ref
-        x=np.clip((nl-0.30)/0.32,0,1); y_=np.clip((nl-0.86)/0.12,0,1); q=0.64+0.30*(x*x*(3-2*x))+0.14*(y_*y_*(3-2*y_))   # soft shadow side, lit, pale streak   # shadow / lit / pale streak
+        sh_=0.64 if gname=="head" else 0.52
+        x=np.clip((nl-0.30)/0.32,0,1); y_=np.clip((nl-0.86)/0.12,0,1); q=sh_+(0.94-sh_)*(x*x*(3-2*x))+0.14*(y_*y_*(3-2*y_))   # shadow side / lit / pale streak   # shadow / lit / pale streak
         lit=lit/np.maximum(lum,1e-4)[...,None]*(q*ref*0.80)[...,None]
         emi=bake.img_np(bake.bake_pass([g],'EMIT',512,1))
         inkmask=bake.ink_mask([g],size,3,min_angle=65)
@@ -243,7 +258,7 @@ class Spring:
             a=w*w*(target-self.x)-2*z*w*self.v; self.v+=a*h; self.x+=self.v*h
         return self.x
 
-CH=("lean","side","twist","bend","sbend","crouch","nod","tilt","turn","squash","air","yaw","look","shake","feetfwd")
+CH=("lean","side","twist","bend","sbend","crouch","nod","tilt","turn","squash","air","yaw","look","shake","feetfwd","cross")
 HEADCH=("nod","tilt","turn")
 class Puppet:
     def __init__(self,name,loc=(0,0,0),yaw=0.0,cam=None,inst=None,tint=(1.0,1.0,1.0),light="neutral"):
@@ -315,7 +330,7 @@ class Puppet:
         self.gaze_log=[]
         self.anim=[self.A,self.P,self.torso,self.head,self.LOOK,self.froll,self.fx]+list(self.hands.values())+list(self.boots.values())
         self.pose0=dict(pos=tuple(loc[:2]),yaw=yaw,crouch=0.0,lean=0.0,side=0.0,twist=0.0,bend=0.0,sbend=0.0,nod=0.0,tilt=0.0,turn=0.0,
-                        air=0.0,squash=0.0,look=0.0,shake=0.0,feetfwd=0.0,arms={-1:("rest",),1:("rest",)},snap=0.38,damp=0.72,jump=None)
+                        air=0.0,squash=0.0,look=0.0,shake=0.0,feetfwd=0.0,cross=0.0,arms={-1:("rest",),1:("rest",)},snap=0.38,damp=0.72,jump=None)
         self.look_target=None; self.spr["yaw"].x=yaw; self.phase=(hash(self.name)%100)/100.0*6.28; self.landed=set()
     # ---------------- pose keys
     def _full(self,i):
@@ -366,7 +381,7 @@ class Puppet:
         V={}
         for c in CH:
             tgt=P1[c] if c!="yaw" else P1["yaw"]
-            ff=f*(0.6 if c in HEADCH else 1.0)
+            ff=f*(0.6 if c in HEADCH else 0.5 if c=="yaw" else 1.0)
             V[c]=self.spr[c].step(tgt,ff,z,dt)
         # jumps: gravity arcs, squash on landing
         air=V["air"]
@@ -402,7 +417,9 @@ class Puppet:
             tv=tp-hc0; tv.z=0
             if tv.length>1e-3: dv=(dv*(1-lw)+tv.normalized()*lw)
         want=math.atan2(dv.x,-dv.y); body=V["yaw"]+V["twist"]
-        dturn=(want-body+math.pi)%(2*math.pi)-math.pi; dturn=max(-1.25,min(1.25,dturn))
+        dturn=(want-body+math.pi)%(2*math.pi)-math.pi
+        lead=(P1["yaw"]-V["yaw"]+math.pi)%(2*math.pi)-math.pi; dturn+=0.6*max(-0.9,min(0.9,lead))   # eyes/head turn first, body follows
+        dturn=max(-1.25,min(1.25,dturn))
         tilt_w=0.07*math.sin(2*math.pi*0.27*t+ph*0.7)   # heads keep tilting a little, all the time
         self.head.rotation_euler=(ax-nod-0.18*lean,ay+V["tilt"]+tilt_w,0.85*dturn+V["turn"])
         bpy.context.view_layer.update()
@@ -424,30 +441,43 @@ class Puppet:
             if abs(dx)>0.15: gz="R" if dx>0 else "L"
         self.gaze_log.append((t,gz))
         self.froll.rotation_euler=(0,0,-(V["tilt"]+side+ay)*0.9)
-        # feet
+        # feet: each keeps its own position AND direction until it steps; the weight moves over the planted foot
         Am=self.A.matrix_world
+        if not hasattr(self,"fyaw"): self.fyaw={}
         for s in (-1,1):
             rest=Am@Vector((s*D["hipjoint"][0]*1.05,-V["feetfwd"],0))   # feetfwd > 0: feet in front (sitting)
-            if s not in self.feet: self.feet[s]=rest.copy()
+            if s not in self.feet: self.feet[s]=rest.copy(); self.fyaw[s]=V["yaw"]
             st=self.step.get(s)
             if air>0.02:
-                self.feet[s]=rest+Vector((0,0,air*0.85)); self.step.pop(s,None)
+                self.feet[s]=rest+Vector((0,0,air*0.85)); self.step.pop(s,None); self.fyaw[s]=V["yaw"]
             elif st:
-                k=(t-st[0])/0.15
-                if k>=1: self.feet[s]=st[2]; self.step.pop(s)
+                k=(t-st[0])/0.18
+                if k>=1: self.feet[s]=st[2]; self.fyaw[s]=st[4]; self.step.pop(s)
                 else:
-                    p=st[1].lerp(st[2],ss(k)); p.z+=0.07*math.sin(math.pi*k); self.feet[s]=p
+                    p=st[1].lerp(st[2],ss(k)); p.z+=0.06*math.sin(math.pi*k); self.feet[s]=p
+                    self.fyaw[s]=st[3]+(((st[4]-st[3]+math.pi)%(2*math.pi))-math.pi)*ss(k)
             else:
-                if (Vector((self.feet[s].x,self.feet[s].y))-Vector((rest.x,rest.y))).length>0.10 and not self.step.get(-s):
-                    self.step[s]=(t,self.feet[s].copy(),rest+(rest-self.feet[s])*0.25*Vector((1,1,0)))
+                far=(Vector((self.feet[s].x,self.feet[s].y))-Vector((rest.x,rest.y))).length
+                twist=abs(((V["yaw"]-self.fyaw[s]+math.pi)%(2*math.pi))-math.pi)
+                if (far>0.07 or twist>0.38) and not self.step.get(-s):
+                    self.step[s]=(t,self.feet[s].copy(),rest+(rest-self.feet[s])*0.2*Vector((1,1,0)),self.fyaw[s],V["yaw"])
             if air<=0.02: self.feet[s].z=max(self.feet[s].z,0.0)
-        Tm=self.torso.matrix_world
+        stepping=[s for s in (-1,1) if s in self.step]
+        if stepping:   # shift the hips over the standing foot while the other foot is in the air
+            k=(t-self.step[stepping[0]][0])/0.18; w=math.sin(math.pi*max(0.0,min(1.0,k)))
+            self.P.location=Vector(self.P.location)+self.A.matrix_world.to_3x3()@Vector((-stepping[0]*0.03*w,0,0))
+            bpy.context.view_layer.update()
+        Tm=self.torso.matrix_world; sit=V["feetfwd"]>0.12; knees={}
         for s in (-1,1):
             hipj=Tm@Vector((s*D["hipjoint"][0],0,D["hipjoint"][2]-D["hip"]))
             ankle=self.feet[s]+Vector((0,0,D["boot"][2]*0.9))
-            J,T2=_ik(hipj,ankle,D["thigh"],D["shin"],Am.to_3x3()@Vector((s*0.15,-1.0,0.0)))
+            hint=Am.to_3x3()@(Vector((s*0.04,-1.0,0.25)) if sit else Vector((s*0.15,-1.0,0.0)))   # sitting: knees point forward
+            if s==1 and V["cross"]>0.02 and -1 in knees:   # crossed leg: this foot rests over the other knee
+                over=knees[-1]+Am.to_3x3()@Vector((0.02,-0.10,0.09)); ankle=ankle.lerp(over,min(1.0,V["cross"]))
+            J,T2=_ik(hipj,ankle,D["thigh"],D["shin"],hint); knees[s]=J
+            if s==1 and V["cross"]>0.02: self.feet[s]=T2-Vector((0,0,D["boot"][2]*0.9))
             self._set_curve(self.limbs[("leg",s)],_noodle(hipj,J,T2))
-            b=self.boots[s]; b.location=self.feet[s]+Vector((0,-0.02,D["boot"][2]*0.5)); b.rotation_euler=(0,0,V["yaw"])
+            b=self.boots[s]; b.location=self.feet[s]+Vector((0,-0.02,D["boot"][2]*0.5)); b.rotation_euler=(0,0,self.fyaw.get(s,V["yaw"]))
             sh=Tm@self._bend_point("sh_r" if s>0 else "sh_l",wts)
             spec=P1["arms"].get(s,("rest",)); H=self._hand_target(spec,s,t,sh)
             if s==self.gest_side and spec[0] in("rest","body"): H=H+Am.to_3x3()@Vector((s*0.02,-0.05,0.06))*g

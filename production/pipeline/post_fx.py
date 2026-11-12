@@ -14,7 +14,7 @@ GRADES={  # (lift rgb, gain rgb, saturation, contrast)
  "interior":((0.01,0.01,0.03),(1.06,1.01,0.93),1.08,1.06),
  "actor":   ((0.00,0.00,0.01),(1.00,1.00,1.00),1.06,1.03),
 }
-def night_vivid(x,tint=(0.66,0.78,1.22),lift=(0.02,0.03,0.12),sat=1.35,gam=0.85):
+def night_vivid(x,tint=(0.74,0.84,1.18),lift=(0.03,0.04,0.12),sat=1.30,gam=0.74):
     """Competitor-style night (style v4): hue-preserving blue moonlight. Every object keeps its own colour, lit by
     strong blue light; warm sources and light pools stay warm; whites (faces, shirts) stay bright lavender-white."""
     r,b=x[...,0],x[...,2]; mx=x.max(-1); mn=x.min(-1); s=(mx-mn)/(mx+1e-4)

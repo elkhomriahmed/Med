@@ -27,6 +27,10 @@ def add(sig,t,g):
     i=int(max(0,t)*SR); j=min(len(mix),i+len(sig)); mix[i:j]+=sig[:j-i]*g
 for ev in C["sfx"]:
     name,t,g=ev[0],ev[1],ev[2]; dur=ev[3] if len(ev)>3 else CAP.get(name,2.0)
+    if name=="swish":   # soft cloth/arm swish for gestures (filtered noise, quick swell)
+        n_=int(SR*0.28); tt=np.arange(n_)/SR; rng=np.random.default_rng(int(t*100)%997)
+        nz=rng.standard_normal(n_); k=np.ones(18)/18; nz=np.convolve(nz,k,mode="same")
+        env=np.sin(np.pi*np.clip(tt/0.28,0,1))**2; add((nz*env*0.5).astype(np.float32),t,g); continue
     if name=="shutter":
         tt=np.arange(int(SR*0.12))/SR; rng=np.random.default_rng(3)
         s=rng.standard_normal(len(tt))*np.exp(-tt*90)*0.6; s[int(SR*0.045):]+=rng.standard_normal(len(tt)-int(SR*0.045))*np.exp(-(tt[:len(tt)-int(SR*0.045)])*120)*0.5
