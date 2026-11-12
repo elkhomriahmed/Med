@@ -433,7 +433,7 @@ class Puppet:
         else: ang=0.0
         # 2D head turn: the disc stays inside the head; the drawn features slide across it (sin) and squeeze (cos),
         # so a 45-70 degree turn shows a real 3/4 face with features partly hidden past the edge
-        a_=max(-1.25,min(1.25,ang)); self._uv_now=(math.sin(a_)*0.62*D["R"],0.45+0.55*math.cos(a_))
+        a_=max(-0.87,min(0.87,ang)); self._uv_now=(math.sin(a_)*0.50*D["R"],0.55+0.45*math.cos(a_))   # up to ~50 deg: clear 3/4 face
         self.face.location=(0,0,D["R"]*1.02); self.fx.location=(0,0,D["R"]*1.03)
         # where the pupils point: towards the look target if there is one, else straight at the camera
         gz="C"
