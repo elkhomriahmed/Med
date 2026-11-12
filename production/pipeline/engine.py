@@ -210,12 +210,15 @@ def camstate(keys,t):
     k=keys[-1] if t>keys[-1][0] else keys[0]; return Vector(k[1]),Vector(k[2]),k[3]
 
 # ---------------- run ----------------
-def run(sc,cam,tgt,t0,t1,update,animated,swaps,out,nproc=2,keys_only=None):
+def run(sc,cam,tgt,t0,t1,update,animated,swaps,out,nproc=2,keys_only=None,key_hooks=(),dof=None):
     """Key every frame of [t0,t1) then render. update(t) sets everything for time t.
     animated: objects whose loc/rot/scale get keyed. swaps: {material_name:[(t,image_path),...]}"""
     f0=int(round(t0*FPS))+1; f1=int(round(t1*FPS))
     sc.frame_start=f0; sc.frame_end=f1
-    bake.workbench(sc); sc.display.shading.use_dof=False; sc.display.render_aa='8'
+    bake.workbench(sc); sc.display.render_aa='8'
+    sc.display.shading.use_dof=bool(dof)
+    if dof:   # style v2: real depth of field, focus follows the camera target
+        cam.data.dof.use_dof=True; cam.data.dof.focus_object=tgt; cam.data.dof.aperture_fstop=dof
     for f in range(f0,f1+1):
         t=(f-1)/FPS; sc.frame_set(f)
         update(t)
@@ -223,6 +226,7 @@ def run(sc,cam,tgt,t0,t1,update,animated,swaps,out,nproc=2,keys_only=None):
         cam.data.keyframe_insert("lens",frame=f)
         for o in animated:
             o.keyframe_insert("location",frame=f); o.keyframe_insert("rotation_euler",frame=f); o.keyframe_insert("scale",frame=f)
+        for h in key_hooks: h(f)
     def apply_swaps(scene,*a):
         t=(scene.frame_current-1)/FPS
         for mn,seq in swaps.items():
@@ -275,7 +279,7 @@ def light_beam(name,loc,angles=(0.0,math.pi),r0=3.05,r1=30.0,near=(0.28,0.16),fa
     root["beam_subs"]=[s_.name for s_ in subs]
     return root
 
-def beam_update(root,cam_loc,lo=0.38,hi=0.62):
+def beam_update(root,cam_loc,lo=0.38,hi=0.62,amount=1.0):
     """Flatten a beam arm when the camera looks along it (its stepped end-on view looks wrong); call after
     setting the root's rotation and the camera. Returns the arm empties so they can be keyed."""
     bpy.context.view_layer.update(); subs=[bpy.data.objects[n] for n in root["beam_subs"]]
@@ -284,5 +288,5 @@ def beam_update(root,cam_loc,lo=0.38,hi=0.62):
         o=R.translation; d=(R.to_3x3()@Vector((math.cos(a),math.sin(a),0))).normalized()
         p0=o+d*root["beam_r0"]*root.scale.x; v=(p0-Vector(cam_loc)).normalized()
         ang=math.acos(max(-1.0,min(1.0,v.dot(d))))      # 0 = looking straight down the beam
-        k=ss((ang-lo)/(hi-lo)); sub.scale=(1,1,max(0.001,k))
+        k=ss((ang-lo)/(hi-lo))*amount; sub.scale=(1,1,max(0.001,k))
     return subs

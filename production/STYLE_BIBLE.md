@@ -1,3 +1,67 @@
+# STYLE FORMULA v2 (current — overrides anything below that conflicts)
+
+Locked after the competitor reverse-engineering ("How One Cart Stopped an Entire Army") and the v1 lighthouse review.
+The three things that matter most, in order: **how the characters look and move**, **every line has its own picture**,
+**one connected world with a moving camera**.
+
+## A. Characters (puppet v2, `pipeline/puppet.py`)
+- **Proportions:** head radius ~0.25 m (diameter ≈ torso height ÷ 1.3), visible torso ~0.65 m tall and ~0.75–0.8 × the head's width,
+  legs ≈ head diameter. Head overlaps the top of the torso (no neck).
+- **Torso:** a narrow pill/sack with straight sides, slightly wider at the hips. It **wears real clothes**: collar, front seam or
+  shirt front, buttons/toggles, pockets, waistcoat, belt with buckle, hem or trouser band, fabric grain. Details are painted on the
+  cloth or sculpted flat — never floating rings.
+- **Head:** near-white sphere with soft shading; hats/hair are 3D with drawn strand/rib lines; thick ink outline on head + torso.
+- **Face:** drawn, always readable: the head turns towards the camera (up to ~70°) and the face rolls with head tilt.
+- **Limbs:** thin black ink **noodle** arms and legs that **bend** (2-joint IK curves), round ink hands, small dark boots.
+- **Bake once per character** (`python puppet.py -- <name>`), then append into any scene. Scene light is applied as a **tint**
+  (e.g. night 0.66/0.70/0.90) so characters sit in the place's light.
+- **New characters:** add an outfit to `OUTFITS` (colours, hat/hair, details). Crowds = several outfits with small colour changes.
+
+## B. Acting (most important)
+- **Pose to pose.** Each beat is one clear full-body pose: crouch, reach, lean, point, jump, recoil, slap, knee-slap, lie down,
+  hands on hips, facepalm, shrug, arms folded, blow on finger. Hold it, then **snap** to the next in ~0.1–0.25 s with a small
+  **overshoot** (bigger snaps for hits/pokes).
+- **Anticipation → action → follow-through:** wind up before a poke/throw, recoil after, settle.
+- **Calm holds:** in a hold only slow breathing. **No constant bobbing, swaying or jitter.**
+- **Stage for the camera:** actions happen in profile or 3/4 so the arm/leg silhouette reads against the background.
+- **Feet are planted** and step when the body moves; jumps leave the ground with gravity-like arcs and squash on landing.
+- **Head acting:** nods, tilts and turns on the beat; head bops to rhythm gags.
+- **Everyone reacts:** background characters react (turn, flinch, laugh) — nobody stands dead still.
+- **Comedy:** at least one visual gag every ~8–10 s (smoking-gun finger, DJ scratch on a spinning lens, sandwich, seagull spy).
+
+## C. Every line has its own picture
+- Write a **shot list before building**: one visual per clause. Abstract lines get concrete images
+  (e.g. "the town says…" = townsfolk gossiping, pointing and laughing in the square).
+- Build every place and extra character the shot list needs (crowds, townsfolk, sailors, doctors).
+
+## D. World, camera, transitions
+- **One connected world:** places are built where they really are (lamp room on top of the tower, tower on the rock, town across the
+  water) so the camera can **fly** from one to the next (out of the window, down to the sea, across to the town).
+- **Within a beat** the camera drifts slowly and pushes in on the action; between beats it glides/flies to the next focus.
+- **Framing:** medium-wide by default so the whole body acts; push in only for the detail that matters (finger on glass, teeth).
+- **Hard cut only** for a real jump: back/forward in time, or a completely different place. Time-of-day jumps use a quick **0.3 s
+  dissolve** while the camera keeps moving. No white flashes.
+- **Depth of field:** real lens blur on everything outside the focus (focus follows the camera target).
+
+## E. Look and light
+- Baked 3D sets (wood grain, paint, fabric, rounded edges, AO) + **contact shadows under characters** (soft floor ellipse + boot
+  contacts, projected per frame) + **glow** on lights + **colour grade** per mood (day / morning / night / interior) + soft vignette.
+- Light follows real logic: one visible source, lamps off in daylight, characters tinted by the place's light.
+
+## F. Voice, captions, sound
+- Script ~250–270 words; VO sped up so the video lands at 62–70 s with **no pauses over ~0.25 s** (competitor: 3.5 words/s).
+- Captions: 1–3 words, white with black outline, bounce in, fixed spot ~70% down.
+- Sound: whoosh on fast camera moves, soft swoosh on dissolves, hits on pokes/slaps/landings, cartoon effects (boing, gasp,
+  laughter) on gags, ambience per place (waves, wind, rain). Music bed ~24 dB under the voice; master −14 LUFS.
+
+## G. Pipeline and time budget
+- Characters baked once (~1 min each). Each place baked once per lighting state (~1 min).
+- Frames: fast renderer + DOF, 3 processes (~2.5 s per frame per process at 1080×1920); post pass ~0.1 s/frame.
+- Always: low-res still checks of every beat before a full render (pose readability, framing, props in hands, camera paths).
+- Target total per 65 s video: ~2–2.5 h including checks.
+
+---
+
 # Style bible (locked)
 
 **Approved reference frame: `look_dev/renders/v10_window_light.png`.** Every location follows its logic:
