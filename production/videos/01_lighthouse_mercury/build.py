@@ -32,10 +32,18 @@ if SEG in("A1","A2","C"):
     LR.build(state); LR.lights(state)
     lx,ly=LR.LENS_C
     # sky panorama around the room (inward-facing cylinder)
-    bpy.ops.mesh.primitive_cylinder_add(radius=4.6,depth=8,location=(0,0,1.78),vertices=64)
+    bpy.ops.mesh.primitive_cylinder_add(radius=4.6,depth=8,location=(0,0,1.78),vertices=96)
     sky=bpy.context.object; sky.name="sky"
     bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT'); bpy.ops.mesh.flip_normals(); bpy.ops.object.mode_set(mode='OBJECT')
     sky.data.materials.append(image_live("sky_m",f"{AS}/pano_{state}.png")); live(sky)
+    me=sky.data; uvl=me.uv_layers.active or me.uv_layers.new(); zmin=min(v.co.z for v in me.vertices); zmax=max(v.co.z for v in me.vertices)
+    for poly in me.polygons:
+        us=[]
+        for li in poly.loop_indices:
+            co=me.vertices[me.loops[li].vertex_index].co; us.append((math.atan2(co.y,co.x)/(2*math.pi))%1.0)
+        if max(us)-min(us)>0.5: us=[u+1.0 if u<0.5 else u for u in us]
+        for li,u in zip(poly.loop_indices,us):
+            co=me.vertices[me.loops[li].vertex_index].co; uvl.data[li].uv=(u,(co.z-zmin)/(zmax-zmin))
     for p in sky.data.polygons: p.use_smooth=True
     # ship (night only)
     def make_ship(nm):
@@ -53,10 +61,11 @@ if SEG in("A1","A2","C"):
         # light beams: two long flat wedges outside the windows, turning with the lens
         beam=empty("beam",(lx,ly,LR.POOL_Z+0.74))
         for a in (0,math.pi):
-            me=bpy.data.meshes.new("beam"); r0,r1=3.05,8.0
-            ca,sa=math.cos(a),math.sin(a); px,py=-sa,ca
-            v=[(r0*ca+0.18*px,r0*sa+0.18*py,0),(r0*ca-0.18*px,r0*sa-0.18*py,0),(r1*ca-1.8*px,r1*sa-1.8*py,-0.2),(r1*ca+1.8*px,r1*sa+1.8*py,-0.2)]
-            me.from_pydata(v,[],[[0,1,2,3],[3,2,1,0]]); bo=bpy.data.objects.new("beamq",me); sc.collection.objects.link(bo); bo.location=beam.location
+            me=bpy.data.meshes.new("beam"); r0,r1=3.05,8.5; ca,sa=math.cos(a),math.sin(a); px,py=-sa,ca
+            def vx(r,w,h): return (r*ca+w*px,r*sa+w*py,h)
+            v=[vx(r0,0.2,0.12),vx(r0,-0.2,0.12),vx(r0,-0.2,-0.12),vx(r0,0.2,-0.12),vx(r1,1.6,0.6),vx(r1,-1.6,0.6),vx(r1,-1.6,-0.9),vx(r1,1.6,-0.9)]
+            f=[[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]]; f+= [list(reversed(q)) for q in f]
+            me.from_pydata(v,[],f); bo=bpy.data.objects.new("beamq",me); sc.collection.objects.link(bo); bo.location=beam.location
             bo.data.materials.append(solid("beam_m",(1.0,0.93,0.66))); live(bo); child(bo,beam)
     # mercury pool (fills during the pour in A1; full afterwards)
     pool=mk(cyl,(lx,ly,LR.POOL_Z-0.005),0.62,0.03,solid("merc",(0.80,0.83,0.88)),verts=48,bevel=0); animated.append(pool)
@@ -87,7 +96,7 @@ if SEG=="B":
 
 # ------------------------------------------------------------------ CHARACTERS
 POS={"A1":{"keeper":((-1.33,-0.18,0),20),"engineer":((0.98,-0.48,0),-22)},
-     "A2":{"keeper":((0.05,-0.82,0),5)},
+     "A2":{"keeper":((0.88,-0.48,0),-30)},
      "B": {"keeper":((0.55,1.45,0),0)},
      "C": {"keeper":((0.92,-0.42,0),-28)}}[SEG]
 K=EN.keeper(POS["keeper"][0],math.radians(POS["keeper"][1])); NG=None
@@ -111,7 +120,7 @@ if SEG=="A1":
     bpy.context.scene.cursor.location=(0,0,0); bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
 if SEG=="A2":
     rag=prop_group("rag",[box((0,0,0),(0.16,0.1,0.05),solid("rag_m",(0.82,0.18,0.15)),0.0)])
-    notes=[text_obj(f"note{i}","♪",FONT_SANS,0.16,INK) for i in range(3)]
+    notes=[text_obj(f"note{i}","♪",FONT_SANS,0.24,INK) for i in range(3)]
     for n in notes: face_camera(n,cam); animated.append(n)
 if SEG=="B":
     can=prop_group("oilcan",[cyl((0,0,0.06),0.07,0.13,solid("can_b",(0.20,0.45,0.25)),verts=18,bevel=0),
@@ -179,9 +188,9 @@ if SEG=="A1":
          (T(40)+0.1,(1.55,-1.4,1.4),(0.65,-0.25,1.1),30),
          (T(43)+0.1,(1.45,-1.35,1.35),(0.35,0.0,0.85),31),
          (T(48),(1.3,-1.25,1.3),(0.25,0.05,0.82),33),
-         (T(49)-0.05,(1.4,-1.3,1.45),(0.6,-0.15,1.3),31),
-         (T(52)+0.05,(1.35,-1.25,1.45),(0.6,-0.15,1.35),38),
-         (T(56)-0.1,(1.3,-1.3,1.45),(0.55,-0.1,1.35),35),
+         (T(49)-0.05,(1.95,-1.7,1.5),(0.6,-0.15,1.25),31),
+         (T(52)+0.05,(1.85,-1.6,1.5),(0.6,-0.15,1.3),36),
+         (T(56)-0.1,(1.8,-1.65,1.5),(0.55,-0.1,1.3),34),
          (T(56)+0.25,(1.2,-1.95,1.2),(0.0,0.3,1.45),24),
          (T(65),(0.55,-2.0,1.25),(0.0,0.3,1.45),25),
          (T(66)-0.1,(0.5,-2.0,1.25),(0.0,0.3,1.45),25),
@@ -233,16 +242,17 @@ if SEG=="A1":
         ("whoosh",T(66)-0.05,0.6),("boing",T(69),0.25),("whoosh",T(86)-0.1,0.6),("bell_ding",T(88),0.45),("whoosh",T(89)-0.1,0.6),("ocean_waves",T(89),0.35,2.3)]
 
 if SEG=="A2":
-    BATH=lambda t: Vector((lx+0.22*math.sin(2*math.pi*1.25*t),ly-0.66,LR.POOL_Z+0.02))
-    CAM=[(29.0,(0.95,-2.05,1.5),(0.05,-0.6,1.05),24),(29.45,(0.62,-1.75,1.35),(0.05,-0.62,1.05),30),
-         (T(100),(0.6,-1.72,1.3),(0.05,-0.6,1.0),30),(T(100)+0.12,(0.55,-1.6,1.15),(0.05,-0.55,0.9),34),
-         (T(108)-0.15,(0.55,-1.62,1.2),(0.05,-0.6,0.95),33),(T(108)+0.25,(0.55,-1.7,1.6),(0.05,-0.75,1.7),31),
-         (T(112)-0.1,(0.55,-1.7,1.6),(0.05,-0.8,1.6),31),(T(112)+0.25,(0.35,-1.45,1.6),(0.05,-0.82,1.58),42),(34.8,(0.32,-1.4,1.6),(0.05,-0.82,1.58),44)]
+    def BATH(t):
+        th=-0.95+0.32*math.sin(2*math.pi*1.25*t); return Vector((lx+0.66*math.cos(th),ly+0.66*math.sin(th),LR.POOL_Z+0.04))
+    CAM=[(29.0,(-0.9,-2.15,1.65),(0.5,-0.3,1.0),24),(29.45,(-0.5,-1.8,1.4),(0.55,-0.32,1.0),28),
+         (T(100),(-0.45,-1.75,1.35),(0.5,-0.3,0.95),28),(T(100)+0.12,(-0.25,-1.6,1.2),(0.45,-0.25,0.85),33),
+         (T(108)-0.15,(-0.25,-1.62,1.25),(0.5,-0.3,0.95),32),(T(108)+0.25,(-0.35,-1.75,1.65),(0.85,-0.45,1.65),28),
+         (T(112)-0.1,(-0.32,-1.72,1.65),(0.85,-0.45,1.6),29),(T(112)+0.25,(0.05,-1.45,1.62),(0.88,-0.48,1.55),36),(34.8,(0.08,-1.42,1.62),(0.88,-0.48,1.55),37)]
     WIPE=rk.arm_near(BATH(0)); OTH=1-WIPE
     rk.face_seq=[(29.0,"proud"),(T(100),"happy"),(T(108),"proud"),(T(111),"neutral"),(T(112),"sleepy")]
     rk.arm_seq={WIPE:[(29.0,("aim",BATH)),(T(111)+0.1,("aim",lambda t:BATH(T(111)+0.1)))],OTH:[(29.0,("euler",-0.1,0.45))]}
     hum=lambda t: window(t,T(108)-0.1,T(111),0.15)
-    rk.body_fn=lambda t:{"rx":-0.12,"rz":0.07*math.sin(t*2*math.pi*1.25)*(1-ss((t-T(111))/0.2)),"bob":0.012*(1-ss((t-T(111))/0.2)),"sz":0.03*hum(t)*math.sin(t*9)}
+    rk.body_fn=lambda t:{"rx":-0.08,"rz":0.07*math.sin(t*2*math.pi*1.25)*(1-ss((t-T(111))/0.2)),"bob":0.012*(1-ss((t-T(111))/0.2)),"sz":0.03*hum(t)*math.sin(t*9)}
     def update(t):
         c,g,l=camstate(CAM,t); cam.location=c; tgt.location=g; cam.data.lens=l
         movs["lens"].rotation_euler=(0,0,lens_angle(t)); movs["gear1"].rotation_euler=(0,0.4,0); movs["gear2"].rotation_euler=(0,-0.64,0)
@@ -265,8 +275,8 @@ if SEG=="B":
          (T(115),(1.32,0.38,1.5),(0.6,1.85,1.5),30),(T(115)+0.12,(1.25,0.48,1.52),(0.58,1.7,1.55),35),
          (T(120)-0.1,(1.25,0.5,1.5),(0.6,1.8,1.5),34),(T(121)+0.1,(1.3,0.6,1.45),(0.7,2.5,1.35),32),
          (T(122)-0.15,(1.3,0.6,1.45),(0.7,2.5,1.35),32),(T(122)+0.25,(1.25,0.45,1.1),(0.62,1.3,0.98),33),
-         (T(129)-0.2,(1.22,0.42,1.05),(0.58,1.25,0.85),34),(T(129)+0.3,(1.15,0.35,0.7),(0.5,1.15,0.15),32),
-         (T(133)-0.2,(1.15,0.35,0.7),(0.5,1.15,0.12),32),(T(133)+0.2,(1.45,0.55,1.6),(0.62,2.3,1.35),27),
+         (T(129)-0.2,(1.3,0.35,1.05),(0.6,1.2,0.75),30),(T(129)+0.3,(1.4,0.15,0.95),(0.6,1.2,0.4),27),
+         (T(133)-0.2,(1.42,0.12,0.95),(0.6,1.2,0.35),27),(T(133)+0.2,(1.45,0.55,1.6),(0.62,2.3,1.35),27),
          (T(136),(1.4,0.6,1.58),(0.62,2.25,1.35),29),(T(136)+0.12,(1.35,0.68,1.58),(0.6,2.15,1.45),32),
          (T(140)-0.1,(1.3,0.75,1.55),(0.62,2.3,1.3),31),(T(140)+0.25,(1.0,1.3,1.4),(0.68,2.42,1.2),36),
          (T(142),(0.98,1.32,1.38),(0.66,2.42,1.22),37),(T(142)+0.12,(0.92,1.45,1.35),(0.66,2.42,1.24),44),
@@ -274,7 +284,7 @@ if SEG=="B":
     rk.face_seq=[(34.65,"neutral"),(T(115),"worried"),(T(118),"skeptical"),(T(122),"worried"),(T(125),"shock"),(T(129),"scream"),(T(131),"worried"),
                  (T(133),"furious"),(T(136),"scream"),(T(139)+0.2,"furious"),(T(140),"skeptical"),(T(142),"evil"),(T(145),"worried"),(T(149),"sleepy")]
     rk.arm_seq={OTH:[(34.65,("euler",-0.1,0.45)),(T(115)-0.1,("aim",lambda t:head()+Vector((0.2,0.0,0.15)),0.03,4)),(T(121),("euler",-0.15,0.4)),
-                     (T(122),("aim",lambda t:rk.A.location+Vector((0.0,-0.32,1.0)),0.035,9)),(T(133),("euler",-0.2,1.5,0.25,4)),(T(140),("aim",lambda t:Vector((0.65,2.4,1.25)))),(T(145),("euler",0.05,0.15))],
+                     (T(122),("aim",lambda t:rk.A.location+Vector((0.0,-0.32,1.0)),0.035,9)),(T(133),("euler",-0.2,1.5,0.25,4)),(T(140),("euler",-0.5,0.35,0.06,5)),(T(145),("euler",0.05,0.15))],
                 CAN_ARM:[(34.65,("euler",-0.05,0.3)),(T(122),("aim",lambda t:rk.A.location+Vector((0.18,-0.34,1.02)),0.035,9)),(T(133),("euler",-0.2,1.5,0.25,4)),(T(145),("euler",0.05,0.15))]}
     rk.body_fn=lambda t:{"rx":0.02*math.sin(t*40)*window(t,T(122),T(133),0.15)+0.1*ss((t-T(145))/0.6),"rz":0.06*math.sin(t*25)*window(t,T(136),T(140),0.1),
                           "dz":0.06*pulse(t,T(136),0.06,0.3)+0.03*abs(math.sin(t*14))*window(t,T(136),T(140),0.1)-0.05*ss((t-T(149))/0.6),
