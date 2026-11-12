@@ -1,4 +1,16 @@
-# STYLE FORMULA v5 (current — overrides anything below that conflicts)
+# STYLE FORMULA v6 (current — overrides anything below that conflicts)
+
+v6: **2D animation with a touch of 3D, not 3D animation.**
+- **Faces are 2D:** the drawn face disc always faces the camera exactly and sits inside the head circle (radius 0.8 R), so
+  beards/features can never stick out of the head from any angle. Head turns are shown the 2D way: the drawn features slide
+  sideways inside the circle (up to 0.17 R) towards where the head points.
+- **Flat two-tone shading on characters:** lit tone + soft shadow tone (shadow ≈ 70% of lit, soft edge), instead of smooth 3D
+  gradients. Thick ink outline all round. Reads as a drawing with a little depth.
+- **Camera on contact moments:** two-shots when characters touch or react to each other (the shoulder pat), and a closer shot
+  on whoever delivers the punchline gesture.
+
+# (v5 notes)
+# STYLE FORMULA v5
 
 Reference description of the style: *stylized 3D cartoon storytelling, minimalist round-headed characters, exaggerated body
 language, expressive facial animation, playful physical reactions, cinematic environments; characters move continuously and

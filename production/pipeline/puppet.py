@@ -187,6 +187,10 @@ def bake_puppet(name,spp=48,size=1024):
     for gname,g in groups.items():
         alb=bake.img_np(bake.bake_pass([g],'DIFFUSE',size,1,['COLOR']))
         lit=cv2.GaussianBlur(bake.img_np(bake.bake_pass([g],'DIFFUSE',512,spp,['DIRECT','INDIRECT'])),(0,0),2.0)
+        # 2D look with a touch of 3D: soft two-tone (lit / shadow) instead of smooth 3D shading
+        lum=lit.mean(-1); ref=max(1e-4,float(np.percentile(lum,97))); nl=lum/ref
+        x=np.clip((nl-0.40)/0.22,0,1); q=0.70+0.30*(x*x*(3-2*x))
+        lit=lit/np.maximum(lum,1e-4)[...,None]*(q*ref*0.80)[...,None]
         emi=bake.img_np(bake.bake_pass([g],'EMIT',512,1))
         inkmask=bake.ink_mask([g],size,3,min_angle=65)
         bake.apply_baked([g],bake.compose(alb,lit,emi,inkmask,exposure=0.92,sat=1.15,contrast=1.08),name=f"atlas_PUP_{name}_{gname}")
@@ -263,7 +267,7 @@ class Puppet:
         self.LOOK=E("look"); self.fpiv=E("facepiv",self.head,(0,0,D["head_c"]-D["neck"]))
         c=self.fpiv.constraints.new('TRACK_TO'); c.target=self.LOOK; c.track_axis='TRACK_Z'; c.up_axis='UP_Y'
         self.froll=E("faceroll",self.fpiv)
-        R=D["R"]; pts=[(0.96*R*math.cos(math.radians(a)),0.96*R*math.sin(math.radians(a))) for a in range(0,360,10)]
+        R=D["R"]; pts=[(0.80*R*math.cos(math.radians(a)),0.80*R*math.sin(math.radians(a))) for a in range(0,360,10)]
         me=bpy.data.meshes.new(self.name+"_face"); me.from_pydata([(x,y,0) for x,y in pts],[],[list(range(len(pts)))]); uv=me.uv_layers.new()
         for l in me.loops:
             co=me.vertices[l.vertex_index].co; uv.data[l.index].uv=(co.x/(2.6*R)+0.5,co.y/(2.6*R)+0.5)
@@ -391,7 +395,13 @@ class Puppet:
         bpy.context.view_layer.update()
         hc=self.fpiv.matrix_world.translation; cam=self.cam.matrix_world.translation
         fwd=(self.head.matrix_world.to_3x3()@Vector((0,-1,0))).normalized(); tc=(cam-hc).normalized()
-        self.LOOK.location=hc+(tc*(0.72-0.22*lw)+fwd*(0.28+0.22*lw)).normalized()   # looking at someone: 3/4 face, still readable
+        self.LOOK.location=hc+tc   # the face disc always faces the camera exactly (stays inside the head circle)
+        # 2D-style turning: the drawn features slide sideways inside the head circle towards where the head points
+        f2=Vector((fwd.x,fwd.y)); c2=Vector((tc.x,tc.y))
+        if f2.length>1e-4 and c2.length>1e-4:
+            ang=math.atan2(c2.x*f2.y-c2.y*f2.x,c2.dot(f2))
+        else: ang=0.0
+        k=max(-1.0,min(1.0,ang/1.1)); self.face.location=(-k*0.17*D["R"],-0.04*D["R"]*abs(k),D["R"]*1.02)
         self.froll.rotation_euler=(0,0,-(V["tilt"]+side+ay)*0.9)
         # feet
         Am=self.A.matrix_world
