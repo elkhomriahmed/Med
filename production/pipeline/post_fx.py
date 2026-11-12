@@ -63,6 +63,49 @@ def grade(img,kind,bloom,fidx=0):
     x=x*(1-0.34*np.clip(d,0,1.4)[...,None])   # cinematic vignette
     return np.clip(x*255,0,255).astype(np.uint8)
 
+FOG={"night":((0.07,0.12,0.34),0.075),"day":((0.70,0.78,0.90),0.03),"morning":((0.95,0.82,0.65),0.04),"interior":((0.45,0.36,0.26),0.05)}
+def load_passes(IN,fidx):
+    """Depth (+actor mask), light shadow map and matrices written by passes.py, or None."""
+    d=os.path.join(IN,f"d_{fidx:04d}.png"); m=os.path.join(IN,f"m_{fidx:04d}.json")
+    if not (os.path.exists(d) and os.path.exists(m)): return None
+    D=cv2.imread(d,cv2.IMREAD_UNCHANGED).astype(np.float32)/65535.0; M=json.load(open(m))
+    z=D[...,2]*M["depth_max"]; actor=D[...,1]>0.5
+    S=None; sp=os.path.join(IN,f"s_{fidx:04d}.png")
+    if "light" in M and os.path.exists(sp):
+        s=cv2.imread(sp,cv2.IMREAD_UNCHANGED).astype(np.float32)/65535.0
+        S=(s[...,2]*M["depth_max"],s[...,3])
+    return z,actor,S,M
+
+def shadow_pass(img,P,strength=0.5,col=(0.20,0.24,0.45)):
+    """Real shadow mapping in post: rebuild each pixel's world position from depth, look it up in the light's view of
+    the characters; if a character is between the light and the point, the point is in that character's shadow."""
+    z,actor,S,M=P
+    if S is None: return img
+    h,w=z.shape; c=M["cam"]; Mc=np.array(c["M"],np.float32)
+    v,u=np.mgrid[0:h,0:w].astype(np.float32); xn=(u+0.5)/w*2-1; yn=1-(v+0.5)/h*2
+    Pc=np.stack([xn*c["tw"]*z,yn*c["th"]*z,-z,np.ones_like(z)],-1)
+    Pw=Pc@Mc.T
+    L=M["light"]; Ml=np.linalg.inv(np.array(L["M"],np.float32)); Pl=Pw@Ml.T
+    zl=-Pl[...,2]; ok=(zl>0.05)&(~actor)&(z>0.01)
+    ul=Pl[...,0]/np.maximum(zl,1e-3)/L["tw"]; vl=Pl[...,1]/np.maximum(zl,1e-3)/L["th"]
+    sd,sa=S; sh,sw=sd.shape
+    px=np.clip(((ul+1)/2*sw).astype(np.int32),0,sw-1); py=np.clip(((1-vl)/2*sh).astype(np.int32),0,sh-1)
+    inside=(np.abs(ul)<1)&(np.abs(vl)<1)&ok
+    occ=(sa[py,px]>0.5)&(sd[py,px]<zl-0.04)&inside
+    m=cv2.GaussianBlur(occ.astype(np.float32),(0,0),2.5)
+    H,W=img.shape[:2]; m=cv2.resize(m,(W,H),interpolation=cv2.INTER_LINEAR)[...,None]
+    x=img.astype(np.float32)/255.0; tint=np.array(col,np.float32)
+    x=x*(1-strength*m)+x*tint*strength*m*0.6
+    return np.clip(x*255,0,255).astype(np.uint8)
+
+def air(img,P,kind):
+    """Atmospheric depth: far things fade into the scene's air colour (actors never filtered)."""
+    z,actor,S,M=P; col,dens=FOG.get(kind,FOG["day"])
+    f=1-np.exp(-np.maximum(0,z-1.5)*dens); f[actor]=0
+    H,W=img.shape[:2]; f=cv2.resize(cv2.GaussianBlur(f.astype(np.float32),(0,0),1.0),(W,H),interpolation=cv2.INTER_LINEAR)[...,None]
+    x=img.astype(np.float32)/255.0; c=np.array(col,np.float32)**(1/2.2)
+    return np.clip((x*(1-f)+c*f)*255,0,255).astype(np.uint8)
+
 def shadows(img,polys):
     if not polys: return img
     h,w=img.shape[:2]; s=4; m=np.zeros((h//s,w//s),np.float32)
@@ -76,8 +119,12 @@ def shadows(img,polys):
 
 def job(a):
     f,out,polys,kind,bloom=a
-    img=cv2.imread(f,cv2.IMREAD_COLOR)[:,:,::-1]
-    img=shadows(img,polys); img=grade(img,kind,bloom,int(os.path.basename(f)[2:6]))
+    img=cv2.imread(f,cv2.IMREAD_COLOR)[:,:,::-1]; fidx=int(os.path.basename(f)[2:6])
+    P=load_passes(os.path.dirname(f),fidx)
+    if P is not None:   # world -> air -> (lens blur is in the render) -> shadows -> bloom/grade/particles
+        img=shadow_pass(img,P); img=air(img,P,kind); img=shadows(img,polys)
+    else: img=shadows(img,polys)
+    img=grade(img,kind,bloom,fidx)
     cv2.imwrite(os.path.join(out,os.path.basename(f)),img[:,:,::-1])
 
 if __name__=="__main__":

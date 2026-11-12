@@ -1,4 +1,18 @@
-# STYLE FORMULA v7 (current — overrides anything below that conflicts)
+# STYLE FORMULA v8 (current — overrides anything below that conflicts)
+
+v8 = the full 4-pass look with no shortcuts (`pipeline/passes.py`, `post_fx.py`):
+- **Depth/actor pass** (per frame, ~0.13 s): every vertex's camera-space depth is written into a colour attribute and the frame
+  is re-rendered showing vertex colours -> an exact depth image + a character mask (the fast renderer has no depth output).
+- **Shadow pass** (per frame, ~0.10 s): the characters are rendered alone from the scene's main light (`sc["shadow_light"]`);
+  post rebuilds every pixel's world position from depth and tests it against that light view -> each character casts its
+  real silhouette shadow onto floors/walls/props (shadow mapping), softened and tinted cool.
+- **Post order:** world -> air (depth fog per mood, characters excluded) -> lens blur (in the render) -> shadow pass ->
+  contact shadows -> haze -> bloom (lights only) -> particles -> grade -> vignette.
+- **Framing:** close-ups keep the whole head and hat in frame; open each place on a wide/high angle that shows the dressed set
+  and the shadows before pushing in.
+
+# (v7 notes)
+# STYLE FORMULA v7
 
 From the niche creator's own guide ("How to make a 3D cartoon look this good", 2026-11-12) and the slot-machine short:
 the look = a plain build + **4 passes**:

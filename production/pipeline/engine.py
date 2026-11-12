@@ -238,8 +238,13 @@ def run(sc,cam,tgt,t0,t1,update,animated,swaps,out,nproc=2,keys_only=None,key_ho
     sc.render.image_settings.file_format='PNG'
     if keys_only:
         bpy.app.handlers.frame_change_pre.append(apply_swaps)
+        st=None
+        if sc.get("passes"):
+            import passes; st=passes.setup(sc)
         for f in keys_only:
             sc.frame_set(f); sc.render.filepath=f"{out}/k_{f:04d}.png"; bpy.ops.render.render(write_still=True)
+            if st is not None:
+                passes.render_depth(sc,st,f"{out}/d_{f:04d}.png"); lc=passes.render_shadowmap(sc,st,f"{out}/s_{f:04d}.png"); passes.matrices(sc,lc,f"{out}/m_{f:04d}.json")
         return
     json.dump({mn:[(s,p) for s,p in seq] for mn,seq in swaps.items()},open(out+"/swaps.json","w"))
     bpy.ops.wm.save_as_mainfile(filepath=out+"/scene.blend")
