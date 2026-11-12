@@ -8,11 +8,22 @@ import sys, os, json, glob, numpy as np, cv2
 from multiprocessing import Pool
 
 GRADES={  # (lift rgb, gain rgb, saturation, contrast)
- "day":     ((0.00,0.01,0.03),(1.04,1.01,0.95),1.10,1.06),
+ "day":     ((0.02,0.02,0.04),(1.08,1.04,0.98),1.28,1.08),
  "morning": ((0.02,0.01,0.03),(1.06,1.00,0.92),1.08,1.05),
  "night":   ((0.01,0.02,0.06),(1.02,0.99,1.02),1.06,1.08),
  "interior":((0.01,0.01,0.03),(1.06,1.01,0.93),1.08,1.06),
 }
+def night_vivid(x):
+    """Competitor-style night: bright, saturated cobalt blue world (indigo shadows -> cobalt mids -> lavender whites),
+    while warm things (lamps, red/orange/yellow objects, light pools) stay warm. x: float 0..1 RGB."""
+    L=(0.3*x[...,0]+0.55*x[...,1]+0.15*x[...,2])[...,None]; Lb=np.clip(L,0,1)**0.62
+    c0=np.array([0.03,0.04,0.30],np.float32); c1=np.array([0.16,0.26,0.92],np.float32); c2=np.array([0.80,0.84,1.0],np.float32)
+    k=np.clip(Lb/0.55,0,1); blue=c0+(c1-c0)*k; k2=np.clip((Lb-0.55)/0.45,0,1)**1.3; blue=blue+(c2-blue)*k2
+    r,b=x[...,0],x[...,2]; mx=x.max(-1); mn=x.min(-1); sat=(mx-mn)/(mx+1e-4)
+    warm=np.clip((r-b)*2.5,0,1)*np.clip(sat*2,0,1)*np.clip(mx*1.6-0.2,0,1)
+    w=(0.72*(1-warm))[...,None]; out=blue*w+np.clip(x*1.25+0.05,0,1)*(1-w)
+    g=out.mean(-1,keepdims=True); return np.clip(g+(out-g)*1.15,0,1)
+
 def grade(img,kind,bloom):
     x=img.astype(np.float32)/255.0
     # bloom: bright parts glow
@@ -21,7 +32,10 @@ def grade(img,kind,bloom):
         h,w=x.shape[:2]; sm=cv2.resize(hi,(w//4,h//4),interpolation=cv2.INTER_AREA)
         g=cv2.GaussianBlur(sm,(0,0),6)+cv2.GaussianBlur(sm,(0,0),18)*0.8
         x=x+cv2.resize(g,(w,h),interpolation=cv2.INTER_LINEAR)*bloom
-    lift,gain,sat,con=GRADES.get(kind,GRADES["day"])
+    if kind=="night":
+        x=night_vivid(np.clip(x,0,1)); lift,gain,sat,con=(0,0,0),(1,1,1),1.0,1.04
+    else:
+        lift,gain,sat,con=GRADES.get(kind,GRADES["day"])
     x=x*np.array(gain,np.float32)+np.array(lift,np.float32)*(1-x)
     x=np.clip(x,0,1); x=x+(x-x*x)*(con-1)*1.6*(x-0.5)*2   # soft S-curve around mid grey
     g=x.mean(-1,keepdims=True); x=g+(x-g)*sat

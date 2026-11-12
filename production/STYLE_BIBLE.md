@@ -1,4 +1,23 @@
-# STYLE FORMULA v2 (current — overrides anything below that conflicts)
+# STYLE FORMULA v3 (current — overrides anything below that conflicts)
+
+v3 changes (after the second competitor study, "The Burglar Who Only Moved Furniture"):
+- **Head is a separate circle sitting ON the body** (head centre = torso top + 0.8 R; only ~4 cm overlap), never sunk into it.
+- **Proportions:** head radius 0.29 m; torso ≈ 0.7 × head width, visible torso ≈ 1.35 × head diameter; legs ≈ 1.1 × head diameter, thin.
+- **Spine bends** (shape keys: forward 0.95 rad, back 0.6, sideways 0.55): sneaking, leaning in, arching back to laugh, folding over,
+  slumping, hip-cocked weight shift. The head and shoulders ride the curved spine.
+- **Spring-driven motion:** every channel (lean, bend, crouch, head, hands) follows its pose target through a damped spring
+  (overshoot + settle); the head is 30% slower than the body (overlapping action); hands lag the body (follow-through).
+  `snap` sets speed, `damp` sets bounciness (0.3 = bouncy hit, 0.5 = smooth).
+- **Jumps are gravity arcs** with an automatic squash on landing.
+- **Calm life:** slow weight shift + breathing + slow head drift. Never jitter.
+- **Talking body language:** `talk(words,a,b)` adds beat gestures (head nod + hand bump on stressed words) and mouth flaps.
+- **Faces change constantly:** a new expression about every 0.8–1.2 s, automatic blinks every 2–3.5 s, mouth flaps while talking
+  (every expression has `_blink` and `_talk` versions).
+- **Night colour = bright saturated cobalt** (`post_fx.night_vivid`): indigo shadows → cobalt mid-tones → lavender whites, while
+  warm things (lamps, light pools, red/orange/yellow objects) stay warm. Target: median brightness ~185/255, saturation ~180/255.
+  Day grade: saturation ×1.28, slightly brighter.
+- **Staging:** raised arms go up-and-back, never across the face; the arm nearest the camera does the readable action.
+
 
 Locked after the competitor reverse-engineering ("How One Cart Stopped an Entire Army") and the v1 lighthouse review.
 The three things that matter most, in order: **how the characters look and move**, **every line has its own picture**,

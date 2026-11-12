@@ -99,8 +99,10 @@ EXPR={ # eyes, brows, mouth
  "skeptical":("lidded","raised","flat"), "sleepy":("closed","calm","flat"), "evil":("lidded","angry","smirk"),
  "proud":("closed","raised","smile"), "talk":("open","calm","o"),
 }
-def make(path,expr,extra=()):
+def make(path,expr,extra=(),variant=None):
     e,b,m=EXPR[expr]
+    if variant=="blink": e="closed" if e not in("closed",) else e
+    if variant=="talk": m={"flat":"o","smirk":"open","smile":"open","frown":"o","grin":"open","grit":"shout","o":"open","open":"o","shout":"open"}.get(m,"open")
     im=Image.new("RGBA",(S,S),(0,0,0,0)); d=ImageDraw.Draw(im)
     if "beard" in extra: beard(d)
     for s in (-1,1):
@@ -114,7 +116,10 @@ CAST={"keeper":("beard",),"engineer":("glasses",)}
 def build(outdir):
     os.makedirs(outdir,exist_ok=True)
     for name,extra in CAST.items():
-        for k in EXPR: make(f"{outdir}/{name}_{k}.png",k,extra)
+        for k in EXPR:
+            make(f"{outdir}/{name}_{k}.png",k,extra)
+            make(f"{outdir}/{name}_{k}_blink.png",k,extra,"blink")
+            make(f"{outdir}/{name}_{k}_talk.png",k,extra,"talk")
 if __name__=="__main__":
     import sys; build(sys.argv[1] if len(sys.argv)>1 else "assets/faces")
     print("faces ok")
