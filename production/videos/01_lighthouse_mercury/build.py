@@ -32,7 +32,7 @@ if SEG in("A1","A2","C"):
     LR.build(state); LR.lights(state)
     lx,ly=LR.LENS_C
     # sky panorama around the room (inward-facing cylinder)
-    bpy.ops.mesh.primitive_cylinder_add(radius=4.6,depth=8,location=(0,0,1.78),vertices=96)
+    bpy.ops.mesh.primitive_cylinder_add(radius=13.8,depth=24,location=(0,0,1.78),vertices=128)   # far out so the beam has room; same view angles as before
     sky=bpy.context.object; sky.name="sky"
     bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT'); bpy.ops.mesh.flip_normals(); bpy.ops.object.mode_set(mode='OBJECT')
     sky.data.materials.append(image_live("sky_m",f"{AS}/pano_{state}.png")); live(sky)
@@ -58,15 +58,9 @@ if SEG in("A1","A2","C"):
         return root
     if state=="night":
         ship=make_ship("ship")
-        # light beams: two long flat wedges outside the windows, turning with the lens
-        beam=empty("beam",(lx,ly,LR.POOL_Z+0.74))
-        for a in (0,math.pi):
-            me=bpy.data.meshes.new("beam"); r0,r1=3.05,8.5; ca,sa=math.cos(a),math.sin(a); px,py=-sa,ca
-            def vx(r,w,h): return (r*ca+w*px,r*sa+w*py,h)
-            v=[vx(r0,0.2,0.12),vx(r0,-0.2,0.12),vx(r0,-0.2,-0.12),vx(r0,0.2,-0.12),vx(r1,1.6,0.6),vx(r1,-1.6,0.6),vx(r1,-1.6,-0.9),vx(r1,1.6,-0.9)]
-            f=[[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]]; f+= [list(reversed(q)) for q in f]
-            me.from_pydata(v,[],f); bo=bpy.data.objects.new("beamq",me); sc.collection.objects.link(bo); bo.location=beam.location
-            bo.data.materials.append(solid("beam_m",(1.0,0.93,0.66))); live(bo); child(bo,beam)
+        # light beams: wide wedges fading from warm core to sky colour (engine.light_beam), turning with the lens
+        beam=light_beam("beam",(lx,ly,LR.POOL_Z+0.74),r1=12.5,far=(3.0,1.3,-1.6)); animated.append(beam)
+        animated.extend(bpy.data.objects[n] for n in beam["beam_subs"])
     # mercury pool (fills during the pour in A1; full afterwards)
     pool=mk(cyl,(lx,ly,LR.POOL_Z-0.005),0.62,0.03,solid("merc",(0.80,0.83,0.88)),verts=48,bevel=0); animated.append(pool)
     hl=mk(cyl,(lx-0.25,ly-0.28,LR.POOL_Z+0.012),0.12,0.004,solid("merc_hi",(0.97,0.98,1.0)),verts=24,bevel=0); child(hl,pool)
@@ -202,16 +196,16 @@ if SEG=="A1":
          (T(86)+0.15,(1.35,-1.8,1.3),(0.3,0.05,1.4),26),
          (T(88)+0.1,(1.3,-1.75,1.3),(0.3,0.05,1.4),30),
          (T(89)-0.2,(1.25,-1.7,1.3),(0.3,0.05,1.4),30),
-         (T(89)+0.25,(0.65,0.95,1.75),(2.1,4.1,1.45),28),
-         (29.1,(0.7,1.05,1.75),(2.3,4.1,1.4),30)]
+         (T(89)+0.25,(1.85,0.45,1.72),(0.3,4.6,1.25),27),
+         (29.1,(1.95,0.6,1.76),(0.0,4.6,1.2),29)]
     def update(t):
         c,g,l=camstate(CAM,t)
         if T(33)<=t<T(33)+0.5: c=c+Vector((0.012*math.sin(t*90),0,0.01*math.sin(t*77)))*(1-(t-T(33))/0.5)
         cam.location=c; tgt.location=g; cam.data.lens=l
         movs["lens"].rotation_euler=(0,0,lens_angle(t))
         movs["gear1"].rotation_euler=(0,gear_angle(t),0); movs["gear2"].rotation_euler=(0,-gear_angle(t)*1.6,0)
-        beam=bpy.data.objects["LIVE_beam"]; beam.rotation_euler=(0,0,lens_angle(t)); bs=ss((t-T(56))/0.8)
-        beam.scale=(max(bs,0.001),max(bs,0.001),1)
+        beam=bpy.data.objects["LIVE_beam"]; beam.rotation_euler=(0,0,lens_angle(t)+1.75); bs=ss((t-T(56))/0.8)   # +1.75: beam crosses the window shot on "sweeps"
+        beam.scale=(max(bs,0.001),max(bs,0.001),max(bs,0.001)); beam_update(beam,c)
         sh=bpy.data.objects["LIVE_ship"]; u=ss((t-(T(34)-0.3))/2.6); sh.location=(-3.3+2.4*u,3.85,1.05); sh.rotation_euler=(0,0.03*math.sin(t*2.1),0); sh.scale=(1,1,1)
         for r in rigs: r.pose(t)
         bpy.context.view_layer.update()
@@ -277,14 +271,14 @@ if SEG=="B":
          (T(129)-0.2,(1.3,0.35,1.05),(0.6,1.2,0.75),30),(T(129)+0.3,(1.4,0.15,0.95),(0.6,1.2,0.4),27),
          (T(133)-0.2,(1.42,0.12,0.95),(0.6,1.2,0.35),27),(T(133)+0.2,(1.45,0.55,1.6),(0.62,2.3,1.35),27),
          (T(136),(1.4,0.6,1.58),(0.62,2.25,1.35),29),(T(136)+0.12,(1.35,0.68,1.58),(0.6,2.15,1.45),32),
-         (T(140)-0.1,(1.3,0.75,1.55),(0.62,2.3,1.3),31),(T(140)+0.25,(1.0,1.3,1.4),(0.68,2.42,1.2),36),
-         (T(142),(0.98,1.32,1.38),(0.66,2.42,1.22),37),(T(142)+0.12,(0.92,1.45,1.35),(0.66,2.42,1.24),44),
-         (T(145)-0.15,(0.92,1.45,1.35),(0.66,2.42,1.24),43),(T(145)+0.3,(2.25,-2.75,2.3),(0.5,1.35,0.95),22),(46.6,(2.1,-2.55,2.2),(0.5,1.35,1.0),23)]
+         (T(140)-0.1,(1.3,0.75,1.55),(0.62,2.3,1.3),31),(T(140)+0.25,(1.22,1.18,1.42),(0.68,2.42,1.2),40),
+         (T(142),(1.2,1.2,1.4),(0.66,2.42,1.22),41),(T(142)+0.12,(1.14,1.3,1.37),(0.66,2.42,1.24),48),
+         (T(145)-0.15,(1.14,1.3,1.37),(0.66,2.42,1.24),47),(T(145)+0.08,(1.5,0.55,2.05),(0.6,1.7,1.15),30),(T(145)+0.35,(1.85,-2.55,2.25),(0.5,1.35,0.95),22),(46.6,(1.6,-2.1,2.1),(0.5,1.35,1.0),24)]
     rk.face_seq=[(34.65,"neutral"),(T(115),"worried"),(T(118),"skeptical"),(T(122),"worried"),(T(125),"shock"),(T(129),"scream"),(T(131),"worried"),
                  (T(133),"furious"),(T(136),"scream"),(T(139)+0.2,"furious"),(T(140),"skeptical"),(T(142),"evil"),(T(145),"worried"),(T(149),"sleepy")]
     rk.arm_seq={OTH:[(34.65,("euler",-0.1,0.45)),(T(115)-0.1,("aim",lambda t:head()+Vector((0.2,0.0,0.15)),0.03,4)),(T(121),("euler",-0.15,0.4)),
-                     (T(122),("aim",lambda t:rk.A.location+Vector((0.0,-0.32,1.0)),0.035,9)),(T(133),("euler",-0.2,1.5,0.25,4)),(T(140),("euler",-0.5,0.35,0.06,5)),(T(145),("euler",0.05,0.15))],
-                CAN_ARM:[(34.65,("euler",-0.05,0.3)),(T(122),("aim",lambda t:rk.A.location+Vector((0.18,-0.34,1.02)),0.035,9)),(T(133),("euler",-0.2,1.5,0.25,4)),(T(145),("euler",0.05,0.15))]}
+                     (T(122),("aim",lambda t:rk.A.location+Vector((0.0,-0.32,1.0)),0.035,9)),(T(133),("euler",-0.2,1.5,0.25,4)),(T(140)-0.1,("euler",-0.12,0.22,0.05,5)),(T(145),("euler",0.05,0.15))],
+                CAN_ARM:[(34.65,("euler",-0.05,0.3)),(T(122),("aim",lambda t:rk.A.location+Vector((0.18,-0.34,1.02)),0.035,9)),(T(133),("euler",-0.2,1.5,0.25,4)),(T(140)-0.1,("euler",-0.12,0.22,0.05,5)),(T(145),("euler",0.05,0.15))]}
     rk.body_fn=lambda t:{"rx":0.02*math.sin(t*40)*window(t,T(122),T(133),0.15)+0.1*ss((t-T(145))/0.6),"rz":0.06*math.sin(t*25)*window(t,T(136),T(140),0.1),
                           "dz":0.06*pulse(t,T(136),0.06,0.3)+0.03*abs(math.sin(t*14))*window(t,T(136),T(140),0.1)-0.05*ss((t-T(149))/0.6),
                           "sz":-0.06*ss((t-T(149))/0.6)+0.06*pulse(t,T(115),0.08,0.3),"bob":0.012*(1-0.7*ss((t-T(149))/0.6))}
@@ -327,8 +321,8 @@ if SEG=="C":
          (T(180),(-1.42,-1.5,2.38),(0.6,0.45,0.6),20),(T(180)+0.15,(-1.3,-1.35,2.3),(1.2,1.0,0.2),26),
          (T(183)-0.2,(-1.3,-1.35,2.3),(1.2,1.0,0.25),26),(T(183)+0.25,(1.6,-1.35,1.6),(0.92,-0.45,1.5),34),
          (T(188),(1.55,-1.3,1.6),(0.92,-0.45,1.52),36),(T(188)+0.12,(1.5,-1.22,1.6),(0.92,-0.45,1.55),41),
-         (T(190)-0.15,(1.5,-1.22,1.6),(0.92,-0.45,1.55),40),(T(190)+0.25,(0.65,0.95,1.75),(2.1,4.1,1.35),28),
-         (T(194)-0.15,(0.7,1.0,1.75),(2.3,4.1,1.3),29),(T(194)+0.25,(1.75,-1.5,1.55),(0.92,-0.45,1.3),30),(T(199),(1.65,-1.42,1.5),(0.92,-0.45,1.25),33),(DUR+0.1,(1.55,-1.32,1.45),(0.92,-0.45,1.2),37)]
+         (T(190)-0.15,(1.5,-1.22,1.6),(0.92,-0.45,1.55),40),(T(190)+0.03,(1.8,-0.4,1.85),(1.6,2.2,1.5),30),(T(190)+0.28,(0.65,0.95,1.75),(2.1,4.1,1.35),28),
+         (T(194)-0.15,(0.7,1.0,1.75),(2.3,4.1,1.3),29),(T(194)+0.05,(1.85,-0.3,1.85),(0.92,-0.45,1.35),28),(T(194)+0.28,(1.75,-1.5,1.55),(0.92,-0.45,1.3),30),(T(199),(1.65,-1.42,1.5),(0.92,-0.45,1.25),33),(DUR+0.1,(1.55,-1.32,1.45),(0.92,-0.45,1.2),37)]
     rk.face_seq=[(46.4,"sleepy"),(T(171),"worried"),(T(176),"neutral"),(T(183),"sleepy"),(T(188),"worried"),(T(194),"sleepy")]
     A0=rk.arm_near(Vector((0,0,0)))
     rk.arm_seq={0:[(46.4,("euler",0.0,0.25)),(T(199),("euler",0.15,0.08))],1:[(46.4,("euler",0.0,0.25)),(T(199),("euler",0.15,0.08))]}
@@ -337,7 +331,7 @@ if SEG=="C":
     def update(t):
         c,g,l=camstate(CAM,t); cam.location=c; tgt.location=g; cam.data.lens=l
         movs["lens"].rotation_euler=(0,0,lens_angle(t)); movs["gear1"].rotation_euler=(0,0.4,0); movs["gear2"].rotation_euler=(0,-0.64,0)
-        bm=bpy.data.objects["LIVE_beam"]; bm.rotation_euler=(0,0,lens_angle(t)); bm.scale=(1,1,1)
+        bm=bpy.data.objects["LIVE_beam"]; bm.rotation_euler=(0,0,lens_angle(t)); bm.scale=(1,1,1); beam_update(bm,cam.location)
         sh=bpy.data.objects["LIVE_ship"]; u=ss((t-(T(190)-0.2))/2.2); sh.location=(0.9+2.2*u,3.9,1.05); sh.rotation_euler=(0,0.03*math.sin(t*2.1),math.pi); sh.scale=(1,1,1)
         pool.scale=(1,1,1)
         for r in rigs: r.pose(t)

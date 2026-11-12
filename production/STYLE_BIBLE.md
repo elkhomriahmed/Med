@@ -120,3 +120,11 @@ Every video follows these rules.
 - **Bake each place once, per lighting state.** Characters and moving props are baked as separate pieces so they can animate.
 - **Fast frames:** frames render with the fast renderer in 2 parallel processes, and segments are joined afterwards.
 - **Check before every full render:** low-res still checks of each segment's key frames, including where props sit in hands, framing, and outlines.
+
+### Lessons from video 1 (checked on every new video)
+- **Camera paths never pass through a character.** Between two camera keys the camera moves in a straight line; if that line comes within ~0.6 m of a character's head, add a waypoint key that swings around/above them.
+- **Arms out of close-ups.** Before cutting the camera close beside a character, drop their gesturing arms (`euler` low) ~0.1 s earlier so no black arm bar crosses the lens.
+- **Keep the camera ~0.4 m off walls** in wide shots so no wall edge sits on the frame edge.
+- **Light beams:** use `engine.light_beam` (banded wedge fading from warm core to sky colour) + `engine.beam_update` each frame (flattens a beam arm when the camera looks along it). The fast renderer has no transparency or texture gradients, so never use a single flat mesh for light.
+- **Sky panorama cylinders sit far out (≈14 m)** so beams, ships and other outside objects have room in front of them.
+- **Check model joins in a wide still** (caps, lids, tops sitting on what they belong to) before the full render.

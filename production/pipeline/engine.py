@@ -246,3 +246,43 @@ def run(sc,cam,tgt,t0,t1,update,animated,swaps,out,nproc=2,keys_only=None):
         procs.append(subprocess.Popen([sys.executable,os.path.join(HERE,"render_range.py"),out,str(a),str(b)],env=dict(os.environ)))
     for p in procs: p.wait()
     print("FRAMES",f0,f1,round(time.time()-t_,1),flush=True)
+
+def light_beam(name,loc,angles=(0.0,math.pi),r0=3.05,r1=30.0,near=(0.28,0.16),far=(7.0,2.6,-3.4),
+               core=(1.0,0.95,0.72),sky=(0.13,0.21,0.42),bands=14):
+    """Lighthouse beams for the fast renderer (no transparency, no texture gradients there): each beam is a long
+    widening wedge cut into bands whose flat colours step from a warm core at the lamp to the sky colour far out,
+    so the beam reads as glowing light that fades into the night. Returns the LIVE_ root to rotate."""
+    root=bpy.data.objects.new("LIVE_"+name,None); bpy.context.scene.collection.objects.link(root); root.location=loc
+    root["beam_dirs"]=[float(a) for a in angles]; root["beam_r0"]=r0; subs=[]
+    nw,nh=near; fw,fz1,fz0=far
+    def sec(u):   # cross-section at fraction u of the length
+        e=u**1.15; return r0+(r1-r0)*u, nw+(fw-nw)*e, nh+(fz1-nh)*e, -nh+(fz0+nh)*e
+    for a in angles:
+        ca,sa=math.cos(a),math.sin(a); px_,py_=-sa,ca
+        def vx(r,w,h): return (r*ca+w*px_,r*sa+w*py_,h)
+        sub=bpy.data.objects.new(f"LIVE_{name}_arm",None); bpy.context.scene.collection.objects.link(sub); sub.parent=root; subs.append(sub)
+        for b in range(bands):
+            u0,u1=b/bands,(b+1)/bands; k=(1-(b+0.5)/bands)**1.5
+            col=tuple(sky[j]+(core[j]-sky[j])*k for j in range(3))
+            r_a,w_a,t_a,d_a=sec(u0); r_b,w_b,t_b,d_b=sec(u1)
+            v=[vx(r_a,w_a,t_a),vx(r_a,-w_a,t_a),vx(r_a,-w_a,d_a),vx(r_a,w_a,d_a),vx(r_b,w_b,t_b),vx(r_b,-w_b,t_b),vx(r_b,-w_b,d_b),vx(r_b,w_b,d_b)]
+            f=[[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]]
+            if b==0: f.append([0,1,2,3])
+            f+=[list(reversed(q)) for q in f]
+            me=bpy.data.meshes.new(f"{name}_{b}"); me.from_pydata(v,[],f); uv=me.uv_layers.new()
+            bo=bpy.data.objects.new(f"LIVE_{name}q",me); bpy.context.scene.collection.objects.link(bo)
+            bo.data.materials.append(solid(f"{name}_band{b}",col)); bo.parent=sub
+    root["beam_subs"]=[s_.name for s_ in subs]
+    return root
+
+def beam_update(root,cam_loc,lo=0.38,hi=0.62):
+    """Flatten a beam arm when the camera looks along it (its stepped end-on view looks wrong); call after
+    setting the root's rotation and the camera. Returns the arm empties so they can be keyed."""
+    bpy.context.view_layer.update(); subs=[bpy.data.objects[n] for n in root["beam_subs"]]
+    R=root.matrix_world
+    for a,sub in zip(root["beam_dirs"],subs):
+        o=R.translation; d=(R.to_3x3()@Vector((math.cos(a),math.sin(a),0))).normalized()
+        p0=o+d*root["beam_r0"]*root.scale.x; v=(p0-Vector(cam_loc)).normalized()
+        ang=math.acos(max(-1.0,min(1.0,v.dot(d))))      # 0 = looking straight down the beam
+        k=ss((ang-lo)/(hi-lo)); sub.scale=(1,1,max(0.001,k))
+    return subs

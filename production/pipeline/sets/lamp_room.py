@@ -99,7 +99,7 @@ def build(state="night"):
         lens.append(torus(c,0.26,0.03,brass,rot=(0,math.pi/2,a),coll=M,name="MOV_lens"))
         lens.append(torus(c,0.14,0.02,brass,rot=(0,math.pi/2,a),coll=M,name="MOV_lens"))
     lens.append(sph((lx,ly,base_z+0.72),(0.16,0.16,0.2),lamp,coll=M,name="MOV_lens"))
-    lens.append(cyl((lx,ly,base_z+H+0.05),0.3,0.08,brass,verts=40,coll=M,name="MOV_lens"))
+    lens.append(cyl((lx,ly,base_z+1.40),0.3,0.08,brass,verts=40,coll=M,name="MOV_lens"))   # cap sits on the top ring
     for o in M.objects:
         if o.name.startswith("MOV_lens") and o.data and len(o.data.materials) and o.data.materials[0] and o.data.materials[0].name.startswith(("lens_glass","lens_lamp")):
             o.visible_shadow=False   # let the lamp light pass through the glass
