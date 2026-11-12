@@ -44,7 +44,7 @@ def esc(s): return s.replace("\\","").replace("'","\u2019").replace(":","\\:").r
 dt=[]
 for i,(a,b,w) in enumerate(W):
     e=W[i+1][0] if i+1<len(W) else min(DUR,b+0.4)
-    dt.append(f"drawtext=fontfile={font}:text='{esc(w)}':fontsize='120*max(0.15\\,1-exp(-abs(t-{a:.3f})*14)*cos(abs(t-{a:.3f})*22))':fontcolor=white:borderw=11:bordercolor=black:shadowx=4:shadowy=6:shadowcolor=black@0.5:x=(w-text_w)/2:y=h*0.68+60-text_h/2:enable='between(t,{a:.3f},{e:.3f})'")
+    dt.append(f"drawtext=fontfile={font}:text='{esc(w)}':fontsize='120*max(0.15\\,1-exp(-abs(t-{a:.3f})*14)*cos(abs(t-{a:.3f})*22))':fontcolor=white:borderw=11:bordercolor=black:shadowx=4:shadowy=6:shadowcolor=black@0.5:x=(w-text_w)/2:y=h*0.68+60-text_h/2:enable='gte(t,{a:.3f})*lt(t,{e:.3f})'")
 for t in C.get("flashes",[]):
     dt.append(f"drawbox=x=0:y=0:w=iw:h=ih:color=white@0.85:t=fill:enable='between(t,{t-0.001:.3f},{t+1/FPS:.3f})'")
     dt.append(f"drawbox=x=0:y=0:w=iw:h=ih:color=white@0.4:t=fill:enable='between(t,{t+1/FPS:.3f},{t+2/FPS:.3f})'")
