@@ -80,3 +80,43 @@ These are the rules for every video in this project. Change them only on purpose
 - `pipeline/characters.py`: keeper (red knit beanie, white beard, yellow raincoat) and engineer (bowl-cut hair, round glasses, striped blue tie)
 - `pipeline/sets/cottage.py`: keeper's cottage
 - Reference frame: `look_dev/renders/v4_frame.png`
+
+---
+
+# Production formula (locked from the approved 5-second sample, v11)
+
+Every video follows these rules.
+
+## Look
+- **Characters:** 3D white ball heads with drawn faces that always turn to the camera. Bean bodies and thin ink arms and legs.
+- **Outlines:** a thick black ink outline around the whole character (head, body, hat, clothes). The world has **no** outlines.
+- **3D world:** real modelled sets with textured wood, paint and fabric, rounded edges, and contact shadows in corners. Each set is built big enough to hold several points of interest.
+- **Colour:** two colour families per place (cool walls or sky against warm wood), with clean, not muddy, saturation. A soft glow on light sources.
+- **Light follows real-world logic:** there is always one visible source (a window, lamp or lens). Lamps are off in daylight. Characters are lit from the source's side.
+
+## Acting
+- **Faces change all the time:** the expression switches on the exact word it reacts to, sometimes a few frames before an action, never on the same frame as a big camera move.
+- **Bodies are always alive:** constant bob and sway, squash and stretch on keywords, and arm gestures (point, panic, shrug, hold).
+- **Props sit in the drawn hand,** using where the hand actually renders, not its stored position.
+- **Quoted dialogue:** the speaking character's mouth flaps between open and closed, and the face expression carries the emotion.
+- **Real physics:** thrown or dropped things follow gravity, tumble, bounce and settle. Liquids pour and pool, spinning things spin with weight.
+
+## Camera
+- **Few places, long shots.** Each place is one continuous shot. The camera glides between points of interest inside it (a character, a prop, the window, another character) instead of cutting.
+- **Hard transitions only between places:** a quick flash with a camera-shutter click. Moves within a place get a whoosh.
+- **Opening:** a fast push in from wide, straight onto the main character.
+- **The camera never stops:** a slow drift between moves, a quick zoom-in on each expression change or keyword, a shake on violent beats.
+- **Follow the action:** when something is thrown, poured or falls, the camera tracks it from a sensible distance so it never fills the screen.
+- **Smooth handoffs:** every move eases in and out over at least about 0.25 s. Pose changes blend; nothing snaps.
+
+## Pace
+- The voiceover is sped up about 6–12% (final length still over 60 s). There's a new visual beat about every 2 seconds, and every line has a picture.
+
+## Captions and sound
+- **Captions:** one word at a time, white with a black outline, bouncing in, always in the same spot about 70% down the screen.
+- **Sound:** library effects (`library/sfx`) land exactly on their words. A quiet music bed (`library/music`) sits about 24 dB under the voice. The whole mix is levelled to −14 LUFS.
+
+## Render pipeline (fast and verified)
+- **Bake each place once, per lighting state.** Characters and moving props are baked as separate pieces so they can animate.
+- **Fast frames:** frames render with the fast renderer in 2 parallel processes, and segments are joined afterwards.
+- **Check before every full render:** low-res still checks of each segment's key frames, including where props sit in hands, framing, and outlines.
