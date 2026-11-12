@@ -13,16 +13,16 @@ GRADES={  # (lift rgb, gain rgb, saturation, contrast)
  "night":   ((0.01,0.02,0.06),(1.02,0.99,1.02),1.06,1.08),
  "interior":((0.01,0.01,0.03),(1.06,1.01,0.93),1.08,1.06),
 }
-def night_vivid(x):
-    """Competitor-style night: bright, saturated cobalt blue world (indigo shadows -> cobalt mids -> lavender whites),
-    while warm things (lamps, red/orange/yellow objects, light pools) stay warm. x: float 0..1 RGB."""
-    L=(0.3*x[...,0]+0.55*x[...,1]+0.15*x[...,2])[...,None]; Lb=np.clip(L,0,1)**0.62
-    c0=np.array([0.03,0.04,0.30],np.float32); c1=np.array([0.16,0.26,0.92],np.float32); c2=np.array([0.80,0.84,1.0],np.float32)
-    k=np.clip(Lb/0.55,0,1); blue=c0+(c1-c0)*k; k2=np.clip((Lb-0.55)/0.45,0,1)**1.3; blue=blue+(c2-blue)*k2
-    r,b=x[...,0],x[...,2]; mx=x.max(-1); mn=x.min(-1); sat=(mx-mn)/(mx+1e-4)
-    warm=np.clip((r-b)*2.5,0,1)*np.clip(sat*2,0,1)*np.clip(mx*1.6-0.2,0,1)
-    w=(0.72*(1-warm))[...,None]; out=blue*w+np.clip(x*1.25+0.05,0,1)*(1-w)
-    g=out.mean(-1,keepdims=True); return np.clip(g+(out-g)*1.15,0,1)
+def night_vivid(x,tint=(0.50,0.66,1.30),lift=(0.03,0.05,0.20),sat=1.55,gam=0.78):
+    """Competitor-style night (style v4): hue-preserving blue moonlight. Every object keeps its own colour, lit by
+    strong blue light; warm sources and light pools stay warm; whites (faces, shirts) stay bright lavender-white."""
+    r,b=x[...,0],x[...,2]; mx=x.max(-1); mn=x.min(-1); s=(mx-mn)/(mx+1e-4)
+    warm=(np.clip((r-b)*2.2,0,1)*np.clip(s*2,0,1)*np.clip(mx*1.8-0.3,0,1))[...,None]
+    white=(np.clip((mn-0.55)/0.3,0,1)*np.clip(1-s*3,0,1))[...,None]
+    t=np.array(tint,np.float32)*(1-white)+np.array((0.86,0.88,1.04),np.float32)*white
+    y=x*(t*(1-warm)+np.array((0.98,0.90,0.82),np.float32)*warm)
+    y=y+np.array(lift,np.float32)*(1-y); y=np.clip(y,0,1)**gam
+    g=(0.3*y[...,0]+0.55*y[...,1]+0.15*y[...,2])[...,None]; return np.clip(g+(y-g)*sat,0,1)
 
 def grade(img,kind,bloom):
     x=img.astype(np.float32)/255.0

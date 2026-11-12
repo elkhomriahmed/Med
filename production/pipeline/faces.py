@@ -102,6 +102,9 @@ EXPR={ # eyes, brows, mouth
 def make(path,expr,extra=(),variant=None):
     e,b,m=EXPR[expr]
     if variant=="blink": e="closed" if e not in("closed",) else e
+    if variant=="A": m="open"
+    if variant=="O": m="o"
+    if variant=="E": m="grit"
     if variant=="talk": m={"flat":"o","smirk":"open","smile":"open","frown":"o","grin":"open","grit":"shout","o":"open","open":"o","shout":"open"}.get(m,"open")
     im=Image.new("RGBA",(S,S),(0,0,0,0)); d=ImageDraw.Draw(im)
     if "beard" in extra: beard(d)
@@ -120,6 +123,7 @@ def build(outdir):
             make(f"{outdir}/{name}_{k}.png",k,extra)
             make(f"{outdir}/{name}_{k}_blink.png",k,extra,"blink")
             make(f"{outdir}/{name}_{k}_talk.png",k,extra,"talk")
+            for v in ("A","O","E"): make(f"{outdir}/{name}_{k}_{v}.png",k,extra,v)
 if __name__=="__main__":
     import sys; build(sys.argv[1] if len(sys.argv)>1 else "assets/faces")
     print("faces ok")

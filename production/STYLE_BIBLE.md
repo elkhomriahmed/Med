@@ -1,4 +1,21 @@
-# STYLE FORMULA v3 (current — overrides anything below that conflicts)
+# STYLE FORMULA v4 (current — overrides anything below that conflicts)
+
+v4 corrections (user review of the v3 sample):
+- **Whole head outlined:** the head sits fully above the body (centre = torso top + 0.97 R) so the jaw line gets the same thick
+  ink line as the rest of the head. The head must read as a complete circle standing out from the body.
+- **Human pace, not puppet pace:** default motion is slow and smooth (snap 0.38 s, damping 0.72 = no bounce). Fast snaps only for
+  real hits (poke, slap, jump). Body bends are small in talking beats.
+- **While talking: body calm, head steady and facing camera, hands do the expressing, face never stops changing.**
+  Hands make slow, readable gestures that illustrate the words (thumb to chest = "I", open hand to the object, mime the action,
+  finger up for numbers, finger wag for "can't"), each held ~0.5–1 s. Gesture with the arm on the camera side so it reads in
+  front of the body.
+- **Faces:** lip-sync mouth shapes per syllable (A open / O round / E teeth / closed on m-b-p) on top of a base expression that
+  changes every ~0.6–1 s; eyelids/brows shift between related expressions; blinks every 2–3.5 s. Listeners react with the
+  face (skeptical, bored, smug) while their body stays still.
+- **Night colour = hue-preserving blue moonlight** (`post_fx.night_vivid`): objects keep their own colours under strong blue
+  light, warm sources/pools stay warm, faces and whites stay bright lavender-white. (The v3 monochrome-blue ramp is retired.)
+
+# (v3 notes)
 
 v3 changes (after the second competitor study, "The Burglar Who Only Moved Furniture"):
 - **Head is a separate circle sitting ON the body** (head centre = torso top + 0.8 R; only ~4 cm overlap), never sunk into it.

@@ -90,7 +90,7 @@ def build_puppet(name):
     ink=mat("pup_ink",INKC,0.6,0.1)
     body,zc=_bean(D,coat); parts_t.append(body)
     top=D["hip"]-0.05+D["torso_h"]; D["torso_top"]=top
-    hz=top+R*0.80; D["head_c"]=hz   # the head SITS on the body: a clear separate circle
+    hz=top+R*0.97; D["head_c"]=hz   # the head SITS on the body: a whole circle, jaw line outlined over the body
     w,dp=D["torso_w"],D["torso_d"]
     def front_y(z):   # surface y at height z on the body front (approx ellipse)
         u=(z-zc)/(D["torso_h"]/2); return -dp*math.sqrt(max(0.0,1-u*u))*0.98
@@ -298,7 +298,7 @@ class Puppet:
         self.feet={}; self.step={}; self.t_prev=None; self.spr={c:Spring() for c in CH}; self.hspr={}
         self.anim=[self.A,self.P,self.torso,self.head,self.LOOK,self.froll]+list(self.hands.values())+list(self.boots.values())
         self.pose0=dict(pos=tuple(loc[:2]),yaw=yaw,crouch=0.0,lean=0.0,side=0.0,twist=0.0,bend=0.0,sbend=0.0,nod=0.0,tilt=0.0,turn=0.0,
-                        air=0.0,squash=0.0,arms={-1:("rest",),1:("rest",)},snap=0.2,damp=0.45,jump=None)
+                        air=0.0,squash=0.0,arms={-1:("rest",),1:("rest",)},snap=0.38,damp=0.72,jump=None)
         self.spr["yaw"].x=yaw; self.phase=(hash(self.name)%100)/100.0*6.28; self.landed=set()
     # ---------------- pose keys
     def _full(self,i):
@@ -329,7 +329,7 @@ class Puppet:
         return g
     def talk(self,words,a,b,every=2,amp=1.0):
         """Speaking: mouth flaps over [a,b] and beat gestures (head nod + hand bump) on every n-th word."""
-        self.speak.append((a,b)); ws=[w for w in words if a<=w[0]<b]
+        self.speak.append((a,b)); ws=[w for w in words if a<=w[0]<b]; self.speak_words=getattr(self,'speak_words',[])+ws
         for i,w in enumerate(ws):
             if i%every==0: self.beats.append((w[0],amp*(1.0 if len(w[2])>3 else 0.6)))
     def _bend_point(self,name,wts):
@@ -349,7 +349,7 @@ class Puppet:
         V={}
         for c in CH:
             tgt=P1[c] if c!="yaw" else P1["yaw"]
-            ff=f*(0.7 if c in HEADCH else 1.0)
+            ff=f*(0.6 if c in HEADCH else 1.0)
             V[c]=self.spr[c].step(tgt,ff,z,dt)
         # jumps: gravity arcs, squash on landing
         air=V["air"]
@@ -361,8 +361,8 @@ class Puppet:
             elif u>1 and kt not in self.landed: self.landed.add(kt); self.spr["squash"].v-=1.6
         # calm life: weight shift + breathing + slow head drift (no jitter)
         ph=self.phase; g=self._beat(t)
-        side=V["side"]+0.022*math.sin(2*math.pi*0.19*t+ph)
-        nod=V["nod"]+0.02*math.sin(2*math.pi*0.15*t+ph*1.7)+0.10*g
+        side=V["side"]+0.012*math.sin(2*math.pi*0.17*t+ph)
+        nod=V["nod"]+0.012*math.sin(2*math.pi*0.13*t+ph*1.7)+0.03*g
         breath=math.sin(2*math.pi*0.3*t+ph)
         self.A.location=Vector((x,y,0)); self.A.rotation_euler=(0,0,V["yaw"])
         bob=0.025*abs(math.sin(math.pi*t/0.17)) if moving else 0.0
@@ -371,7 +371,7 @@ class Puppet:
         self.P.rotation_euler=(-lean,side*0.5,V["twist"])
         sq=V["squash"]; self.P.scale=(1-0.5*sq,1-0.5*sq,1+sq+0.007*breath)
         # curved spine via shape keys
-        bend=V["bend"]+0.06*g; sb=V["sbend"]+side*0.5
+        bend=V["bend"]+0.02*g; sb=V["sbend"]+side*0.5
         wts={"fwd":max(0.0,bend)/BENDS["fwd"][0],"back":max(0.0,-bend)/-BENDS["back"][0],"right":max(0.0,sb)/BENDS["right"][0],"left":max(0.0,-sb)/-BENDS["left"][0]}
         for k_,w in wts.items(): self.kb[k_].value=min(1.2,w)
         self.head.location=self._bend_point("neck",wts)
@@ -412,10 +412,10 @@ class Puppet:
             b=self.boots[s]; b.location=self.feet[s]+Vector((0,-0.02,D["boot"][2]*0.5)); b.rotation_euler=(0,0,V["yaw"])
             sh=Tm@self._bend_point("sh_r" if s>0 else "sh_l",wts)
             spec=P1["arms"].get(s,("rest",)); H=self._hand_target(spec,s,t,sh)
-            if s==self.gest_side and spec[0] in("rest","body"): H=H+Am.to_3x3()@Vector((s*0.03,-0.07,0.09))*g
+            if s==self.gest_side and spec[0] in("rest","body"): H=H+Am.to_3x3()@Vector((s*0.02,-0.05,0.06))*g
             if moving and spec[0]=="rest": H=H+Am.to_3x3()@Vector((0,-0.08*math.sin(math.pi*t/0.17+(0 if s>0 else math.pi)),0.02))
             if s not in self.hspr: self.hspr[s]=[Spring(c) for c in H]
-            hf=(14.0 if spec[0]=="world" else f*0.95)
+            hf=(14.0 if spec[0]=="world" and len(spec)>2 and spec[2]=="track" else f*0.95)
             H=Vector([sp.step(c,hf,max(0.35,z),dt) for sp,c in zip(self.hspr[s],H)])
             J,H2=_ik(sh,H,D["upper"],D["fore"],Am.to_3x3()@Vector((s*0.8,0.45,-0.35)))
             self._set_curve(self.limbs[("arm",s)],_noodle(sh,J,H2))
@@ -445,15 +445,24 @@ class Puppet:
             Image.fromarray(np.clip(a,0,255).astype(np.uint8)).save(q)
         return q
     def face_track(self,t0,t1,fps=30):
-        """Expression per frame: base expression + automatic blinks + mouth flaps while speaking."""
+        """Expression per frame: base expression + lip-sync visemes while speaking (A open / O round / E teeth,
+        picked from the word's letters, ~0.11 s each, closed on m/b/p) + automatic blinks."""
         import random
         rnd=random.Random(hash(self.name)%1000); blinks=[]; t=t0+rnd.uniform(0.4,1.6)
         while t<t1: blinks.append(t); t+=rnd.uniform(1.8,3.6)
+        vis=[]
+        for a,b,w in getattr(self,"speak_words",[]):
+            letters=[c for c in w.lower() if c.isalpha()] or ["a"]
+            n=max(1,int(round((b-a)/0.11))); 
+            for k in range(n):
+                c=letters[min(len(letters)-1,int(k*len(letters)/n))]
+                v=("O" if c in "ouw" else "E" if c in "eiy" else "A" if c in "a" else None if c in "mbp" else ("A" if k%2==0 else "E"))
+                vis.append((a+k*(b-a)/n,a+(k+1)*(b-a)/n-0.02,v))
         out=[]; prev=None; NOBLINK=("sleepy","proud","laugh","happy")
         for fr in range(int(t0*fps),int(t1*fps)+2):
             t=fr/fps; e=[x for s,x in self.face_seq if s<=t]; e=e[-1] if e else self.face_seq[0][1]
-            talking=any(a<=t<b for a,b in self.speak)
-            if talking and int((t-t0)/0.11)%2==0: v=e+"_talk"
+            vv=[v for a,b,v in vis if a<=t<b]
+            if vv and vv[0]: v=e+"_"+vv[0]
             elif e not in NOBLINK and any(0<=t-b<0.1 for b in blinks): v=e+"_blink"
             else: v=e
             if v!=prev: out.append((t,v)); prev=v
