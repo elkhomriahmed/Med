@@ -2,7 +2,9 @@
 brush-like tapered strokes. Canvas = 2.6 x head radius, centred on the head. Drawn at 2x, downsampled."""
 from PIL import Image, ImageDraw
 import math, os
-INK=(32,22,20,255); WHITE=(255,255,255,255); MOUTH=(120,36,34,255); TEETH=(250,248,244,255); BEARD=(244,242,236,255)
+INK=(26,27,52,255);   # dark navy ink (competitor style)
+GAZE=0.0   # pupil offset: -1 looks to the image left, +1 to the right
+WHITE=(255,255,255,255); MOUTH=(120,36,34,255); TEETH=(250,248,244,255); BEARD=(244,242,236,255)
 S=2048; C=S//2; RP=S/2.6
 def P(x,y): return (C+x*RP*1.12, C-y*RP*1.12)
 SC=1.35
@@ -23,15 +25,16 @@ def blob(d,pts,fill,outline=True,w=0.055):
 
 EX,EY=0.27,0.05
 def eye(d,x,kind,s):
+    g=GAZE*0.065
     if kind=="open":        # small oval pupil
-        d.ellipse([*P(x-0.075,EY+0.1),*P(x+0.075,EY-0.1)],fill=INK)
+        d.ellipse([*P(x+g-0.075,EY+0.1),*P(x+g+0.075,EY-0.1)],fill=INK)
     elif kind=="lidded":    # heavy upper lid over a half pupil (smug / bored)
         d.chord([*P(x-0.09,EY+0.08),*P(x+0.09,EY-0.12)],180,360,fill=INK) if False else None
-        d.pieslice([*P(x-0.085,EY+0.07),*P(x+0.085,EY-0.11)],0,180,fill=INK)
+        d.pieslice([*P(x+g-0.085,EY+0.07),*P(x+g+0.085,EY-0.11)],0,180,fill=INK)
         stroke(d,[(x-0.15,EY+0.0),(x+0.13,EY+0.02*s*0)],0.06,0.05,0.075)
     elif kind=="wide":
         d.ellipse([*P(x-0.13,EY+0.15),*P(x+0.13,EY-0.15)],fill=WHITE,outline=INK,width=W(0.045))
-        d.ellipse([*P(x-0.05,EY+0.05),*P(x+0.05,EY-0.05)],fill=INK)
+        d.ellipse([*P(x+g*1.1-0.05,EY+0.05),*P(x+g*1.1+0.05,EY-0.05)],fill=INK)
     elif kind=="happy":     # upward arcs
         stroke(d,arc_pts(x,EY-0.03,0.11,0.09,10,170),0.03,0.03,0.07)
     elif kind=="closed":
@@ -116,14 +119,48 @@ def make(path,expr,extra=(),variant=None):
     else: mouth(d,m)
     im.resize((1024,1024),Image.LANCZOS).save(path)
 CAST={"keeper":("beard",),"engineer":("glasses",)}
+GAZE_KINDS=("open","lidded","wide")
+def fx_sprites(outdir):
+    """2D emotion graphics drawn over the face (same canvas as the face): sweat drop, blush, tears, anger vein, none."""
+    BLUE=(150,200,245,255); PINK=(240,140,150,150); RED=(200,40,50,255)
+    def new(): return Image.new("RGBA",(S,S),(0,0,0,0))
+    im=new(); d=ImageDraw.Draw(im)
+    pts=[(0.62,0.62),(0.55,0.44),(0.58,0.38),(0.66,0.38),(0.69,0.44)]   # drop at the upper right of the head
+    d.ellipse([*P(0.48,0.50),*P(0.76,0.22)],fill=BLUE,outline=INK,width=W(0.035)); d.polygon([P(0.50,0.42),P(0.62,0.80),P(0.74,0.42)],fill=BLUE)
+    stroke(d,[(0.505,0.42),(0.62,0.80),(0.735,0.42)],0.035); d.ellipse([*P(0.55,0.42),*P(0.61,0.34)],fill=(255,255,255,255))
+    im.resize((1024,1024),Image.LANCZOS).save(f"{outdir}/fx_sweat.png")
+    im=new(); d=ImageDraw.Draw(im)
+    for sx in (-1,1):
+        d.ellipse([*P(sx*0.42-0.13,-0.08),*P(sx*0.42+0.13,-0.18)],fill=PINK)
+        for k in (-0.06,0,0.06): stroke(d,[(sx*0.42+k-0.02,-0.10),(sx*0.42+k+0.02,-0.16)],0.012)
+    im.resize((1024,1024),Image.LANCZOS).save(f"{outdir}/fx_blush.png")
+    im=new(); d=ImageDraw.Draw(im)
+    for sx in (-1,1):
+        x=sx*EX; d.polygon([P(x-0.04,EY-0.1),P(x+0.04,EY-0.1),P(x+0.07,EY-0.5),P(x-0.07,EY-0.5)],fill=BLUE)
+        stroke(d,[(x-0.04,EY-0.1),(x-0.07,EY-0.5)],0.02); stroke(d,[(x+0.04,EY-0.1),(x+0.07,EY-0.5)],0.02)
+    im.resize((1024,1024),Image.LANCZOS).save(f"{outdir}/fx_tears.png")
+    im=new(); d=ImageDraw.Draw(im)
+    c=(0.5,0.5)
+    for a in (45,135,225,315):
+        r=math.radians(a); stroke(d,[(c[0]+0.03*math.cos(r),c[1]+0.03*math.sin(r)),(c[0]+0.11*math.cos(r),c[1]+0.11*math.sin(r))],0.035)
+    im2=Image.new("RGBA",(S,S),(0,0,0,0)); d2=ImageDraw.Draw(im2)
+    for a in (45,135,225,315):
+        r=math.radians(a); d2.line([P(c[0]+0.03*math.cos(r),c[1]+0.03*math.sin(r)),P(c[0]+0.11*math.cos(r),c[1]+0.11*math.sin(r))],fill=RED,width=W(0.045))
+    im2.resize((1024,1024),Image.LANCZOS).save(f"{outdir}/fx_anger.png")
+    new().resize((1024,1024)).save(f"{outdir}/fx_none.png")
 def build(outdir):
+    global GAZE
     os.makedirs(outdir,exist_ok=True)
     for name,extra in CAST.items():
         for k in EXPR:
-            make(f"{outdir}/{name}_{k}.png",k,extra)
-            make(f"{outdir}/{name}_{k}_blink.png",k,extra,"blink")
-            make(f"{outdir}/{name}_{k}_talk.png",k,extra,"talk")
-            for v in ("A","O","E"): make(f"{outdir}/{name}_{k}_{v}.png",k,extra,v)
+            gz=[0.0]+([-1.0,1.0] if EXPR[k][0] in GAZE_KINDS else [])
+            for gv in gz:
+                GAZE=gv; suf="" if gv==0 else ("_L" if gv<0 else "_R")
+                make(f"{outdir}/{name}_{k}{suf}.png",k,extra)
+                make(f"{outdir}/{name}_{k}_talk{suf}.png",k,extra,"talk")
+                for v in ("A","O","E"): make(f"{outdir}/{name}_{k}_{v}{suf}.png",k,extra,v)
+                if gv==0: make(f"{outdir}/{name}_{k}_blink.png",k,extra,"blink")
+    GAZE=0.0; fx_sprites(outdir)
 if __name__=="__main__":
     import sys; build(sys.argv[1] if len(sys.argv)>1 else "assets/faces")
     print("faces ok")

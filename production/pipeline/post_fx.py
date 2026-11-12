@@ -12,6 +12,7 @@ GRADES={  # (lift rgb, gain rgb, saturation, contrast)
  "morning": ((0.02,0.01,0.03),(1.06,1.00,0.92),1.08,1.05),
  "night":   ((0.01,0.02,0.06),(1.02,0.99,1.02),1.06,1.08),
  "interior":((0.01,0.01,0.03),(1.06,1.01,0.93),1.08,1.06),
+ "actor":   ((0.00,0.00,0.01),(1.00,1.00,1.00),1.06,1.03),
 }
 def night_vivid(x,tint=(0.66,0.78,1.22),lift=(0.02,0.03,0.12),sat=1.35,gam=0.85):
     """Competitor-style night (style v4): hue-preserving blue moonlight. Every object keeps its own colour, lit by
@@ -39,10 +40,10 @@ def particles(x,fidx,kind,n=30,seed=7):
     layer=cv2.GaussianBlur(layer,(0,0),2.2)
     return x+cv2.resize(layer,(w,h),interpolation=cv2.INTER_LINEAR)
 
-def grade(img,kind,bloom,fidx=0):
+def grade(img,kind,bloom,fidx=0,particles_on=True):
     x=img.astype(np.float32)/255.0
     # haze: wide warm glow around light sources (lamps, lanterns, windows) - air in the room
-    lum=x.max(-1,keepdims=True); hz=np.clip((lum-0.88)/0.12,0,1)*x
+    lum=x.max(-1,keepdims=True); hz=np.clip((lum-0.88)/0.12,0,1)*x*(0.0 if kind=="actor" else 1.0)
     h0,w0=x.shape[:2]; sm=cv2.resize(hz,(w0//8,h0//8),interpolation=cv2.INTER_AREA)
     x=x+cv2.resize(cv2.GaussianBlur(sm,(0,0),14),(w0,h0),interpolation=cv2.INTER_LINEAR)*0.12
     # bloom: bright parts glow
@@ -59,7 +60,7 @@ def grade(img,kind,bloom,fidx=0):
     x=np.clip(x,0,1); x=x+(x-x*x)*(con-1)*1.6*(x-0.5)*2   # soft S-curve around mid grey
     g=x.mean(-1,keepdims=True); x=g+(x-g)*sat
     h,w=x.shape[:2]; yy,xx=np.mgrid[0:h,0:w].astype(np.float32); d=((xx-w/2)/(w*0.75))**2+((yy-h/2)/(h*0.72))**2
-    x=particles(x,fidx,kind)
+    if particles_on: x=particles(x,fidx,kind)
     x=x*(1-0.34*np.clip(d,0,1.4)[...,None])   # cinematic vignette
     return np.clip(x*255,0,255).astype(np.uint8)
 
@@ -117,14 +118,20 @@ def shadows(img,polys):
     m=cv2.resize(m,(w,h),interpolation=cv2.INTER_LINEAR)[...,None]
     return (img.astype(np.float32)*(1-m)).astype(np.uint8)
 
+def process(img,polys,kind,bloom,fidx,P):
+    """The whole style-v9 post chain for one frame (used by the renderer and by still checks)."""
+    if P is None:
+        return grade(shadows(img,polys),kind,bloom,fidx)
+    img=shadow_pass(img,P); img=air(img,P,kind); img=shadows(img,polys)
+    world=grade(img,kind,bloom,fidx)
+    actor=grade(img,"actor",0.0,fidx,particles_on=False)   # actors are never filtered: faces stay cream/near-white
+    H,W=img.shape[:2]; m=cv2.resize(cv2.GaussianBlur(P[1].astype(np.float32),(0,0),0.8),(W,H),interpolation=cv2.INTER_LINEAR)[...,None]
+    return (world.astype(np.float32)*(1-m)+actor.astype(np.float32)*m).astype(np.uint8)
+
 def job(a):
     f,out,polys,kind,bloom=a
     img=cv2.imread(f,cv2.IMREAD_COLOR)[:,:,::-1]; fidx=int(os.path.basename(f)[2:6])
-    P=load_passes(os.path.dirname(f),fidx)
-    if P is not None:   # world -> air -> (lens blur is in the render) -> shadows -> bloom/grade/particles
-        img=shadow_pass(img,P); img=air(img,P,kind); img=shadows(img,polys)
-    else: img=shadows(img,polys)
-    img=grade(img,kind,bloom,fidx)
+    img=process(img,polys,kind,bloom,fidx,load_passes(os.path.dirname(f),fidx))
     cv2.imwrite(os.path.join(out,os.path.basename(f)),img[:,:,::-1])
 
 if __name__=="__main__":

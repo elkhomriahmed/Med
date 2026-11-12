@@ -15,7 +15,7 @@ from characters import striped
 import bake
 
 FACEDIR=os.path.join(HERE,"assets","faces"); PUPDIR=os.path.join(HERE,"assets","puppets")
-INKC=(0.035,0.025,0.02)
+INKC=(0.10,0.105,0.20)   # dark navy ink (competitor outline colour)
 
 def clamp01(x): return max(0.0,min(1.0,x))
 def ss(x): x=clamp01(x); return x*x*(3-2*x)
@@ -122,7 +122,7 @@ def build_puppet(name):
     if "belt" in det:
         parts_t.append(box((0,front_y(D["hip"]+0.092)-0.012,D["hip"]+0.092),(0.06,0.014,0.045),mat("pup_buckle",(0.85,0.66,0.2),0.3,0.7),0.004))
     # ---- head
-    head=sph((0,0,hz),(R,R*0.94,R*0.98),mat("pup_skin",(0.80,0.76,0.70),0.45,0.4,emit=0.04),seg=48); parts_h.append(head)
+    head=sph((0,0,hz),(R,R*0.94,R*0.98),mat("pup_skin",(0.86,0.84,0.80),0.45,0.4,emit=0.06),seg=48); parts_h.append(head)
     if O["hat"]=="beanie":
         bc=striped(name+"_beanie",(0.56,0.06,0.05),(0.36,0.03,0.025),26,'X',0.9)
         o=sph((0,0,hz),(R*1.035,R*1.0,R*1.28),bc,seg=48); bm=bmesh.new(); bm.from_mesh(o.data)
@@ -142,6 +142,7 @@ def build_puppet(name):
 LIGHTS={  # scene light presets the characters are baked under (style v7: characters belong to the place's light)
  "neutral":dict(world=((0.55,0.58,0.62),0.22),key=((1.0,0.95,0.86),3.6),fill=((0.75,0.85,1.0),22),rim=((1.0,0.97,0.92),70)),
  "night_lamp":dict(world=((0.10,0.13,0.30),0.35),key=((1.0,0.70,0.40),3.4),fill=((0.32,0.45,1.0),45),rim=((0.80,0.88,1.0),190)),
+ "soft":dict(world=((0.42,0.42,0.50),0.32),key=((1.0,0.92,0.80),3.3),fill=((0.62,0.62,0.80),26),rim=((0.92,0.94,1.0),170)),
  "day_window":dict(world=((0.6,0.65,0.75),0.30),key=((1.0,0.93,0.80),3.8),fill=((0.6,0.7,1.0),30),rim=((1.0,0.98,0.9),150)),
 }
 def _studio_lights(preset="neutral"):
@@ -194,7 +195,7 @@ def bake_puppet(name,spp=48,size=1024,light="neutral"):
         lit=cv2.GaussianBlur(bake.img_np(bake.bake_pass([g],'DIFFUSE',512,spp,['DIRECT','INDIRECT'])),(0,0),2.0)
         # 2D look with a touch of 3D: soft two-tone (lit / shadow) instead of smooth 3D shading
         lum=lit.mean(-1); ref=max(1e-4,float(np.percentile(lum,97))); nl=lum/ref
-        x=np.clip((nl-0.36)/0.20,0,1); y_=np.clip((nl-0.86)/0.12,0,1); q=0.50+0.40*(x*x*(3-2*x))+0.22*(y_*y_*(3-2*y_))   # shadow / lit / pale streak
+        x=np.clip((nl-0.30)/0.32,0,1); y_=np.clip((nl-0.86)/0.12,0,1); q=0.64+0.30*(x*x*(3-2*x))+0.14*(y_*y_*(3-2*y_))   # soft shadow side, lit, pale streak   # shadow / lit / pale streak
         lit=lit/np.maximum(lum,1e-4)[...,None]*(q*ref*0.80)[...,None]
         emi=bake.img_np(bake.bake_pass([g],'EMIT',512,1))
         inkmask=bake.ink_mask([g],size,3,min_angle=65)
@@ -242,7 +243,7 @@ class Spring:
             a=w*w*(target-self.x)-2*z*w*self.v; self.v+=a*h; self.x+=self.v*h
         return self.x
 
-CH=("lean","side","twist","bend","sbend","crouch","nod","tilt","turn","squash","air","yaw","look","shake")
+CH=("lean","side","twist","bend","sbend","crouch","nod","tilt","turn","squash","air","yaw","look","shake","feetfwd")
 HEADCH=("nod","tilt","turn")
 class Puppet:
     def __init__(self,name,loc=(0,0,0),yaw=0.0,cam=None,inst=None,tint=(1.0,1.0,1.0),light="neutral"):
@@ -281,8 +282,12 @@ class Puppet:
         fp=bpy.data.objects.new("LIVE_"+self.name+"_face",me); coll.objects.link(fp); fp.parent=self.froll; fp.location=(0,0,R*1.02)
         self.face_char=OUTFITS[name]["face"]; self.face_mat=image_mat(self.name+"_facemat",self.face_path("neutral"),emit=0.6,rough=0.9)
         fp.data.materials.append(self.face_mat); self.face=fp
+        # 2D emotion graphics (sweat drop, blush, tears, anger) drawn over the face
+        fx=bpy.data.objects.new("LIVE_"+self.name+"_fx",me.copy()); coll.objects.link(fx); fx.parent=self.froll; fx.location=(0,0,R*1.03)
+        fx.scale=(1.25,1.25,1); self.fx_mat=image_mat(self.name+"_fxmat",f"{FACEDIR}/fx_none.png",emit=0.6,rough=0.9)
+        fx.data.materials.clear(); fx.data.materials.append(self.fx_mat); self.fx=fx; self.fx_seq=[(0.0,"none")]
         import engine
-        inkm=bpy.data.materials.get("inksolid") or engine.solid("inksolid",INKC)
+        inkm=bpy.data.materials.get("pup_inksolid") or engine.solid("pup_inksolid",INKC)
         bootm=engine.solid(f"{name}_boot",D["boot_col"])
         self.limbs={}
         for kind in ("arm","leg"):
@@ -307,9 +312,10 @@ class Puppet:
         # acting state
         self.keys=[(0.0,{})]; self.face_seq=[(0.0,"neutral")]; self.speak=[]; self.beats=[]; self.gest_side=1
         self.feet={}; self.step={}; self.t_prev=None; self.spr={c:Spring() for c in CH}; self.hspr={}
-        self.anim=[self.A,self.P,self.torso,self.head,self.LOOK,self.froll]+list(self.hands.values())+list(self.boots.values())
+        self.gaze_log=[]
+        self.anim=[self.A,self.P,self.torso,self.head,self.LOOK,self.froll,self.fx]+list(self.hands.values())+list(self.boots.values())
         self.pose0=dict(pos=tuple(loc[:2]),yaw=yaw,crouch=0.0,lean=0.0,side=0.0,twist=0.0,bend=0.0,sbend=0.0,nod=0.0,tilt=0.0,turn=0.0,
-                        air=0.0,squash=0.0,look=0.0,shake=0.0,arms={-1:("rest",),1:("rest",)},snap=0.38,damp=0.72,jump=None)
+                        air=0.0,squash=0.0,look=0.0,shake=0.0,feetfwd=0.0,arms={-1:("rest",),1:("rest",)},snap=0.38,damp=0.72,jump=None)
         self.look_target=None; self.spr["yaw"].x=yaw; self.phase=(hash(self.name)%100)/100.0*6.28; self.landed=set()
     # ---------------- pose keys
     def _full(self,i):
@@ -409,11 +415,19 @@ class Puppet:
             ang=math.atan2(c2.x*f2.y-c2.y*f2.x,c2.dot(f2))
         else: ang=0.0
         k=max(-1.0,min(1.0,ang/1.1)); self.face.location=(-k*0.17*D["R"],-0.04*D["R"]*abs(k),D["R"]*1.02)
+        self.fx.location=(self.face.location[0],self.face.location[1],D["R"]*1.03)
+        # where the pupils point: towards the look target if there is one, else straight at the camera
+        gz="C"
+        if self.look_target is not None and lw>0.25:
+            tp=self.look_target.head_pos() if hasattr(self.look_target,'head_pos') else Vector(self.look_target(t) if callable(self.look_target) else self.look_target)
+            cm=self.cam.matrix_world; right=Vector((cm[0][0],cm[1][0],cm[2][0])); dx=(tp-hc).dot(right)
+            if abs(dx)>0.15: gz="R" if dx>0 else "L"
+        self.gaze_log.append((t,gz))
         self.froll.rotation_euler=(0,0,-(V["tilt"]+side+ay)*0.9)
         # feet
         Am=self.A.matrix_world
         for s in (-1,1):
-            rest=Am@Vector((s*D["hipjoint"][0]*1.05,0,0))
+            rest=Am@Vector((s*D["hipjoint"][0]*1.05,-V["feetfwd"],0))   # feetfwd > 0: feet in front (sitting)
             if s not in self.feet: self.feet[s]=rest.copy()
             st=self.step.get(s)
             if air>0.02:
@@ -486,14 +500,18 @@ class Puppet:
         for fr in range(int(t0*fps),int(t1*fps)+2):
             t=fr/fps; e=[x for s,x in self.face_seq if s<=t]; e=e[-1] if e else self.face_seq[0][1]
             vv=[v for a,b,v in vis if a<=t<b]
-            if vv and vv[0]: v=e+"_"+vv[0]
+            g=[x for s_,x in self.gaze_log if s_<=t+1e-4]; g=g[-1] if g else "C"
+            gs="" if g=="C" or not os.path.exists(f"{FACEDIR}/{self.face_char}_{e}_L.png") else "_"+g
+            if vv and vv[0]: v=e+"_"+vv[0]+gs
             elif e not in NOBLINK and any(0<=t-b<0.1 for b in blinks): v=e+"_blink"
-            else: v=e
+            else: v=e+gs
             if v!=prev: out.append((t,v)); prev=v
         return out
     def swaps(self,t0=0.0,t1=None):
         if t1 is None: return {self.face_mat.name:[(t,self.face_path(e)) for t,e in self.face_seq]}
-        return {self.face_mat.name:[(t,self.face_path(e)) for t,e in self.face_track(t0,t1)]}
+        out={self.face_mat.name:[(t,self.face_path(e)) for t,e in self.face_track(t0,t1)]}
+        out[self.fx_mat.name]=[(t,f"{FACEDIR}/fx_{e}.png") for t,e in self.fx_seq]
+        return out
 
 def shadow_hook(puppets,store,floor_z=0.0,light=(0.07,0.05)):
     """Key hook: per frame, project each puppet's soft floor shadow (ellipse under the body, shrinking/fading

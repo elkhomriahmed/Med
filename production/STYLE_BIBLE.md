@@ -1,4 +1,20 @@
-# STYLE FORMULA v8 (current — overrides anything below that conflicts)
+# STYLE FORMULA v9 (current — overrides anything below that conflicts)
+
+Built on everything above (v2–v8) — nothing removed. Additions from the "Mirror Rigged a Horse Race" breakdown
+(`research/breakdown_mirror_horse_race.md`):
+- **Faces stay cream / near-white in every light** (character light preset `soft`: warm-white key, grey-violet fill, pale rim
+  streak, soft two-tone). The scene grade colours the WORLD; characters get only a light "actor" grade (actor mask from the
+  depth pass) — never tinted blue at night.
+- **Dark-navy ink** for outlines, limbs and drawn features (not black).
+- **Eyes move:** every open/lidded/wide expression has left/right gaze versions; pupils point at the look target automatically.
+- **2D emotion graphics** over the face on cue (`fx_seq`): sweat drop, blush, tears, anger vein.
+- **Prop acting:** props live in the hands and are put down on real surfaces (mug on the crate); one hand holds, the other talks.
+- **Sitting:** `crouch≈0.9` + `feetfwd≈0.3` on a seat at the right height.
+- **Sign jokes** in the set (readable boards that comment on the story).
+- **Ambience bed** per place (waves + wind for the lighthouse) under every scene, plus an effect on every action.
+
+# (v8 notes)
+# STYLE FORMULA v8
 
 v8 = the full 4-pass look with no shortcuts (`pipeline/passes.py`, `post_fx.py`):
 - **Depth/actor pass** (per frame, ~0.13 s): every vertex's camera-space depth is written into a colour attribute and the frame

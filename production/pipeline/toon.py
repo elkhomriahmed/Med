@@ -1,7 +1,7 @@
 """Shared toolkit: materials, primitives, outlines, lights, render settings."""
 import bpy, math, random, os
 from mathutils import Vector
-INK=(0.035,0.025,0.02)
+INK=(0.10,0.105,0.20)
 HERE=os.path.dirname(os.path.abspath(__file__))
 _mats={}
 
