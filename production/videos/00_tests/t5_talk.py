@@ -40,6 +40,11 @@ NIGHT=(1.0,1.0,1.0)
 eng=PP.Puppet("engineer",(*EP,0),yaw_to(EP,(-0.2,-1.6)),cam=cam,tint=NIGHT)
 kee=PP.Puppet("keeper",(*KP,0),yaw_to(KP,(0.6,-1.7)),cam=cam,tint=NIGHT)
 LENS=(lx,ly,1.45)
+def beside_head(dx,dz,dy=0.0):   # camera-space point beside the keeper's head (never in front of the face)
+    def f(t):
+        m=cam.matrix_world; r=Vector((m[0][0],m[1][0],m[2][0])); u=Vector((m[0][1],m[1][1],m[2][1])); b=Vector((m[0][2],m[1][2],m[2][2]))
+        return kee.head_pos()+r*dx+u*dz+b*dy
+    return f
 # KEEPER (the talker): calm body, slow readable hand gestures, face never stops changing.
 kee.keys=[(0.0,dict(bend=-0.18,tilt=0.06,arms={-1:("body",(-0.05,0.22,-0.34)),1:("body",(-0.05,0.22,-0.40))})),          # laughing, hands on belly
           (T(69)+0.15,dict(bend=-0.26,nod=-0.08,snap=0.45)),
@@ -48,9 +53,9 @@ kee.keys=[(0.0,dict(bend=-0.18,tilt=0.06,arms={-1:("body",(-0.05,0.22,-0.34)),1:
           (T(71),dict(arms={-1:("body",(-0.13,0.17,-0.06)),1:("rest",)},snap=0.35)),                                    # "I've" - thumb to his chest
           (T(74)-0.05,dict(tilt=0.08,arms={-1:("body",(0.26,0.22,0.02)),1:("rest",)},snap=0.4)),                          # "that lens" - open hand to the lens
           (T(75),dict(arms={-1:("wave",0.14,0.26,-0.06,0.07,1.6),1:("rest",)},snap=0.4)),                                  # "by hand" - mimes cranking
-          (T(77)+0.05,dict(tilt=-0.1,bend=-0.06,arms={-1:("body",(0.26,0.14,0.30)),1:("rest",)},snap=0.4)),                # "30 years" - finger up, proud
+          (T(77)+0.05,dict(tilt=-0.1,bend=-0.06,arms={-1:("world",beside_head(-0.40,0.06,0.10)),1:("rest",)},snap=0.4)),                # "30 years" - finger up, proud
           (T(80)-0.05,dict(tilt=0.06,bend=0.10,arms={-1:("wave",0.10,0.30,0.06,0.035,2.4),1:("body",(0.14,-0.02,-0.32))},snap=0.4)),  # "can't" - wags his finger
-          (T(85),dict(bend=0.0,arms={-1:("body",(0.20,0.20,-0.05)),1:("body",(0.14,-0.02,-0.32))},snap=0.45)),              # "metal" - palm up
+          (T(85),dict(bend=0.0,arms={-1:("world",beside_head(-0.36,-0.38,0.15)),1:("body",(0.14,-0.02,-0.32))},snap=0.45)),              # "metal" - palm up
           (T(86)+0.1,dict(tilt=0.0,bend=-0.05,yaw=yaw_to((KP[0]+0.18,KP[1]+0.08),(0.0,0.3)),arms={-1:("rest",),1:("rest",)},snap=0.5))]  # turns to the lens
 kee.gest_side=-1
 kee.talk(W,T(70)-0.01,T(85)+0.31,every=2,amp=1.0)
