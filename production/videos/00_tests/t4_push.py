@@ -47,7 +47,7 @@ hips={1:("body",(0.14,-0.02,-0.32)),-1:("body",(0.14,-0.02,-0.32))}
 # ENGINEER: cocky stance -> big wind-up (arches back) -> poke (folds forward) -> blows the finger -> chest out, hands on hips
 #           -> DJ scratch with a hand on his "headphones", head bopping -> turns to the keeper, deadpan
 eng.keys=[(0.0,dict(sbend=0.22,side=0.05,tilt=-0.12,arms={1:("rest",),-1:("body",(0.14,-0.02,-0.32))})),
-          (T(49)-0.08,dict(bend=-0.38,sbend=0.0,side=0.0,nod=-0.22,tilt=0.1,arms={1:("body",(0.20,-0.32,0.46)),-1:("body",(0.20,0.0,-0.22))},snap=0.22,damp=0.5)),
+          (T(49)-0.08,dict(bend=-0.38,sbend=0.0,side=0.0,nod=-0.22,tilt=0.1,arms={1:("body",(0.10,-0.38,-0.12)),-1:("body",(0.20,0.10,-0.10))},snap=0.22,damp=0.5)),
           (T(52)-0.1,dict(bend=0.45,lean=0.12,nod=0.08,tilt=0.0,arms={1:("world",RIM),-1:("body",(0.22,-0.08,-0.15))},snap=0.08,damp=0.32)),
           (T(54)-0.05,dict(bend=-0.12,lean=0.0,nod=-0.1,tilt=0.18,arms={1:("body",(-0.03,0.27,0.32)),-1:("rest",)},snap=0.18)),
           (T(57)-0.12,dict(bend=-0.28,nod=-0.14,tilt=-0.08,sbend=0.12,arms=hips,snap=0.2)),

@@ -109,7 +109,7 @@ def lights(state="night"):
     sc=bpy.context.scene; lx,ly=LENS_C
     w=bpy.data.worlds.new("w"); sc.world=w; w.use_nodes=True; bg=w.node_tree.nodes["Background"]
     if state=="night":
-        bpy.ops.object.light_add(type='POINT',location=(lx,ly,POOL_Z+0.74)); l=bpy.context.object.data; l.energy=900; l.color=(1.0,0.82,0.52); l.shadow_soft_size=0.2
+        bpy.ops.object.light_add(type='POINT',location=(lx,ly,POOL_Z+0.74)); l=bpy.context.object.data; l.energy=2600; l.color=(1.0,0.74,0.40); l.shadow_soft_size=0.2
         bpy.ops.object.light_add(type='SUN',rotation=(math.radians(60),0,math.radians(200))); s=bpy.context.object.data; s.energy=1.2; s.color=(0.55,0.65,1.0); s.angle=math.radians(4)
         bpy.ops.object.light_add(type='AREA',location=(0,-1.6,2.6),rotation=(math.radians(20),0,0)); a=bpy.context.object.data; a.energy=60; a.size=3; a.color=(0.6,0.7,1.0)
         bg.inputs[0].default_value=(0.08,0.12,0.28,1); bg.inputs[1].default_value=0.6

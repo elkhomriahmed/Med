@@ -125,12 +125,12 @@ def build_puppet(name):
     head=sph((0,0,hz),(R,R*0.94,R*0.98),mat("pup_skin",(0.95,0.935,0.91),0.45,0.4,emit=0.12),seg=48); parts_h.append(head)
     if O["hat"]=="beanie":
         bc=striped(name+"_beanie",(0.56,0.06,0.05),(0.36,0.03,0.025),26,'X',0.9)
-        o=sph((0,0,hz),(R*1.035,R*1.0,R*1.07),bc,seg=48); bm=bmesh.new(); bm.from_mesh(o.data)
+        o=sph((0,0,hz),(R*1.035,R*1.0,R*1.28),bc,seg=48); bm=bmesh.new(); bm.from_mesh(o.data)
         bmesh.ops.bisect_plane(bm,geom=bm.verts[:]+bm.edges[:]+bm.faces[:],plane_co=(0,0,hz+R*0.55),plane_no=(0,-0.1,1),clear_inner=True)
         bm.to_mesh(o.data); bm.free(); parts_h.append(o)
         cuff=cyl((0,0.01,hz+R*0.58),R*0.99,R*0.24,striped(name+"_cuff",(0.48,0.05,0.04),(0.30,0.025,0.02),40,'X',0.9),verts=48,rot=(-0.15,0,0),bevel=0)
         b=cuff.modifiers.new("round",'BEVEL'); b.width=R*0.08; b.segments=4; parts_h.append(cuff)
-        parts_h.append(sph((0,0.03,hz+R*1.13),(R*0.2,R*0.2,R*0.2),mat(name+"_pom",(0.94,0.91,0.85),0.95,0.05),seg=20))
+        parts_h.append(sph((0,0.04,hz+R*1.30),(R*0.2,R*0.2,R*0.2),mat(name+"_pom",(0.94,0.91,0.85),0.95,0.05),seg=20))
     if O["hair"]:
         hc=O["hair"]; o=sph((0,0,hz),(R*1.05,R*0.99,R*1.03),striped(name+"_hair",hc,tuple(x*0.6 for x in hc),12,'X',0.5),seg=48)
         bm=bmesh.new(); bm.from_mesh(o.data)
