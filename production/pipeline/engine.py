@@ -238,6 +238,8 @@ def run(sc,cam,tgt,t0,t1,update,animated,swaps,out,nproc=2,keys_only=None,key_ho
     sc.render.image_settings.file_format='PNG'
     if keys_only:
         bpy.app.handlers.frame_change_pre.append(apply_swaps)
+        if sc.get("face_uv"):
+            import puppet; bpy.app.handlers.frame_change_pre.append(puppet.apply_face_uv)
         st=None
         if sc.get("passes"):
             import passes; st=passes.setup(sc)

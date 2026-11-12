@@ -92,7 +92,8 @@ def shadow_pass(img,P,strength=0.5,col=(0.20,0.24,0.45)):
     sd,sa=S; sh,sw=sd.shape
     px=np.clip(((ul+1)/2*sw).astype(np.int32),0,sw-1); py=np.clip(((1-vl)/2*sh).astype(np.int32),0,sh-1)
     inside=(np.abs(ul)<1)&(np.abs(vl)<1)&ok
-    occ=(sa[py,px]>0.5)&(sd[py,px]<zl-0.04)&inside
+    low=Pw[...,2]<0.30   # character shadows fall on the floor and low objects only (never a halo on the wall behind a head)
+    occ=(sa[py,px]>0.5)&(sd[py,px]<zl-0.04)&inside&low
     m=cv2.GaussianBlur(occ.astype(np.float32),(0,0),2.5)
     H,W=img.shape[:2]; m=cv2.resize(m,(W,H),interpolation=cv2.INTER_LINEAR)[...,None]
     x=img.astype(np.float32)/255.0; tint=np.array(col,np.float32)

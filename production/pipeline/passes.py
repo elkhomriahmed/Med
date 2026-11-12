@@ -24,6 +24,7 @@ def setup(sc):
     st={"objs":[],"actors":actors(sc)}
     for o in sc.objects:
         if o.type!='MESH' or o.hide_render: continue
+        if o.name.endswith(("_face","_fx")): continue   # drawn face/emotion decals are see-through: not geometry
         me=o.data
         if ATTR not in me.color_attributes: me.color_attributes.new(ATTR,'FLOAT_COLOR','POINT')
         st["objs"].append(o)
@@ -61,8 +62,8 @@ def render_depth(sc,st,path,pct=50):
     except Exception: sc.view_settings.view_transform='Standard'
     sc.render.resolution_percentage=pct; sc.render.image_settings.color_depth='16'
     hidden=[]
-    for o in sc.objects:   # curves (ink limbs) have no attribute: hide them from the depth pass
-        if o.type in('CURVE','FONT') and not o.hide_render: o.hide_render=True; hidden.append(o)
+    for o in sc.objects:   # curves (ink limbs) and see-through decals: hide them from the depth pass
+        if (o.type in('CURVE','FONT') or o.name.endswith(("_face","_fx"))) and not o.hide_render: o.hide_render=True; hidden.append(o)
     sc.render.filepath=path; bpy.ops.render.render(write_still=True)
     for o in hidden: o.hide_render=False
     _restore(sc,s)
@@ -88,7 +89,7 @@ def render_shadowmap(sc,st,path,res=768):
     s=_state(sc); sh=sc.display.shading; cam0=sc.camera; rx,ry=sc.render.resolution_x,sc.render.resolution_y
     act=st["actors"]; hidden=[]
     for o in sc.objects:
-        if o.type in('MESH','CURVE','FONT') and o not in act and not o.hide_render: o.hide_render=True; hidden.append(o)
+        if ((o.type in('MESH','CURVE','FONT') and o not in act) or o.name.endswith(("_face","_fx"))) and not o.hide_render: o.hide_render=True; hidden.append(o)
     # silhouette as depth from the light: reuse the depth attribute machinery with the light camera
     sc.camera=lc; bpy.context.view_layer.update(); _write_depth(sc,{"objs":[o for o in st["objs"] if o in act],"actors":act})
     sh.color_type='VERTEX'; sh.light='FLAT'; sc.display.render_aa='OFF'; sh.use_dof=False

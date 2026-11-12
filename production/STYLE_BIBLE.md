@@ -1,4 +1,15 @@
-# STYLE FORMULA v10 (current — overrides anything below that conflicts)
+# STYLE FORMULA v11 (current — overrides anything below that conflicts)
+
+v11 (user review of v10):
+- **Characters look at each other:** when talking or reacting, the head turns TO the other person (45-70 degrees), not to the
+  camera; the drawn face then shows a real 3/4 view — features slide across the head and squeeze, and the ones past the edge
+  are simply hidden (face decal = head-sized disc, features moved in UV space per frame: `puppet.apply_face_uv`).
+- **Shading lives inside the outline:** heads have a soft shadow side inside the ink line (head shadow tone 58%); character
+  shadows from the shadow pass fall only on the floor and low objects — never a dark halo on the wall behind a head.
+- Drawn face/emotion decals are excluded from the depth/actor and shadow passes (they are see-through, not geometry).
+
+# (v10 notes)
+# STYLE FORMULA v10
 
 Built on v2–v9 (nothing removed). From the v9 deep comparison (metrics vs 4 competitor videos):
 - **Clothes are fabric, not plastic:** muted fabric colours, patterns (sewn seams on raincoats, tweed check on waistcoats),

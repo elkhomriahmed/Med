@@ -14,6 +14,8 @@ def on_frame(scene,*x):
         for nd in bpy.data.materials[mn].node_tree.nodes:
             if nd.type=='TEX_IMAGE': nd.image=img
 bpy.app.handlers.frame_change_pre.append(on_frame)
+if sc.get("face_uv"):
+    sys.path.insert(0,os.path.dirname(os.path.abspath(__file__))); import puppet; bpy.app.handlers.frame_change_pre.append(puppet.apply_face_uv)
 sc.frame_start=a; sc.frame_end=b; sc.render.filepath=OUT+"/f_"
 if sc.get("passes"):   # style v8: colour + depth/actor pass + light shadow map + matrices, per frame
     sys.path.insert(0,os.path.dirname(os.path.abspath(__file__))); import passes

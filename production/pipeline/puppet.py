@@ -209,7 +209,7 @@ def bake_puppet(name,spp=48,size=1024,light="neutral"):
         lit=cv2.GaussianBlur(bake.img_np(bake.bake_pass([g],'DIFFUSE',512,spp,['DIRECT','INDIRECT'])),(0,0),2.0)
         # 2D look with a touch of 3D: soft two-tone (lit / shadow) instead of smooth 3D shading
         lum=lit.mean(-1); ref=max(1e-4,float(np.percentile(lum,97))); nl=lum/ref
-        sh_=0.64 if gname=="head" else 0.52
+        sh_=0.58 if gname=="head" else 0.52   # shading INSIDE the outline: heads get a visible soft shadow side
         x=np.clip((nl-0.30)/0.32,0,1); y_=np.clip((nl-0.86)/0.12,0,1); q=sh_+(0.94-sh_)*(x*x*(3-2*x))+0.14*(y_*y_*(3-2*y_))   # shadow side / lit / pale streak   # shadow / lit / pale streak
         lit=lit/np.maximum(lum,1e-4)[...,None]*(q*ref*0.80)[...,None]
         emi=bake.img_np(bake.bake_pass([g],'EMIT',512,1))
@@ -290,7 +290,7 @@ class Puppet:
         self.LOOK=E("look"); self.fpiv=E("facepiv",self.head,(0,0,D["head_c"]-D["neck"]))
         c=self.fpiv.constraints.new('TRACK_TO'); c.target=self.LOOK; c.track_axis='TRACK_Z'; c.up_axis='UP_Y'
         self.froll=E("faceroll",self.fpiv)
-        R=D["R"]; pts=[(0.80*R*math.cos(math.radians(a)),0.80*R*math.sin(math.radians(a))) for a in range(0,360,10)]
+        R=D["R"]; pts=[(0.92*R*math.cos(math.radians(a)),0.92*R*math.sin(math.radians(a))) for a in range(0,360,10)]
         me=bpy.data.meshes.new(self.name+"_face"); me.from_pydata([(x,y,0) for x,y in pts],[],[list(range(len(pts)))]); uv=me.uv_layers.new()
         for l in me.loops:
             co=me.vertices[l.vertex_index].co; uv.data[l.index].uv=(co.x/(2.6*R)+0.5,co.y/(2.6*R)+0.5)
@@ -415,7 +415,7 @@ class Puppet:
         if self.look_target is not None and lw>0.01:
             tp=self.look_target.head_pos() if hasattr(self.look_target,'head_pos') else Vector(self.look_target(t) if callable(self.look_target) else self.look_target)
             tv=tp-hc0; tv.z=0
-            if tv.length>1e-3: dv=(dv*(1-lw)+tv.normalized()*lw)
+            if tv.length>1e-3: dv=(dv*(1-lw)+tv.normalized()*lw*1.6)   # looking at someone = head really turns to them
         want=math.atan2(dv.x,-dv.y); body=V["yaw"]+V["twist"]
         dturn=(want-body+math.pi)%(2*math.pi)-math.pi
         lead=(P1["yaw"]-V["yaw"]+math.pi)%(2*math.pi)-math.pi; dturn+=0.6*max(-0.9,min(0.9,lead))   # eyes/head turn first, body follows
@@ -431,8 +431,10 @@ class Puppet:
         if f2.length>1e-4 and c2.length>1e-4:
             ang=math.atan2(c2.x*f2.y-c2.y*f2.x,c2.dot(f2))
         else: ang=0.0
-        k=max(-1.0,min(1.0,ang/1.1)); self.face.location=(-k*0.17*D["R"],-0.04*D["R"]*abs(k),D["R"]*1.02)
-        self.fx.location=(self.face.location[0],self.face.location[1],D["R"]*1.03)
+        # 2D head turn: the disc stays inside the head; the drawn features slide across it (sin) and squeeze (cos),
+        # so a 45-70 degree turn shows a real 3/4 face with features partly hidden past the edge
+        a_=max(-1.25,min(1.25,ang)); self._uv_now=(-math.sin(a_)*0.62*D["R"],0.45+0.55*math.cos(a_))
+        self.face.location=(0,0,D["R"]*1.02); self.fx.location=(0,0,D["R"]*1.03)
         # where the pupils point: towards the look target if there is one, else straight at the camera
         gz="C"
         if self.look_target is not None and lw>0.25:
@@ -495,6 +497,10 @@ class Puppet:
     def _set_curve(self,o,pts):
         for p,q in zip(o.data.splines[0].points,pts): p.co=(q.x,q.y,q.z,1.0)
     def key(self,f):
+        sc=bpy.context.scene; d=json.loads(sc.get("face_uv","{}") or "{}")
+        for o in (self.face,self.fx):
+            d.setdefault(o.data.name,{"R":self.D["R"],"f":{}})["f"][str(f)]=list(getattr(self,"_uv_now",(0.0,1.0)))
+        sc["face_uv"]=json.dumps(d)
         for o in self.anim:
             o.keyframe_insert("location",frame=f); o.keyframe_insert("rotation_euler",frame=f); o.keyframe_insert("scale",frame=f)
         for kb in self.kb: kb.keyframe_insert("value",frame=f)
@@ -576,3 +582,15 @@ if __name__=="__main__":
     args=sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else ["keeper","engineer"]
     light=os.environ.get("LIGHT","neutral")
     for n in args: print("BAKED",n,light,bake_puppet(n,light=light)["name"])
+
+
+def apply_face_uv(scene,*a):
+    """frame_change handler: slide/squeeze the drawn face inside the head circle for this frame (see Puppet.key)."""
+    d=json.loads(scene.get("face_uv","{}") or "{}"); f=str(scene.frame_current)
+    for mname,e in d.items():
+        me=bpy.data.meshes.get(mname)
+        if me is None or f not in e["f"] or not me.uv_layers: continue
+        sh,sq=e["f"][f]; R=e["R"]; uv=me.uv_layers[0]; S=2.6*R
+        for l in me.loops:
+            co=me.vertices[l.vertex_index].co
+            uv.data[l.index].uv=((co.x/1.0-sh)/max(0.3,sq)/S+0.5,co.y/S+0.5)
