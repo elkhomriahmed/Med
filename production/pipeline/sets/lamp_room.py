@@ -103,14 +103,65 @@ def build(state="night"):
     for o in M.objects:
         if o.name.startswith("MOV_lens") and o.data and len(o.data.materials) and o.data.materials[0] and o.data.materials[0].name.startswith(("lens_glass","lens_lamp")):
             o.visible_shadow=False   # let the lamp light pass through the glass
+    dress(S)
     return S
+
+
+def dress(S):
+    """Set dressing (style v7): bolted iron, pipes, crates, barrels, rope, a desk with a logbook and mug, a hanging lantern,
+    pictures and a chart on the walls - the room should feel lived-in and full of texture and depth."""
+    random.seed(23); n=8
+    iron=mat("lr_iron2",(0.10,0.11,0.12),0.35,0.6); bolt=mat("lr_bolt",(0.32,0.30,0.28),0.3,0.8)
+    brass=mat("lr_brass2",(0.80,0.55,0.18),0.25,0.8); copper=mat("lr_pipe",(0.62,0.30,0.14),0.3,0.7)
+    crate=wood("lr_crate",(0.58,0.40,0.22),(0.36,0.23,0.12),axis="X",grain=7,bump=0.2)
+    barrel=wood("lr_barrel",(0.45,0.27,0.13),(0.28,0.16,0.07),axis="Z",grain=10,bump=0.25)
+    rope=mat("lr_rope",(0.70,0.58,0.36),0.9,0.05,vary=0.06)
+    for i in range(n):   # iron band with bolts on top of the low wall, and a lower band
+        a=2*math.pi*i/n; side=2*R*math.tan(math.pi/n); cx,cy=R*math.cos(a)*0.975,R*math.sin(a)*0.975; rot=(0,0,a+math.pi/2)
+        for zb in (0.62,0.18):
+            box((cx,cy,zb),(side,0.03,0.07),iron,0.004,rot=rot,coll=S,name="band")
+            for k in range(7):
+                u=(k-3)/3.4*side/2; px=cx+u*math.cos(a+math.pi/2)-0.02*math.cos(a); py=cy+u*math.sin(a+math.pi/2)-0.02*math.sin(a)
+                sph((px,py,zb),(0.016,0.016,0.016),bolt,seg=10,coll=S,name="bolt")
+    # brass pipes running along the wall
+    for k,(a0,a1,z) in enumerate(((0.3,1.6,0.82),(3.5,5.2,0.90))):
+        pts=[(2.72*math.cos(a0+(a1-a0)*j/10),2.72*math.sin(a0+(a1-a0)*j/10),z) for j in range(11)]
+        tube(pts,0.03,copper,coll=S,name="pipe")
+        for j in (0,5,10):
+            p=pts[j]; torus(p,0.045,0.012,brass,rot=(math.pi/2,0,a0+(a1-a0)*j/10),coll=S,name="pipe_clamp")
+    # crates and barrels in the corners
+    for (x,y,sz,r) in ((1.95,1.55,0.42,0.3),(2.2,1.05,0.34,-0.2),(2.05,1.25,0.28,0.5)):
+        box((x,y,sz/2 if sz>0.3 else 0.42+sz/2),(sz,sz,sz),crate,0.012,rot=(0,0,r),coll=S,name="crate")
+    for (x,y) in ((-2.1,-1.25),(-1.85,-1.6)):
+        cyl((x,y,0.36),0.24,0.72,barrel,verts=24,coll=S,name="barrel")
+        for z in (0.12,0.6): torus((x,y,z),0.245,0.016,iron,coll=S,name="hoop")
+    # coil of rope
+    for k in range(5): torus((1.35,-1.9,0.03+k*0.035),0.22-k*0.012,0.03,rope,coll=S,name="rope")
+    # desk with logbook, mug and a candle lantern
+    desk=wood("lr_desk",(0.52,0.33,0.17),(0.33,0.20,0.10),axis="X",grain=6,bump=0.2)
+    box((-1.6,1.75,0.74),(0.9,0.5,0.05),desk,0.01,rot=(0,0,-0.6),coll=S,name="desk")
+    for (dx,dy) in ((-0.38,-0.18),(0.38,-0.18),(-0.38,0.18),(0.38,0.18)):
+        x=-1.6+dx*math.cos(-0.6)-dy*math.sin(-0.6); y=1.75+dx*math.sin(-0.6)+dy*math.cos(-0.6)
+        box((x,y,0.36),(0.05,0.05,0.72),desk,0.004,coll=S,name="desk_leg")
+    box((-1.65,1.72,0.785),(0.3,0.22,0.05),mat("lr_book",(0.45,0.10,0.08),0.6,0.2),0.006,rot=(0,0,-0.4),coll=S,name="logbook")
+    cyl((-1.35,1.55,0.82),0.045,0.1,mat("lr_mug",(0.85,0.82,0.74),0.4,0.3),verts=16,coll=S,name="mug")
+    # hanging lantern
+    cyl((1.4,-0.3,2.35),0.01,0.5,iron,verts=6,coll=S,name="chain")
+    cyl((1.4,-0.3,2.0),0.11,0.22,mat("lr_lant",(1.0,0.8,0.45),0.3,0.2,emit=6.0),verts=12,coll=S,name="lantern")
+    cyl((1.4,-0.3,2.13),0.13,0.03,iron,verts=12,coll=S,name="lantern_cap")
+    # pictures and a sea chart on the low wall
+    for (a,col,w,h) in ((2.3,(0.18,0.35,0.55),0.42,0.3),(3.0,(0.85,0.78,0.6),0.5,0.36)):
+        cx,cy=(R-0.1)*math.cos(a),(R-0.1)*math.sin(a)
+        box((cx,cy,0.72),(w+0.06,0.03,h+0.06),mat("lr_frame",(0.35,0.20,0.08),0.5,0.3),0.006,rot=(0,0,a+math.pi/2),coll=S,name="frame")
+        box((cx-0.02*math.cos(a),cy-0.02*math.sin(a),0.72),(w,0.02,h),mat(f"lr_pic{int(a*10)}",col,0.7,0.1,vary=0.15),0.0,rot=(0,0,a+math.pi/2),coll=S,name="picture")
 
 def lights(state="night"):
     sc=bpy.context.scene; lx,ly=LENS_C
     w=bpy.data.worlds.new("w"); sc.world=w; w.use_nodes=True; bg=w.node_tree.nodes["Background"]
     if state=="night":
         bpy.ops.object.light_add(type='POINT',location=(lx,ly,POOL_Z+0.74)); l=bpy.context.object.data; l.energy=2600; l.color=(1.0,0.74,0.40); l.shadow_soft_size=0.2
-        bpy.ops.object.light_add(type='SUN',rotation=(math.radians(60),0,math.radians(200))); s=bpy.context.object.data; s.energy=1.2; s.color=(0.55,0.65,1.0); s.angle=math.radians(4)
+        bpy.ops.object.light_add(type='SUN',rotation=(math.radians(58),0,math.radians(200))); s=bpy.context.object.data; s.energy=2.6; s.color=(0.42,0.56,1.0); s.angle=math.radians(3)
+        bpy.ops.object.light_add(type='POINT',location=(1.4,-0.3,1.95)); q=bpy.context.object.data; q.energy=120; q.color=(1.0,0.66,0.32); q.shadow_soft_size=0.15
         bpy.ops.object.light_add(type='AREA',location=(0,-1.6,2.6),rotation=(math.radians(20),0,0)); a=bpy.context.object.data; a.energy=60; a.size=3; a.color=(0.6,0.7,1.0)
         bg.inputs[0].default_value=(0.08,0.12,0.28,1); bg.inputs[1].default_value=0.6
     else:

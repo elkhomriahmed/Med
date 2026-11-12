@@ -13,22 +13,41 @@ GRADES={  # (lift rgb, gain rgb, saturation, contrast)
  "night":   ((0.01,0.02,0.06),(1.02,0.99,1.02),1.06,1.08),
  "interior":((0.01,0.01,0.03),(1.06,1.01,0.93),1.08,1.06),
 }
-def night_vivid(x,tint=(0.50,0.66,1.30),lift=(0.03,0.05,0.20),sat=1.55,gam=0.78):
+def night_vivid(x,tint=(0.66,0.78,1.22),lift=(0.02,0.03,0.12),sat=1.35,gam=0.85):
     """Competitor-style night (style v4): hue-preserving blue moonlight. Every object keeps its own colour, lit by
     strong blue light; warm sources and light pools stay warm; whites (faces, shirts) stay bright lavender-white."""
     r,b=x[...,0],x[...,2]; mx=x.max(-1); mn=x.min(-1); s=(mx-mn)/(mx+1e-4)
     warm=(np.clip((r-b)*2.2,0,1)*np.clip(s*2,0,1)*np.clip(mx*1.8-0.3,0,1))[...,None]
-    white=(np.clip((mn-0.55)/0.3,0,1)*np.clip(1-s*3,0,1))[...,None]
+    white=0.15*(np.clip((mn-0.55)/0.3,0,1)*np.clip(1-s*3,0,1))[...,None]
     t=np.array(tint,np.float32)*(1-white)+np.array((0.86,0.88,1.04),np.float32)*white
     y=x*(t*(1-warm)+np.array((0.98,0.90,0.82),np.float32)*warm)
-    y=y+np.array(lift,np.float32)*(1-y); y=np.clip(y,0,1)**gam
+    Lx=(0.3*x[...,0]+0.55*x[...,1]+0.15*x[...,2])[...,None]; gate=np.clip((Lx-0.06)/0.12,0,1)   # ink lines stay dark
+    y=y+np.array(lift,np.float32)*(1-y)*gate; y=np.clip(y,0,1)**gam
     g=(0.3*y[...,0]+0.55*y[...,1]+0.15*y[...,2])[...,None]; return np.clip(g+(y-g)*sat,0,1)
 
-def grade(img,kind,bloom):
+def particles(x,fidx,kind,n=30,seed=7):
+    """Floating dust motes / light specks (style v7): a few sharp small motes + some big soft out-of-focus ones in
+    front of everything (depth). Drift slowly and continuously from frame to frame."""
+    h,w=x.shape[:2]; rng=np.random.default_rng(seed); t=fidx/30.0
+    col=np.array((1.0,0.86,0.62) if kind!="night" else (0.85,0.88,1.0),np.float32)
+    layer=np.zeros((h//2,w//2,3),np.float32)
+    for i in range(n):
+        bx,by=rng.random(),rng.random(); vx,vy=(rng.random()-0.5)*0.012,-0.006-rng.random()*0.012
+        big=rng.random()<0.12; r=(rng.uniform(12,26) if big else rng.uniform(1.4,3.0)); a=(0.035 if big else 0.45)*rng.uniform(0.5,1.0)
+        px=((bx+vx*t+0.01*np.sin(t*0.7+i))%1.0)*w/2; py=((by+vy*t)%1.0)*h/2
+        cv2.circle(layer,(int(px),int(py)),int(max(1,r/2)),(a*col).tolist(),-1,lineType=cv2.LINE_AA)
+    layer=cv2.GaussianBlur(layer,(0,0),2.2)
+    return x+cv2.resize(layer,(w,h),interpolation=cv2.INTER_LINEAR)
+
+def grade(img,kind,bloom,fidx=0):
     x=img.astype(np.float32)/255.0
+    # haze: wide warm glow around light sources (lamps, lanterns, windows) - air in the room
+    lum=x.max(-1,keepdims=True); hz=np.clip((lum-0.88)/0.12,0,1)*x
+    h0,w0=x.shape[:2]; sm=cv2.resize(hz,(w0//8,h0//8),interpolation=cv2.INTER_AREA)
+    x=x+cv2.resize(cv2.GaussianBlur(sm,(0,0),14),(w0,h0),interpolation=cv2.INTER_LINEAR)*0.12
     # bloom: bright parts glow
     if bloom>0:
-        lum=x.max(-1,keepdims=True); hi=np.clip((lum-0.86)/0.14,0,1)*x
+        lum=x.max(-1,keepdims=True); hi=np.clip((lum-0.93)/0.07,0,1)*x
         h,w=x.shape[:2]; sm=cv2.resize(hi,(w//4,h//4),interpolation=cv2.INTER_AREA)
         g=cv2.GaussianBlur(sm,(0,0),6)+cv2.GaussianBlur(sm,(0,0),18)*0.8
         x=x+cv2.resize(g,(w,h),interpolation=cv2.INTER_LINEAR)*bloom
@@ -40,7 +59,8 @@ def grade(img,kind,bloom):
     x=np.clip(x,0,1); x=x+(x-x*x)*(con-1)*1.6*(x-0.5)*2   # soft S-curve around mid grey
     g=x.mean(-1,keepdims=True); x=g+(x-g)*sat
     h,w=x.shape[:2]; yy,xx=np.mgrid[0:h,0:w].astype(np.float32); d=((xx-w/2)/(w*0.75))**2+((yy-h/2)/(h*0.72))**2
-    x=x*(1-0.22*np.clip(d,0,1.3)[...,None])
+    x=particles(x,fidx,kind)
+    x=x*(1-0.34*np.clip(d,0,1.4)[...,None])   # cinematic vignette
     return np.clip(x*255,0,255).astype(np.uint8)
 
 def shadows(img,polys):
@@ -57,7 +77,7 @@ def shadows(img,polys):
 def job(a):
     f,out,polys,kind,bloom=a
     img=cv2.imread(f,cv2.IMREAD_COLOR)[:,:,::-1]
-    img=shadows(img,polys); img=grade(img,kind,bloom)
+    img=shadows(img,polys); img=grade(img,kind,bloom,int(os.path.basename(f)[2:6]))
     cv2.imwrite(os.path.join(out,os.path.basename(f)),img[:,:,::-1])
 
 if __name__=="__main__":

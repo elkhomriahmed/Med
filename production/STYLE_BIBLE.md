@@ -1,4 +1,29 @@
-# STYLE FORMULA v6 (current — overrides anything below that conflicts)
+# STYLE FORMULA v7 (current — overrides anything below that conflicts)
+
+From the niche creator's own guide ("How to make a 3D cartoon look this good", 2026-11-12) and the slot-machine short:
+the look = a plain build + **4 passes**:
+1. **Camera** — a real camera that moves in close: one face fills ~40–67% of the frame width. Camera styles to pick per video:
+   *Dread Cuts* (hard cuts on words, low tilted camera, slow push every shot), *One Take* (one unbroken floating camera),
+   *Found Footage* (shaky phone camera in their faces), *The Watcher* (long lens from far away, creeping closer),
+   *Through the Steel* (camera follows the sound through walls/water from place to place).
+2. **Environment** — flat walls become real sets with texture (bolted steel, rivets, pipes, crates, barrels, rope, pictures,
+   lanterns); characters stay the same, the world around them is rebuilt and dressed.
+3. **Post** — every frame: world → air → haze → depth of field → bloom → screen → actors → particles → grade.
+   Characters go on top and are never blurred.
+4. **Shading** — light hits faces and clothes from the scene's light: a lit side, a soft shadow side and a **pale streak on the
+   edge**; heads are cream, never flat bright white; plus a **shadow pass** (each character's shadow as the light sees it).
+
+Our implementation:
+- Characters are baked under the scene's light preset (`LIGHTS` in puppet.py: `night_lamp`, `day_window`, …): warm key from the
+  scene's main light, coloured fill from the ambient side, a strong rim from behind for the pale streak; three tones
+  (shadow 50% / lit 90% / streak 112%); cream skin (0.80, 0.76, 0.70); face whites tinted by the scene.
+- Sets are dressed (`lamp_room.dress`) and lit warm-versus-cool (warm lamp/lantern pools, cool moonlight through windows).
+- Post: soft contact shadows, haze glow only around real light sources, bloom only above 93% brightness (faces never glow),
+  gentle hue-preserving night grade with dark ink kept dark, floating dust motes, cinematic vignette; real lens depth of field.
+- Closer framing: faces fill much more of the frame; low angles; two-shots for contact moments.
+
+# (v6 notes)
+# STYLE FORMULA v6
 
 v6: **2D animation with a touch of 3D, not 3D animation.**
 - **Faces are 2D:** the drawn face disc always faces the camera exactly and sits inside the head circle (radius 0.8 R), so

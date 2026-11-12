@@ -122,7 +122,7 @@ def build_puppet(name):
     if "belt" in det:
         parts_t.append(box((0,front_y(D["hip"]+0.092)-0.012,D["hip"]+0.092),(0.06,0.014,0.045),mat("pup_buckle",(0.85,0.66,0.2),0.3,0.7),0.004))
     # ---- head
-    head=sph((0,0,hz),(R,R*0.94,R*0.98),mat("pup_skin",(0.95,0.935,0.91),0.45,0.4,emit=0.12),seg=48); parts_h.append(head)
+    head=sph((0,0,hz),(R,R*0.94,R*0.98),mat("pup_skin",(0.80,0.76,0.70),0.45,0.4,emit=0.04),seg=48); parts_h.append(head)
     if O["hat"]=="beanie":
         bc=striped(name+"_beanie",(0.56,0.06,0.05),(0.36,0.03,0.025),26,'X',0.9)
         o=sph((0,0,hz),(R*1.035,R*1.0,R*1.28),bc,seg=48); bm=bmesh.new(); bm.from_mesh(o.data)
@@ -139,16 +139,21 @@ def build_puppet(name):
     D["shoulder"]=(w*0.86,0.0,hz-R-0.04); D["hipjoint"]=(0.07,0.0,D["hip"]+0.02)
     return D,parts_t,parts_h
 
-def _studio_lights():
-    sc=bpy.context.scene
-    w=bpy.data.worlds.new("pupw"); sc.world=w; w.use_nodes=True; bg=w.node_tree.nodes["Background"]; bg.inputs[0].default_value=(0.55,0.58,0.62,1); bg.inputs[1].default_value=0.22
+LIGHTS={  # scene light presets the characters are baked under (style v7: characters belong to the place's light)
+ "neutral":dict(world=((0.55,0.58,0.62),0.22),key=((1.0,0.95,0.86),3.6),fill=((0.75,0.85,1.0),22),rim=((1.0,0.97,0.92),70)),
+ "night_lamp":dict(world=((0.10,0.13,0.30),0.35),key=((1.0,0.70,0.40),3.4),fill=((0.32,0.45,1.0),45),rim=((0.80,0.88,1.0),190)),
+ "day_window":dict(world=((0.6,0.65,0.75),0.30),key=((1.0,0.93,0.80),3.8),fill=((0.6,0.7,1.0),30),rim=((1.0,0.98,0.9),150)),
+}
+def _studio_lights(preset="neutral"):
+    P=LIGHTS[preset]; sc=bpy.context.scene
+    w=bpy.data.worlds.new("pupw"); sc.world=w; w.use_nodes=True; bg=w.node_tree.nodes["Background"]; bg.inputs[0].default_value=(*P['world'][0],1); bg.inputs[1].default_value=P['world'][1]
     def L(kind,loc,rot,energy,col,size=1.0):
         bpy.ops.object.light_add(type=kind,location=loc,rotation=rot); l=bpy.context.object.data; l.energy=energy; l.color=col
         if kind=='AREA': l.size=size
         if kind=='SUN': l.angle=math.radians(8)
-    L('SUN',(0,0,5),(math.radians(48),0,math.radians(-38)),3.6,(1.0,0.95,0.86))     # key: front-left-top, warm
-    L('AREA',(1.6,-1.4,1.4),(math.radians(70),0,math.radians(50)),22,(0.75,0.85,1.0),2.0)  # fill: right, cool
-    L('AREA',(0,1.6,2.0),(math.radians(-55),0,0),70,(1.0,0.97,0.92),1.5)                 # rim: behind
+    L('SUN',(0,0,5),(math.radians(48),0,math.radians(-38)),P['key'][1],P['key'][0])     # key: front-left-top, warm
+    L('AREA',(1.6,-1.4,1.4),(math.radians(70),0,math.radians(50)),P['fill'][1],P['fill'][0],2.0)  # fill: right, cool
+    L('AREA',(-1.1,1.4,2.0),(math.radians(-55),0,math.radians(-35)),P['rim'][1],P['rim'][0],1.2)   # rim: behind-left = pale streak on the edge
     bpy.ops.mesh.primitive_plane_add(size=6,location=(0,0,0)); fl=bpy.context.object; fl.name="studio_floor"
     fl.data.materials.append(mat("studio_floor",(0.5,0.5,0.5),0.9,0.1)); return fl
 
@@ -174,10 +179,10 @@ def _bend_keys(torso,D):
     ref["basis"]={k:list(p) for k,p in pts.items()}
     D["bend_ref"]=ref
 
-def bake_puppet(name,spp=48,size=1024):
+def bake_puppet(name,spp=48,size=1024,light="neutral"):
     """Build + bake a character once and save it to assets/puppets/<name>.blend. Returns the dims dict."""
     import cv2, numpy as np, engine
-    reset(pct=100); D,pt,ph=build_puppet(name); fl=_studio_lights()
+    reset(pct=100); D,pt,ph=build_puppet(name); fl=_studio_lights(light)
     groups={}
     for gname,parts in (("torso",pt),("head",ph)):
         objs=[o for o in bake.to_mesh(parts) if o.type=='MESH']
@@ -189,7 +194,7 @@ def bake_puppet(name,spp=48,size=1024):
         lit=cv2.GaussianBlur(bake.img_np(bake.bake_pass([g],'DIFFUSE',512,spp,['DIRECT','INDIRECT'])),(0,0),2.0)
         # 2D look with a touch of 3D: soft two-tone (lit / shadow) instead of smooth 3D shading
         lum=lit.mean(-1); ref=max(1e-4,float(np.percentile(lum,97))); nl=lum/ref
-        x=np.clip((nl-0.40)/0.22,0,1); q=0.70+0.30*(x*x*(3-2*x))
+        x=np.clip((nl-0.36)/0.20,0,1); y_=np.clip((nl-0.86)/0.12,0,1); q=0.50+0.40*(x*x*(3-2*x))+0.22*(y_*y_*(3-2*y_))   # shadow / lit / pale streak
         lit=lit/np.maximum(lum,1e-4)[...,None]*(q*ref*0.80)[...,None]
         emi=bake.img_np(bake.bake_pass([g],'EMIT',512,1))
         inkmask=bake.ink_mask([g],size,3,min_angle=65)
@@ -204,8 +209,9 @@ def bake_puppet(name,spp=48,size=1024):
     for im in bpy.data.images: im.pack() if im.packed_file is None and im.source=='GENERATED' else None
     os.makedirs(PUPDIR,exist_ok=True)
     groups["torso"]["dims"]=json.dumps(D)
-    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(PUPDIR,f"{name}.blend"),compress=True)
-    json.dump(D,open(os.path.join(PUPDIR,f"{name}.json"),"w"),indent=1)
+    tag=name if light=="neutral" else f"{name}_{light}"
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(PUPDIR,f"{tag}.blend"),compress=True)
+    json.dump(D,open(os.path.join(PUPDIR,f"{tag}.json"),"w"),indent=1)
     return D
 
 # ------------------------------------------------------------------ RIG (in a scene)
@@ -239,10 +245,11 @@ class Spring:
 CH=("lean","side","twist","bend","sbend","crouch","nod","tilt","turn","squash","air","yaw","look","shake")
 HEADCH=("nod","tilt","turn")
 class Puppet:
-    def __init__(self,name,loc=(0,0,0),yaw=0.0,cam=None,inst=None,tint=(1.0,1.0,1.0)):
+    def __init__(self,name,loc=(0,0,0),yaw=0.0,cam=None,inst=None,tint=(1.0,1.0,1.0),light="neutral"):
         sc=bpy.context.scene; self.name=inst or name; self.cam=cam or sc.camera; self.tint=tuple(tint)
-        D=json.load(open(os.path.join(PUPDIR,f"{name}.json"))); self.D=D
-        with bpy.data.libraries.load(os.path.join(PUPDIR,f"{name}.blend")) as (src,dst):
+        tag=name if light=="neutral" else f"{name}_{light}"
+        D=json.load(open(os.path.join(PUPDIR,f"{tag}.json"))); self.D=D
+        with bpy.data.libraries.load(os.path.join(PUPDIR,f"{tag}.blend")) as (src,dst):
             dst.objects=[n for n in src.objects if n.startswith("PUP_")]
         coll=bpy.data.collections.new("PUPPET_"+self.name); sc.collection.children.link(coll); self.coll=coll
         objs={o.name.split("_")[-1].split(".")[0]:o for o in dst.objects}
@@ -518,5 +525,6 @@ def shadow_hook(puppets,store,floor_z=0.0,light=(0.07,0.05)):
 
 if __name__=="__main__":
     import sys
-    for n in sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else ["keeper","engineer"]:
-        print("BAKED",n,bake_puppet(n)["name"])
+    args=sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else ["keeper","engineer"]
+    light=os.environ.get("LIGHT","neutral")
+    for n in args: print("BAKED",n,light,bake_puppet(n,light=light)["name"])
