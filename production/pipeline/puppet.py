@@ -232,7 +232,7 @@ class Spring:
             a=w*w*(target-self.x)-2*z*w*self.v; self.v+=a*h; self.x+=self.v*h
         return self.x
 
-CH=("lean","side","twist","bend","sbend","crouch","nod","tilt","turn","squash","air","yaw")
+CH=("lean","side","twist","bend","sbend","crouch","nod","tilt","turn","squash","air","yaw","look","shake")
 HEADCH=("nod","tilt","turn")
 class Puppet:
     def __init__(self,name,loc=(0,0,0),yaw=0.0,cam=None,inst=None,tint=(1.0,1.0,1.0)):
@@ -298,8 +298,8 @@ class Puppet:
         self.feet={}; self.step={}; self.t_prev=None; self.spr={c:Spring() for c in CH}; self.hspr={}
         self.anim=[self.A,self.P,self.torso,self.head,self.LOOK,self.froll]+list(self.hands.values())+list(self.boots.values())
         self.pose0=dict(pos=tuple(loc[:2]),yaw=yaw,crouch=0.0,lean=0.0,side=0.0,twist=0.0,bend=0.0,sbend=0.0,nod=0.0,tilt=0.0,turn=0.0,
-                        air=0.0,squash=0.0,arms={-1:("rest",),1:("rest",)},snap=0.38,damp=0.72,jump=None)
-        self.spr["yaw"].x=yaw; self.phase=(hash(self.name)%100)/100.0*6.28; self.landed=set()
+                        air=0.0,squash=0.0,look=0.0,shake=0.0,arms={-1:("rest",),1:("rest",)},snap=0.38,damp=0.72,jump=None)
+        self.look_target=None; self.spr["yaw"].x=yaw; self.phase=(hash(self.name)%100)/100.0*6.28; self.landed=set()
     # ---------------- pose keys
     def _full(self,i):
         p=dict(self.pose0)
@@ -361,15 +361,16 @@ class Puppet:
             elif u>1 and kt not in self.landed: self.landed.add(kt); self.spr["squash"].v-=1.6
         # calm life: weight shift + breathing + slow head drift (no jitter)
         ph=self.phase; g=self._beat(t)
-        side=V["side"]+0.012*math.sin(2*math.pi*0.17*t+ph)
-        nod=V["nod"]+0.012*math.sin(2*math.pi*0.13*t+ph*1.7)+0.03*g
+        sh5=math.sin(2*math.pi*5.0*t)*V["shake"]          # laughing / shivering body shake
+        side=V["side"]+0.026*math.sin(2*math.pi*0.21*t+ph)
+        nod=V["nod"]+0.02*math.sin(2*math.pi*0.16*t+ph*1.7)+0.03*g+0.04*sh5
         breath=math.sin(2*math.pi*0.3*t+ph)
         self.A.location=Vector((x,y,0)); self.A.rotation_euler=(0,0,V["yaw"])
         bob=0.025*abs(math.sin(math.pi*t/0.17)) if moving else 0.0
         self.P.location=(0,0,D["hip"]-0.22*V["crouch"]+air+bob)
         lean=V["lean"]+(0.10 if moving else 0.0)
         self.P.rotation_euler=(-lean,side*0.5,V["twist"])
-        sq=V["squash"]; self.P.scale=(1-0.5*sq,1-0.5*sq,1+sq+0.007*breath)
+        sq=V["squash"]+0.035*sh5; self.P.scale=(1-0.5*sq,1-0.5*sq,1+sq+0.007*breath)
         # curved spine via shape keys
         bend=V["bend"]+0.02*g; sb=V["sbend"]+side*0.5
         wts={"fwd":max(0.0,bend)/BENDS["fwd"][0],"back":max(0.0,-bend)/-BENDS["back"][0],"right":max(0.0,sb)/BENDS["right"][0],"left":max(0.0,-sb)/-BENDS["left"][0]}
@@ -378,13 +379,19 @@ class Puppet:
         ax=sum(BENDS[k][0]*w for k,w in wts.items() if BENDS[k][1]=="y")*0.85; ay=sum(BENDS[k][0]*w for k,w in wts.items() if BENDS[k][1]=="x")*0.85
         bpy.context.view_layer.update()
         hc0=self.torso.matrix_world@(self.head.location+Vector((0,0,D["head_c"]-D["neck"]))); cam0=self.cam.matrix_world.translation
-        dv=cam0-hc0; want=math.atan2(dv.x,-dv.y); body=V["yaw"]+V["twist"]
+        dv=cam0-hc0; dv.z=0; dv.normalize(); lw=max(0.0,min(1.0,V["look"]))
+        if self.look_target is not None and lw>0.01:
+            tp=self.look_target.head_pos() if hasattr(self.look_target,'head_pos') else Vector(self.look_target(t) if callable(self.look_target) else self.look_target)
+            tv=tp-hc0; tv.z=0
+            if tv.length>1e-3: dv=(dv*(1-lw)+tv.normalized()*lw)
+        want=math.atan2(dv.x,-dv.y); body=V["yaw"]+V["twist"]
         dturn=(want-body+math.pi)%(2*math.pi)-math.pi; dturn=max(-1.25,min(1.25,dturn))
-        self.head.rotation_euler=(ax-nod-0.18*lean,ay+V["tilt"],0.8*dturn+V["turn"])
+        tilt_w=0.07*math.sin(2*math.pi*0.27*t+ph*0.7)   # heads keep tilting a little, all the time
+        self.head.rotation_euler=(ax-nod-0.18*lean,ay+V["tilt"]+tilt_w,0.85*dturn+V["turn"])
         bpy.context.view_layer.update()
         hc=self.fpiv.matrix_world.translation; cam=self.cam.matrix_world.translation
         fwd=(self.head.matrix_world.to_3x3()@Vector((0,-1,0))).normalized(); tc=(cam-hc).normalized()
-        self.LOOK.location=hc+(tc*0.72+fwd*0.28).normalized()
+        self.LOOK.location=hc+(tc*(0.72-0.22*lw)+fwd*(0.28+0.22*lw)).normalized()   # looking at someone: 3/4 face, still readable
         self.froll.rotation_euler=(0,0,-(V["tilt"]+side+ay)*0.9)
         # feet
         Am=self.A.matrix_world

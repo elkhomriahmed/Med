@@ -288,5 +288,8 @@ def beam_update(root,cam_loc,lo=0.38,hi=0.62,amount=1.0):
         o=R.translation; d=(R.to_3x3()@Vector((math.cos(a),math.sin(a),0))).normalized()
         p0=o+d*root["beam_r0"]*root.scale.x; v=(p0-Vector(cam_loc)).normalized()
         ang=math.acos(max(-1.0,min(1.0,v.dot(d))))      # 0 = looking straight down the beam
-        k=ss((ang-lo)/(hi-lo))*amount; sub.scale=(1,1,max(0.001,k))
+        k=ss((ang-lo)/(hi-lo))*amount
+        rel=Vector(cam_loc)-o; along=rel.dot(d); lat=(rel-d*along).length
+        if along>root["beam_r0"]*root.scale.x-0.4 and lat<0.6+0.3*(along-root["beam_r0"]): k=0.0   # never sweep through the camera
+        sub.scale=(1,1,max(0.001,k))
     return subs

@@ -1,4 +1,23 @@
-# STYLE FORMULA v4 (current — overrides anything below that conflicts)
+# STYLE FORMULA v5 (current — overrides anything below that conflicts)
+
+Reference description of the style: *stylized 3D cartoon storytelling, minimalist round-headed characters, exaggerated body
+language, expressive facial animation, playful physical reactions, cinematic environments; characters move continuously and
+naturally — tilting heads, leaning, gesturing, changing expressions to match the narration; vibrant saturated colour, soft
+cinematic light, strong warm-vs-cool contrast, dynamic camera angles; polished, playful animated world.*
+
+v5 rules:
+- **Characters relate to each other:** bodies stand 3/4 towards each other (between the partner and the camera); heads turn
+  towards whoever they talk to or react to (`look_target`, `look` weight) so the face is 3/4 but still readable. Physical
+  contact sells it (a patronising pat on the shoulder).
+- **Every reaction is about what is being said:** the listener humours, doubts, gets offended, glances at the object being
+  discussed, folds arms when challenged, and gets the punchline gesture (presenting the lens on "but it works").
+- **Continuous natural life:** slow weight shifts, a head that keeps tilting a little, leans in/out with emphasis, a laugh
+  body-shake (`shake`) — always smooth, never jittery or fast.
+- **Dynamic camera, faces always visible:** low-angle two-shots, front 3/4 angles from either side, slow pushes; never shoot the
+  back of a talking head. Cameras stay inside the set (clamped) — a camera outside a wall can be swept by beams/props.
+- **No flashes:** light beams hide any arm whose path would cross the camera (`engine.beam_update`).
+
+# (v4 notes)
 
 v4 corrections (user review of the v3 sample):
 - **Whole head outlined:** the head sits fully above the body (centre = torso top + 0.97 R) so the jaw line gets the same thick
