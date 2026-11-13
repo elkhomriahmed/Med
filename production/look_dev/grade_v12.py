@@ -3,14 +3,14 @@ warm highlights / cooler shadows, gentle S-contrast, bloom on light sources, vig
 import os, sys
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2, numpy as np
-def grade(lin, ev=0.0, sat=1.35, warm=0.06, contrast=0.18, bloom=0.35, vig=0.28):
+def grade(lin, ev=0.0, sat=1.30, warm=0.035, contrast=0.18, bloom=0.35, vig=0.28):
     x = lin[..., :3].astype(np.float32) * (2.0 ** ev)
     w = 6.0; x = x * (1 + x / (w * w)) / (1 + x)                       # Reinhard with white point: soft shoulder
     x = np.clip(x, 0, 1)
     x = np.where(x <= 0.0031308, 12.92 * x, 1.055 * np.power(x, 1 / 2.4) - 0.055)   # sRGB
     l = (x * np.array([0.0722, 0.7152, 0.2126])).sum(-1, keepdims=True)         # BGR luma
     x = l + (x - l) * sat
-    x = x + warm * np.clip(l - 0.45, 0, 1) * np.array([-0.6, 0.15, 1.0]) - warm * 0.5 * np.clip(0.45 - l, 0, 1) * np.array([1.0, 0.1, -0.5])
+    x = x + warm * np.clip(l - 0.45, 0, 1) * np.array([-0.6, 0.15, 1.0]) - 0.10 * np.clip(0.42 - l, 0, 1) * np.array([-0.55, 0.05, 0.6])
     x = np.clip(x, 0, 1); x = x + contrast * (x - x * x) * (2 * x - 1) * 2      # S-curve around mid grey
     br = np.clip((x - 0.82) / 0.18, 0, 1) ** 2 * x
     h, w_ = x.shape[:2]; g = cv2.GaussianBlur(br, (0, 0), w_ * 0.02) + 0.6 * cv2.GaussianBlur(br, (0, 0), w_ * 0.006)

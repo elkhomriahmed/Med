@@ -50,7 +50,7 @@ for o in bpy.data.objects:
 for o in bpy.data.objects:
     if o.name.startswith("pedestal"): o.data.materials[0] = painted("lr_pedestal", (0.55, 0.52, 0.48), grime=(0.25, 0.22, 0.2), bump=0.8, brush=18)
 # ceiling: dark planked wood with rafters and an iron ring (was a flat pale copper cone)
-roofw = wood("lr_ceiling", (0.36, 0.21, 0.11), (0.18, 0.10, 0.05), axis="Z", grain=9, bump=0.8)
+roofw = wood("lr_ceiling", (0.22, 0.15, 0.11), (0.10, 0.07, 0.05), axis="Z", grain=9, bump=0.8)
 bpy.data.objects["roof"].data.materials[0] = roofw
 ironr = mat("lr_rafter_iron", (0.10, 0.10, 0.11), 0.4, 0.5)
 for k in range(8):
@@ -58,7 +58,7 @@ for k in range(8):
     r0, z0, r1, z1 = 3.0, 2.97, 0.25, 4.05
     mid = Vector(((r0 + r1) / 2 * math.cos(a), (r0 + r1) / 2 * math.sin(a), (z0 + z1) / 2 - 0.06))
     ln = math.hypot(r0 - r1, z1 - z0); tilt = math.atan2(z1 - z0, r0 - r1)
-    b = box(mid, (ln, 0.10, 0.12), wood("lr_rafter", (0.42, 0.25, 0.12), (0.22, 0.12, 0.06), axis="X", grain=7, bump=0.6), 0.01, rot=(0, tilt, a + math.pi), name="rafter")
+    b = box(mid, (ln, 0.10, 0.12), wood("lr_rafter", (0.30, 0.19, 0.11), (0.15, 0.09, 0.05), axis="X", grain=7, bump=0.6), 0.01, rot=(0, tilt, a + math.pi), name="rafter")
 torus((0, 0, 2.93), 2.75, 0.05, ironr, name="ceiling_ring")
 cyl((0, 0, 3.9), 0.32, 0.25, ironr, verts=16, name="vent_hub")
 # the lens: warm glow from inside without blowing out
@@ -142,12 +142,16 @@ def ink_tube(pts, r, name):
     for i, q in enumerate(pts): sp.points[i].co = (*q, 1)
     o = bpy.data.objects.new(name, cu); sc.collection.objects.link(o); cu.materials.append(INKM); return o
 
+PCAP = 3.2
+def cap_r(t):   # capsule-like profile: flat sides, rounded top and bottom
+    return max(0.0, 1 - abs(t) ** PCAP) ** (1 / PCAP)
 def egg(c, rx, ry, rz, taper, m, name):
-    """Bean torso: sphere stretched tall, wider at the bottom."""
-    o = sph(c, (rx, ry, rz), m, seg=48, name=name); c = Vector(c)
+    """Competitor torso: slim rounded capsule (flat-ish sides), slightly wider at the bottom."""
+    o = sph(c, (rx, ry, rz), m, seg=128, name=name); c = Vector(c)
     for v in o.data.vertices:
-        t = -(v.co.z - c.z) / rz
-        f = 1 + taper * t; v.co.x = c.x + (v.co.x - c.x) * f; v.co.y = c.y + (v.co.y - c.y) * f
+        t = (v.co.z - c.z) / rz; ro = math.sqrt(max(1 - t * t, 0.0))
+        f = (cap_r(t) / ro if ro > 1e-4 else 1.0) * (1 - taper * t)
+        v.co.x = c.x + (v.co.x - c.x) * f; v.co.y = c.y + (v.co.y - c.y) * f
     for p in o.data.polygons: p.use_smooth = True
     return o
 
@@ -163,21 +167,38 @@ def character(key, base, yaw, look_at, expr, coat, coat_dark, hat=None, hair=Non
     R = 0.29; x0, y0 = base; ca, sa = math.cos(yaw), math.sin(yaw)
     def W(px, py, pz):            # local (x right, y forward=-Y... body faces -Y rotated by yaw) -> world
         return Vector((x0 + px * ca - py * sa, y0 + px * sa + py * ca, pz))
-    hip = 0.56; tz = hip + 0.36; head_z = tz + 0.40 + R * 0.62
+    TW, TD, TH, TP = 0.215, 0.15, 0.40, 0.07          # half width / depth / height, taper
+    hip = 0.60; tz = hip + TH; top = tz + TH; head_z = top + R * 0.80   # head sits ON the body: chin outline shows
+    def fy(z): t = (z - tz) / TH; return -TD * cap_r(t) * (1 - TP * t)   # front surface (local y) at height z
     parts = []
     coatm = tweed(key + "_coat", coat, coat_dark) if key == "engineer" else cloth(key + "_coat", coat, rib=14, bump=0.25); darkm = cloth(key + "_coatd", coat_dark, bump=0.2)
-    t = egg(W(0, 0, tz), 0.30, 0.25, 0.44, 0.13, coatm, key + "_torso"); orient(t, (0, 0, yaw), W(0, 0, tz)); parts.append(t)
+    t = egg(W(0, 0, tz), TW, TD, TH, TP, coatm, key + "_torso")
+    if key == "engineer":   # open coat: a light-blue checked shirt down the front, painted into the torso surface (follows the curve)
+        c0 = W(0, 0, tz); a = t.data.attributes.new("shirt", 'FLOAT', 'POINT'); vals = []
+        for v in t.data.vertices:
+            lx = v.co.x - c0.x; ly = v.co.y - c0.y          # mesh is still unrotated here (faces -Y)
+            w = 0.055 + 0.025 * max(0.0, (v.co.z - tz) / TH)          # V-opening, wider toward the collar
+            vals.append(1.0 if (abs(lx) < w and ly < 0) else 0.0)
+        a.data.foreach_set("value", vals)
+        nt = coatm.node_tree; n = nt.nodes; pb = n["Principled BSDF"]; src = pb.inputs['Base Color'].links[0].from_socket
+        at = n.new('ShaderNodeAttribute'); at.attribute_name = "shirt"; at.attribute_type = 'GEOMETRY'
+        edge = n.new('ShaderNodeMapRange'); edge.inputs[1].default_value = 0.45; edge.inputs[2].default_value = 0.55; nt.links.new(at.outputs['Fac'], edge.inputs[0])
+        tc = n.new('ShaderNodeTexCoord'); ck = n.new('ShaderNodeTexChecker'); ck.inputs['Scale'].default_value = 70
+        ck.inputs['Color1'].default_value = (0.55, 0.70, 0.88, 1); ck.inputs['Color2'].default_value = (0.40, 0.54, 0.74, 1); nt.links.new(tc.outputs['Object'], ck.inputs[0])
+        mx = n.new('ShaderNodeMix'); mx.data_type = 'RGBA'; nt.links.new(edge.outputs[0], mx.inputs['Factor']); nt.links.new(src, mx.inputs['A']); nt.links.new(ck.outputs['Color'], mx.inputs['B'])
+        nt.links.new(mx.outputs['Result'], pb.inputs['Base Color'])
+    orient(t, (0, 0, yaw), W(0, 0, tz)); parts.append(t)
     # collar (two soft wedges) + placket + buttons + pocket flap
-    cr = torus(W(0, 0, tz + 0.385), 0.135, 0.035, cloth(key + "_collar", collar), name=key + "_collar"); cr.scale = (1, 1, 0.6)
+    cr = torus(W(0, 0, top - 0.035), 0.095, 0.03, cloth(key + "_collar", collar), name=key + "_collar"); cr.scale = (1, 1, 0.6)
     bpy.ops.object.select_all(action='DESELECT'); cr.select_set(True); bpy.context.view_layer.objects.active = cr
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True); parts.append(cr)
-    pl = box(W(0, -0.245, tz - 0.02), (0.035, 0.02, 0.60), darkm, 0.008, rot=(0.0, 0, yaw), name=key + "_placket"); parts.append(pl)
+    pl = box(W(0, fy(tz) - 0.014, tz - 0.02), (0.03, 0.02, 0.58), darkm, 0.008, rot=(0.0, 0, yaw), name=key + "_placket"); parts.append(pl)
     for k in range(4):
-        z = tz + 0.22 - k * 0.15; yy = -0.25 * math.sqrt(max(0.0, 1 - ((z - tz) / 0.44) ** 2)) - 0.012
+        z = tz + 0.22 - k * 0.15; yy = fy(z) - 0.026
         parts.append(sph(W(0.0, yy, z), (0.022, 0.012, 0.022), mat(key + "_btn", (0.12, 0.08, 0.06), 0.4, 0.3), seg=12, name=key + "_btn"))
     for s in (-1, 1):
-        yy = -0.25 * math.sqrt(1 - (0.12 / 0.44) ** 2) * (1 + 0.13 * 0.12 / 0.44) + 0.01
-        parts.append(box(W(s * 0.15, yy, tz - 0.12), (0.12, 0.02, 0.05), darkm, 0.01, rot=(0, 0, yaw), name=key + "_pocket"))
+        yy = fy(tz - 0.12) - 0.004
+        parts.append(box(W(s * 0.105, yy, tz - 0.12), (0.085, 0.02, 0.04), darkm, 0.01, rot=(0, 0, yaw), name=key + "_pocket"))
     # head + face projector
     hc = W(0, 0, head_z)
     proj = bpy.data.objects.new(key + "_faceproj", None); sc.collection.objects.link(proj); proj.location = hc
@@ -209,14 +230,14 @@ def character(key, base, yaw, look_at, expr, coat, coat_dark, hat=None, hair=Non
         parts.append(h)
     # legs + boots
     for s in (-1, 1):
-        ink_tube([W(s * 0.08, 0, hip + 0.10), W(s * 0.09, -0.02, hip * 0.5), W(s * 0.10, 0, 0.05)], 0.017, key + f"_leg{s}")
-        bt = sph(W(s * 0.10, -0.04, 0.035), (0.055, 0.085, 0.04), INKM, seg=20, name=key + "_boot"); orient(bt, (0, 0, yaw), W(s * 0.10, -0.04, 0.035)); parts.append(bt)
+        ink_tube([W(s * 0.07, 0, hip + 0.10), W(s * 0.08, -0.02, hip * 0.5), W(s * 0.09, 0, 0.05)], 0.016, key + f"_leg{s}")
+        bt = sph(W(s * 0.09, -0.04, 0.035), (0.055, 0.085, 0.04), INKM, seg=20, name=key + "_boot"); orient(bt, (0, 0, yaw), W(s * 0.09, -0.04, 0.035)); parts.append(bt)
     # arms: shoulder -> elbow -> mitten
-    sh = {s: W(s * 0.25, -0.02, tz + 0.24) for s in (-1, 1)}
+    sh = {s: W(s * 0.185, -0.02, top - 0.14) for s in (-1, 1)}
     if pose == "talk":     # one hand opens toward the partner, the other rests
-        arms = {1: (W(0.36, -0.10, tz + 0.02), W(0.28, -0.30, tz + 0.14)), -1: (W(-0.33, -0.03, tz - 0.05), W(-0.30, -0.08, tz - 0.32))}
+        arms = {1: (W(0.31, -0.10, tz + 0.04), W(0.25, -0.28, tz + 0.16)), -1: (W(-0.26, -0.03, tz - 0.06), W(-0.24, -0.07, tz - 0.30))}
     else:                  # listening, skeptical: both hands on the hips, elbows out
-        arms = {s: (W(s * 0.43, -0.02, tz + 0.02), W(s * 0.30, -0.08, tz - 0.20)) for s in (-1, 1)}
+        arms = {s: (W(s * 0.36, -0.03, tz + 0.04), W(s * 0.215, -0.07, tz - 0.16)) for s in (-1, 1)}
     for s in (-1, 1):
         el, hd = arms[s]; ink_tube([sh[s], el, hd], 0.016, key + f"_arm{s}")
         mitten(hd, hd - el, INKM, key + f"_hand{s}")
@@ -238,13 +259,13 @@ bpy.ops.object.light_add(type='SPOT', location=(0.3, -2.3, 2.1)); f = bpy.contex
 f.data.spot_size = math.radians(48); f.data.spot_blend = 0.8; f.data.shadow_soft_size = 0.5
 f.rotation_euler = (Vector((0, -0.66, 1.25)) - f.location).to_track_quat('-Z', 'Y').to_euler()
 for o in bpy.data.objects:
-    if o.type == 'LIGHT' and o.data.type == 'SUN': o.data.energy = 4.5
+    if o.type == 'LIGHT' and o.data.type == 'SUN': o.data.energy = 7.0; o.data.color = (0.45, 0.58, 1.0)
 
 cam, tgt = camera(sc, CAMP, (0.0, -0.3, 1.12), lens=16, fstop=4.0)
 cam.data.dof.focus_distance = 2.0; cam.data.clip_end = 1000
 render_settings(sc, "CYCLES", samples=SPP, exposure=0.25)
 # warm bounce under the roof + brighter hanging lantern (the competitors' interiors never fall to black)
-bpy.ops.object.light_add(type='POINT', location=(0.0, 0.3, 2.75)); u = bpy.context.object.data; u.energy = 70; u.color = (1.0, 0.66, 0.36); u.shadow_soft_size = 0.8
+bpy.ops.object.light_add(type='POINT', location=(0.0, 0.3, 2.75)); u = bpy.context.object.data; u.energy = 35; u.color = (1.0, 0.66, 0.36); u.shadow_soft_size = 0.8
 for o in bpy.data.objects:
     if o.type == 'LIGHT' and o.data.type == 'POINT' and abs(o.location.x - 1.4) < 0.01: o.data.energy = 220
 sc.cycles.use_denoising = True

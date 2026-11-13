@@ -17,7 +17,13 @@ C1. Head = a lit sphere, warm cream skin (0.95,0.88,0.78), never paper-white. Th
 C2. Face features are drawn ON the sphere (projected from the look direction), not on a flat card: they wrap round the head, take the
     scene light, and the hat/hair geometry covers them (fixes "features through the hat" when looking down or nodding).
 C3. Ink = warm dark brown (0.11,0.075,0.06) for outlines, facial lines, limbs, hands, boots. Outline ~1.2 cm on heads/torsos.
-C4. Torso = bean/pear, as wide as the head (±10%), height 1.3–1.5 head diameters, slightly wider at the bottom; the head sits on it.
+C4. Torso = slim rounded CAPSULE (flat-ish sides, rounded top/bottom; profile |t|^3.2), ~0.75 of the head's width, ~1.4 head
+    diameters tall, only slightly wider at the bottom (taper 0.07), thin front-to-back. NOT a fat bean (user, after still v12a).
+C4b. The head sits ON the torso (chin only ~6 cm into it) so the outline runs all the way round the head, including the chin line
+    over the body (user: "the down part of the head circle is not outlined").
+C1b. Heads stay mostly flat/illustrated: ~40% flat colour over the lit sphere — round, but not "too 3D" (user, after still v12a).
+CL1. Colour separation: each character wears a colour that stands out from the set (contrasting shirt/coat panels); the set's
+    upper areas stay darker/neutral, warm light stays in pools and shadows go cool (grade: cool shadows, warmth 0.035).
 C5. Clothes are cloth, not plastic: weave/knit bump, a pattern per character (plaid, tweed, knit ribs, seams), collar ring, placket,
     buttons, pockets; one signature accessory (glasses, rose, monocle, watch chain, badge).
 C6. Hands = small dark mittens (palm + thumb), 2× the old balls; always in front of the body when gesturing (never inside the torso);
