@@ -131,7 +131,8 @@ def skin_mat(name, face_png, proj, R, shift=0.0, squeeze=1.0, light_side=1.0, dr
     def lin(src, k, b):
         a = n.new('ShaderNodeMath'); a.operation = 'MULTIPLY_ADD'; a.inputs[1].default_value = k; a.inputs[2].default_value = b
         L.new(src, a.inputs[0]); return a.outputs[0]
-    u = lin(sp.outputs['X'], 1 / (2.6 * R * squeeze), 0.5 - shift / (2.6 * R * squeeze)); v = lin(sp.outputs['Y'], 1 / (2.6 * R), 0.5 + drop / (2.6 * R))
+    FS = 2.15 * R   # drawing scale (smaller = more compact): features a compact group in the middle of the head
+    u = lin(sp.outputs['X'], 1 / (FS * squeeze), 0.5 - shift / (FS * squeeze)); v = lin(sp.outputs['Y'], 1 / FS, 0.5 + drop / FS)
     cx = n.new('ShaderNodeCombineXYZ'); L.new(u, cx.inputs[0]); L.new(v, cx.inputs[1])
     im = n.new('ShaderNodeTexImage'); im.image = bpy.data.images.load(face_png); im.extension = 'CLIP'; im.interpolation = 'Cubic'
     L.new(cx.outputs[0], im.inputs[0])
@@ -212,21 +213,24 @@ _t = _n.new('ShaderNodeBsdfTransparent'); _lp = _n.new('ShaderNodeLightPath'); _
 OUTM.node_tree.links.new(_lp.outputs['Is Camera Ray'], _m.inputs[0]); OUTM.node_tree.links.new(_t.outputs[0], _m.inputs[1])
 OUTM.node_tree.links.new(_e.outputs[0], _m.inputs[2]); OUTM.node_tree.links.new(_m.outputs[0], _o.inputs[0])
 
-def head_outline(hc, R, cam, width=0.017, top_cut=None, name="outline"):
+def head_outline(hc, R, cam, width=0.022, top_cut=None, name="outline"):
     """A drawn ring exactly on the head's silhouette as seen from the camera, placed 0.85 R in front of the head centre
     so the body never hides it (the full circle incl. the chin line over the body). top_cut: skip the arc above this height (hat)."""
     hc = Vector(hc); d = Vector(cam) - hc; D = d.length; nrm = d / D
     up = (Vector((0, 0, 1)) - nrm * nrm.z).normalized(); rt = up.cross(nrm)
     off = 0.85 * R; k = (D - off) / math.sqrt(D * D - R * R); r_in = R * k * 0.995; r_out = r_in + width * (D - off) / D
     c = hc + nrm * off; verts = []; faces = []; N = 240
-    # hand-drawn: the radius wanders a little (low-frequency wobble) and the pen pressure (line width) varies along the stroke
+    # HAND-DRAWN marker outline (competitor heads): the stroke eats irregularly into the head edge, so the visible head shape is a
+    # slightly lumpy, not-perfect circle; the pen width varies along the stroke. Outer edge always covers the true silhouette.
     import random as _hr
-    rg = _hr.Random(hash(name) & 0xffff); ph = [rg.uniform(0, 6.283) for _ in range(6)]
-    def wob(a): return 0.014 * math.sin(2 * a + ph[0]) + 0.009 * math.sin(3 * a + ph[1]) + 0.005 * math.sin(5 * a + ph[2])
-    def wid(a): return 0.80 + 0.22 * math.sin(a + ph[3]) + 0.12 * math.sin(3 * a + ph[4]) + 0.06 * math.sin(7 * a + ph[5])
+    rg = _hr.Random(sum(map(ord, name))); ph = [rg.uniform(0, 6.283) for _ in range(7)]
+    def bite(a): return min(0.075, max(0.008, 0.034 + 0.020 * math.sin(2 * a + ph[0]) + 0.012 * math.sin(3 * a + ph[1]) + 0.006 * math.sin(5 * a + ph[2])))
+    def wid(a): return 0.78 + 0.24 * math.sin(a + ph[3]) + 0.12 * math.sin(3 * a + ph[4]) + 0.06 * math.sin(6 * a + ph[5])
+    wbase = width * (D - off) / D
     for i in range(N + 1):
         a = 2 * math.pi * i / N; dirv = rt * math.cos(a) + up * math.sin(a)
-        ri = r_in * (1 + wob(a)); verts += [c + dirv * ri, c + dirv * (ri + (r_out - r_in) * wid(a))]
+        ri = r_in * (1 - bite(a)); ro = max(r_in * 1.03, ri + wbase * wid(a))
+        verts += [c + dirv * ri, c + dirv * ro]
     for i in range(N):
         a = 2 * math.pi * (i + 0.5) / N
         if top_cut is not None and math.sin(a) * R > top_cut: continue
@@ -279,7 +283,7 @@ def character(key, base, yaw, look_at, expr, coat, coat_dark, hat=None, hair=Non
     f_shift = side * math.sin(ang) * 0.62 * R; f_squeeze = 0.55 + 0.45 * math.cos(ang)
     lamp = Vector((LR.LENS_C[0], LR.LENS_C[1], 1.5)); l_side = 1.0 if (lamp - hc).dot(X) > 0 else -1.0
     face = warm_face(f"{FACES}/{key}_{expr}.png")
-    head = sph(hc, (R, R * 0.96, R * 0.99), skin_mat(key + "_skin", face, proj, R, f_shift, f_squeeze, l_side, drop=(0.10 * R if hat else 0.0)), seg=64, name=key + "_head")
+    head = sph(hc, (R, R * 0.96, R * 0.99), skin_mat(key + "_skin", face, proj, R, 0.0, 1.0, l_side, drop=(0.10 * R if hat else 0.0)), seg=64, name=key + "_head")   # features stay centred; the pupils look
     for p in head.data.polygons: p.use_smooth = True
     parts.append(head)
     if hat == "beanie":
@@ -326,8 +330,8 @@ CAMP = (0.05, -2.48, 1.20)
 yaw_k = math.radians(50); yaw_e = math.radians(-45)   # +yaw turns the body (faces -Y) toward +X
 def gaze(me, other, w=0.6):   # look ~50 deg toward the partner, still open to the camera
     a = Vector((other[0], other[1], 1.5)); c = Vector(CAMP); return tuple(a * w + c * (1 - w))
-character("keeper", KP, yaw_k, gaze(KP, EP), "skeptical", (0.86, 0.62, 0.10), (0.62, 0.42, 0.05), hat="beanie", collar=(0.62, 0.42, 0.05), pose="listen")
-character("engineer", EP, yaw_e, gaze(EP, KP), "happy_A", (0.40, 0.20, 0.08), (0.24, 0.11, 0.04), hair=(0.26, 0.13, 0.05), collar=(0.70, 0.72, 0.74), pose="talk")
+character("keeper", KP, yaw_k, gaze(KP, EP), "skeptical_R", (0.86, 0.62, 0.10), (0.62, 0.42, 0.05), hat="beanie", collar=(0.62, 0.42, 0.05), pose="listen")
+character("engineer", EP, yaw_e, gaze(EP, KP), "talk_A_L", (0.40, 0.20, 0.08), (0.24, 0.11, 0.04), hair=(0.26, 0.13, 0.05), collar=(0.70, 0.72, 0.74), pose="talk")
 
 # soft fill from the camera side so faces read (the lamp is the key light, the moon the cool rim)
 bpy.ops.object.light_add(type='SPOT', location=(0.3, -2.3, 2.1)); f = bpy.context.object; f.data.energy = 110; f.data.color = (1.0, 0.80, 0.58)
