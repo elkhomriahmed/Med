@@ -22,14 +22,27 @@ toon.INK = INK_W
 
 sc = reset(pct=PCT)
 
+def night_sky_v12():
+    from PIL import Image, ImageDraw, ImageFilter
+    import numpy as np
+    src = Image.open(EX.sky_image("night")).convert("RGB"); W_, H_ = src.size; d = ImageDraw.Draw(src); rng = np.random.default_rng(12)
+    a = np.asarray(src).astype(np.float32); v = np.arange(H_)[:, None]
+    glow = np.exp(-((v - H_ * 0.5) / (H_ * 0.06)) ** 2)[..., None] * np.array([70, 60, 85])     # moonlit haze on the horizon
+    src = Image.fromarray(np.clip(a + glow, 0, 255).astype(np.uint8)); d = ImageDraw.Draw(src)
+    for _ in range(420):
+        x, y = rng.integers(0, W_), rng.integers(int(H_ * 0.30), int(H_ * 0.495)); r = rng.choice([0.6, 0.9, 1.3]); b = int(rng.uniform(150, 245))
+        d.ellipse([x - r, y - r, x + r, y + r], fill=(b, b, int(b * 0.95)))
+    p = os.path.join(SCR, "sky_night_v12.png"); src.save(p); return p
+
 # ------------------------------------------------------------------ world: lamp room + outside + sky
+KP0 = (-0.62, -0.62)
 LR.build("night"); LR.lights("night")
 EX.build("night")
 bpy.ops.mesh.primitive_uv_sphere_add(radius=420, segments=64, ring_count=32); sky = bpy.context.object; sky.name = "sky"
 bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT'); bpy.ops.mesh.flip_normals(); bpy.ops.object.mode_set(mode='OBJECT')
 sm = bpy.data.materials.new("sky"); sm.use_nodes = True; nt = sm.node_tree; n = nt.nodes; n.clear()
 o_ = n.new('ShaderNodeOutputMaterial'); em = n.new('ShaderNodeEmission'); tx = n.new('ShaderNodeTexImage')
-tx.image = bpy.data.images.load(EX.sky_image("night")); em.inputs[1].default_value = 1.0
+tx.image = bpy.data.images.load(night_sky_v12()); em.inputs[1].default_value = 1.0
 nt.links.new(tx.outputs[0], em.inputs[0]); nt.links.new(em.outputs[0], o_.inputs[0]); sky.data.materials.append(sm)
 for p in sky.data.polygons: p.use_smooth = True
 sky.visible_shadow = False
@@ -61,6 +74,46 @@ for k in range(8):
     b = box(mid, (ln, 0.10, 0.12), wood("lr_rafter", (0.30, 0.19, 0.11), (0.15, 0.09, 0.05), axis="X", grain=7, bump=0.6), 0.01, rot=(0, tilt, a + math.pi), name="rafter")
 torus((0, 0, 2.93), 2.75, 0.05, ironr, name="ceiling_ring")
 cyl((0, 0, 3.9), 0.32, 0.25, ironr, verts=16, name="vent_hub")
+def text3d(name, txt, size, col, loc, rot, emit=0.2):
+    cu = bpy.data.curves.new(name, 'FONT'); cu.body = txt; cu.align_x = 'CENTER'; cu.align_y = 'CENTER'; cu.size = size; cu.extrude = 0.003
+    cu.font = bpy.data.fonts.load("/usr/share/fonts/opentype/inter/InterDisplay-Black.otf", check_existing=True)
+    o = bpy.data.objects.new(name, cu); sc.collection.objects.link(o); cu.materials.append(mat(name + "_m", col, 0.6, 0.2, emit=emit))
+    o.rotation_euler = rot; o.location = loc; return o
+BX, BY, BR = 1.55, -0.15, -0.45
+def bxy(dx, dy): return (BX + dx * math.cos(BR) - dy * math.sin(BR), BY + dx * math.sin(BR) + dy * math.cos(BR))
+box((*bxy(0, 0), 1.05), (0.62, 0.04, 0.46), painted("chalk", (0.10, 0.14, 0.12), grime=(0.2, 0.22, 0.2), bump=0.3, brush=60), 0.01, rot=(0, 0, BR), name="chalkboard")
+box((*bxy(0, 0.02), 1.05), (0.68, 0.035, 0.52), wood("chalk_frame", (0.55, 0.36, 0.18), (0.35, 0.22, 0.10), axis="X", grain=6), 0.008, rot=(0, 0, BR), name="chalkframe")
+for dx in (-0.22, 0.22): cyl((*bxy(dx, 0.05), 0.42), 0.018, 0.84, wood("easel", (0.5, 0.32, 0.16), (0.32, 0.2, 0.1), axis="Z", grain=6), rot=(0.12, 0, BR), name="easel")
+for txt, dz, sz in (("DAYS WITHOUT A", 0.13, 0.06), ("SHIPWRECK:", 0.04, 0.07), ("3", -0.11, 0.16)):
+    text3d("chalktext", txt, sz, (0.92, 0.92, 0.86), (*bxy(0, -0.025), 1.05 + dz), (math.pi / 2, 0, BR), emit=0.15)
+stool = wood("fg_stool", (0.5, 0.32, 0.16), (0.32, 0.2, 0.1), axis="X", grain=6, bump=0.5)
+cyl((-0.50, -1.40, 0.45), 0.20, 0.04, stool, verts=24, name="fg_stool_top")
+for k in range(3): cyl((-0.50 + 0.13 * math.cos(k * 2.1), -1.40 + 0.13 * math.sin(k * 2.1), 0.22), 0.02, 0.44, stool, verts=8, name="fg_stool_leg")
+cyl((-0.53, -1.37, 0.55), 0.06, 0.16, mat("fg_can", (0.55, 0.12, 0.08), 0.4, 0.4), verts=16, name="fg_can")
+cyl((-0.43, -1.45, 0.53), 0.05, 0.12, mat("fg_can2", (0.20, 0.42, 0.25), 0.4, 0.4), verts=16, name="fg_can2")
+cyl((0.95, -1.05, 0.13), 0.13, 0.26, mat("fg_bucket", (0.45, 0.47, 0.50), 0.4, 0.6), verts=20, r2=0.155, name="fg_bucket")
+torus((0.95, -1.05, 0.27), 0.155, 0.011, mat("fg_bucket_rim", (0.30, 0.31, 0.33), 0.3, 0.7), name="fg_bucket_rim")
+box((0.30, -1.25, 0.012), (0.30, 0.22, 0.01), mat("rag", (0.62, 0.20, 0.16), 0.95, 0.05, vary=0.2), 0.004, rot=(0, 0, 0.5), name="rag")
+box((-1.05, 2.35, 1.78), (0.95, 0.04, 0.42), wood("sign_board", (0.55, 0.36, 0.18), (0.35, 0.22, 0.10), axis="X", grain=6), 0.01, rot=(0, 0, -0.35), name="signboard")
+for txt, dz, sz in (("KEEPER OF THE YEAR", 0.07, 0.085), ("1871 - 1901", -0.08, 0.11)):
+    text3d("signtext", txt, sz, (0.92, 0.80, 0.40), (-1.05 - 0.03 * math.sin(0.35), 2.35 - 0.03 * math.cos(0.35), 1.78 + dz), (math.pi / 2, 0, -0.35), emit=0.3)
+# small debris on the floor: nails, wood chips, a dropped wrench
+import random as _rr
+_rr.seed(8); chip = wood("chip", (0.6, 0.42, 0.24), (0.4, 0.26, 0.12), axis="X", grain=6)
+for k in range(14):
+    x, y = _rr.uniform(-1.6, 1.6), _rr.uniform(-2.2, -0.9)
+    if abs(x - KP0[0]) < 0.3 and abs(y - KP0[1]) < 0.3: continue
+    box((x, y, 0.006), (_rr.uniform(0.03, 0.08), _rr.uniform(0.015, 0.03), 0.008), chip, 0.002, rot=(0, 0, _rr.uniform(0, 3.14)), name="chip")
+box((-0.25, -1.45, 0.012), (0.20, 0.035, 0.02), mat("wrench", (0.45, 0.46, 0.48), 0.3, 0.8), 0.006, rot=(0, 0, 0.6), name="wrench")
+# dust in the lamp light (tiny glowing motes), denser near the lens
+dustm = bpy.data.materials.new("dust"); dustm.use_nodes = True; _dn = dustm.node_tree.nodes; _dn.clear()
+_do = _dn.new('ShaderNodeOutputMaterial'); _de = _dn.new('ShaderNodeEmission'); _de.inputs[0].default_value = (1.0, 0.85, 0.6, 1); _de.inputs[1].default_value = 6.0
+dustm.node_tree.links.new(_de.outputs[0], _do.inputs[0])
+for k in range(110):
+    r = 0.65 + 1.4 * _rr.random() ** 1.5; a = _rr.uniform(0, 2 * math.pi); z = _rr.uniform(0.9, 2.6)
+    p_ = (r * math.cos(a), 0.3 + r * math.sin(a), z)
+    if p_[1] < -2.2: continue
+    sph(p_, (0.004,) * 3, dustm, seg=6, name="dust").visible_shadow = False
 # the lens: warm glow from inside without blowing out
 for m in bpy.data.materials:
     if m.name.startswith("lens_glass"):
@@ -99,7 +152,7 @@ def skin_mat(name, face_png, proj, R, skin=(0.95, 0.88, 0.78)):
     # darker ring toward the silhouette (light bounce / roundness): facing-based
     lw = n.new('ShaderNodeLayerWeight'); lw.inputs[0].default_value = 0.5
     ring = n.new('ShaderNodeMapRange'); ring.inputs[1].default_value = 0.35; ring.inputs[2].default_value = 0.95
-    ring.inputs[3].default_value = 1.0; ring.inputs[4].default_value = 0.70; L.new(lw.outputs['Facing'], ring.inputs[0])
+    ring.inputs[3].default_value = 1.0; ring.inputs[4].default_value = 0.86; L.new(lw.outputs['Facing'], ring.inputs[0])
     sk = n.new('ShaderNodeMix'); sk.data_type = 'RGBA'; sk.blend_type = 'MULTIPLY'; sk.inputs['Factor'].default_value = 1
     sk.inputs['A'].default_value = (*skin, 1); cr = n.new('ShaderNodeCombineColor'); L.new(ring.outputs[0], cr.inputs[0]); L.new(ring.outputs[0], cr.inputs[1]); L.new(ring.outputs[0], cr.inputs[2])
     L.new(cr.outputs[0], sk.inputs['B'])
@@ -147,7 +200,7 @@ def cap_r(t):   # capsule-like profile: flat sides, rounded top and bottom
     return max(0.0, 1 - abs(t) ** PCAP) ** (1 / PCAP)
 def egg(c, rx, ry, rz, taper, m, name):
     """Competitor torso: slim rounded capsule (flat-ish sides), slightly wider at the bottom."""
-    o = sph(c, (rx, ry, rz), m, seg=128, name=name); c = Vector(c)
+    o = sph(c, (rx, ry, rz), m, seg=256, name=name); c = Vector(c)
     for v in o.data.vertices:
         t = (v.co.z - c.z) / rz; ro = math.sqrt(max(1 - t * t, 0.0))
         f = (cap_r(t) / ro if ro > 1e-4 else 1.0) * (1 - taper * t)
@@ -163,12 +216,35 @@ def mitten(c, d, m, name):
     th = sph(Vector(c) + Vector((0, -0.03, 0.02)), (0.018, 0.018, 0.026), m, seg=14, name=name + "_th")
     return pal, th
 
+OUTM = bpy.data.materials.new("head_outline"); OUTM.use_nodes = True
+_n = OUTM.node_tree.nodes; _n.clear(); _o = _n.new('ShaderNodeOutputMaterial'); _e = _n.new('ShaderNodeEmission'); _e.inputs[0].default_value = (*INK_W, 1)
+_t = _n.new('ShaderNodeBsdfTransparent'); _lp = _n.new('ShaderNodeLightPath'); _m = _n.new('ShaderNodeMixShader')
+OUTM.node_tree.links.new(_lp.outputs['Is Camera Ray'], _m.inputs[0]); OUTM.node_tree.links.new(_t.outputs[0], _m.inputs[1])
+OUTM.node_tree.links.new(_e.outputs[0], _m.inputs[2]); OUTM.node_tree.links.new(_m.outputs[0], _o.inputs[0])
+
+def head_outline(hc, R, cam, width=0.015, top_cut=None, name="outline"):
+    """A drawn ring exactly on the head's silhouette as seen from the camera, placed 0.85 R in front of the head centre
+    so the body never hides it (the full circle incl. the chin line over the body). top_cut: skip the arc above this height (hat)."""
+    hc = Vector(hc); d = Vector(cam) - hc; D = d.length; nrm = d / D
+    up = (Vector((0, 0, 1)) - nrm * nrm.z).normalized(); rt = up.cross(nrm)
+    off = 0.85 * R; k = (D - off) / math.sqrt(D * D - R * R); r_in = R * k * 0.995; r_out = r_in + width * (D - off) / D
+    c = hc + nrm * off; verts = []; faces = []; N = 160
+    for i in range(N + 1):
+        a = 2 * math.pi * i / N; dirv = rt * math.cos(a) + up * math.sin(a)
+        verts += [c + dirv * r_in, c + dirv * r_out]
+    for i in range(N):
+        a = 2 * math.pi * (i + 0.5) / N
+        if top_cut is not None and math.sin(a) * R > top_cut: continue
+        faces.append((2 * i, 2 * i + 1, 2 * i + 3, 2 * i + 2))
+    me = bpy.data.meshes.new(name); me.from_pydata([tuple(v) for v in verts], [], faces); o = bpy.data.objects.new(name, me)
+    sc.collection.objects.link(o); me.materials.append(OUTM); return o
+
 def character(key, base, yaw, look_at, expr, coat, coat_dark, hat=None, hair=None, collar=(0.95, 0.93, 0.88), pose="talk"):
     R = 0.29; x0, y0 = base; ca, sa = math.cos(yaw), math.sin(yaw)
     def W(px, py, pz):            # local (x right, y forward=-Y... body faces -Y rotated by yaw) -> world
         return Vector((x0 + px * ca - py * sa, y0 + px * sa + py * ca, pz))
-    TW, TD, TH, TP = 0.215, 0.15, 0.40, 0.07          # half width / depth / height, taper
-    hip = 0.60; tz = hip + TH; top = tz + TH; head_z = top + R * 0.80   # head sits ON the body: chin outline shows
+    TW, TD, TH, TP = 0.21, 0.15, 0.31, 0.06          # half width / depth / height, taper
+    hip = 0.64; tz = hip + TH; top = tz + TH; head_z = top + R * 0.80   # head sits ON the body: chin outline shows
     def fy(z): t = (z - tz) / TH; return -TD * cap_r(t) * (1 - TP * t)   # front surface (local y) at height z
     parts = []
     coatm = tweed(key + "_coat", coat, coat_dark) if key == "engineer" else cloth(key + "_coat", coat, rib=14, bump=0.25); darkm = cloth(key + "_coatd", coat_dark, bump=0.2)
@@ -192,13 +268,13 @@ def character(key, base, yaw, look_at, expr, coat, coat_dark, hat=None, hair=Non
     cr = torus(W(0, 0, top - 0.035), 0.095, 0.03, cloth(key + "_collar", collar), name=key + "_collar"); cr.scale = (1, 1, 0.6)
     bpy.ops.object.select_all(action='DESELECT'); cr.select_set(True); bpy.context.view_layer.objects.active = cr
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True); parts.append(cr)
-    pl = box(W(0, fy(tz) - 0.014, tz - 0.02), (0.03, 0.02, 0.58), darkm, 0.008, rot=(0.0, 0, yaw), name=key + "_placket"); parts.append(pl)
-    for k in range(4):
-        z = tz + 0.22 - k * 0.15; yy = fy(z) - 0.026
+    pl = box(W(0, fy(tz) - 0.014, tz - 0.01), (0.03, 0.02, 0.46), darkm, 0.008, rot=(0.0, 0, yaw), name=key + "_placket"); parts.append(pl)
+    for k in range(3):
+        z = tz + 0.15 - k * 0.13; yy = fy(z) - 0.026
         parts.append(sph(W(0.0, yy, z), (0.022, 0.012, 0.022), mat(key + "_btn", (0.12, 0.08, 0.06), 0.4, 0.3), seg=12, name=key + "_btn"))
     for s in (-1, 1):
-        yy = fy(tz - 0.12) - 0.004
-        parts.append(box(W(s * 0.105, yy, tz - 0.12), (0.085, 0.02, 0.04), darkm, 0.01, rot=(0, 0, yaw), name=key + "_pocket"))
+        yy = fy(tz - 0.10) - 0.004
+        parts.append(box(W(s * 0.105, yy, tz - 0.10), (0.085, 0.02, 0.04), darkm, 0.01, rot=(0, 0, yaw), name=key + "_pocket"))
     # head + face projector
     hc = W(0, 0, head_z)
     proj = bpy.data.objects.new(key + "_faceproj", None); sc.collection.objects.link(proj); proj.location = hc
@@ -243,6 +319,7 @@ def character(key, base, yaw, look_at, expr, coat, coat_dark, hat=None, hair=Non
         mitten(hd, hd - el, INKM, key + f"_hand{s}")
     for o in parts:
         if o.type == 'MESH': hull(o, 0.012)
+    head_outline(hc, R, CAMP, top_cut=(R * 0.36 if hat else (R * 0.25 if hair else None)), name=key + "_outline")
     return head
 
 # keeper (left) and engineer (right) face each other ~50 deg, both still open to the camera

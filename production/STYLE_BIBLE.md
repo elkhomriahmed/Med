@@ -17,11 +17,14 @@ C1. Head = a lit sphere, warm cream skin (0.95,0.88,0.78), never paper-white. Th
 C2. Face features are drawn ON the sphere (projected from the look direction), not on a flat card: they wrap round the head, take the
     scene light, and the hat/hair geometry covers them (fixes "features through the hat" when looking down or nodding).
 C3. Ink = warm dark brown (0.11,0.075,0.06) for outlines, facial lines, limbs, hands, boots. Outline ~1.2 cm on heads/torsos.
-C4. Torso = slim rounded CAPSULE (flat-ish sides, rounded top/bottom; profile |t|^3.2), ~0.75 of the head's width, ~1.4 head
+C4. Torso = slim rounded CAPSULE (flat-ish sides, rounded top/bottom; profile |t|^3.2), ~0.72 of the head's width, ~1.05 head
     diameters tall, only slightly wider at the bottom (taper 0.07), thin front-to-back. NOT a fat bean (user, after still v12a).
 C4b. The head sits ON the torso (chin only ~6 cm into it) so the outline runs all the way round the head, including the chin line
     over the body (user: "the down part of the head circle is not outlined").
-C1b. Heads stay mostly flat/illustrated: ~40% flat colour over the lit sphere — round, but not "too 3D" (user, after still v12a).
+C1b. Heads stay FLAT/illustrated: ~68% flat colour over the lit sphere, edge darkening only to 0.86 — "just a bit rounded but
+    still 2D" (user, after still v12b).
+C4c. Head outline = a drawn ring on the head's camera silhouette, placed 0.85 R in front of the head centre so the full circle shows
+    (chin line drawn over the body); the arc is cut only where a hat/hair covers the top (user: "not full 360 outlined").
 CL1. Colour separation: each character wears a colour that stands out from the set (contrasting shirt/coat panels); the set's
     upper areas stay darker/neutral, warm light stays in pools and shadows go cool (grade: cool shadows, warmth 0.035).
 C5. Clothes are cloth, not plastic: weave/knit bump, a pattern per character (plaid, tweed, knit ribs, seams), collar ring, placket,
@@ -56,6 +59,8 @@ W1. Every surface has relief: wood grain + gaps, plank-to-plank tone variation, 
 W2. Ceilings and upper walls are built (rafters, beams, pipes, lamps) — never an empty flat cone.
 W3. Dressing in every shot: props with jokes (signs, newspaper headlines, calendars, labelled crates), scattered small debris on floors.
 W4. Depth layers in every frame: foreground prop, characters, mid-ground set, lit background through a window/door.
+W5. Detail kit per interior: joke sign/chalkboard, foreground props, floor debris (chips, a dropped tool), dust motes in the key
+    light, stars/haze in windows.
 
 ## S. Sound and voice
 S1. Master at −14.0 LUFS (v11 was −14.9). More distinct sounds (target ≥ 30 different effects per video).
