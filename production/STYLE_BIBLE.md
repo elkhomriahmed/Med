@@ -26,6 +26,10 @@ C1b. FACES ARE FLAT 2D DRAWINGS (user, most important, after v12e): the face dra
     horizontal squeeze (0.55+0.45 cos a) of the flat drawing. No 3D sphere shading on the face: flat white (emission) plus a soft
     2D fade-shade on the side away from the key light (to cool grey 0.66) and a faint warm glow on the lit side.
     Hat wearers: drawing dropped 0.10 R so the eyebrows sit under the brim, not behind it.
+C1c. Faces read WHITE (≈215–220/255 after grade, emission 6.0) with "a bit of beam light": warm lamp tint (1.0,0.68,0.30) up to 70%
+    fading in from the lamp side, cool-grey fade (0.58,0.58,0.68) on the far side (user, after v12f).
+C4e. Head outline is HAND-DRAWN, not a perfect circle: radius wobble ±~2.8% (low-frequency, 2/3/5 lobes, random phase per character)
+    and pen-pressure width 0.6–1.2× along the stroke; the head's own hull line is thin (0.6 cm) underneath (user, after v12f).
 C4c. Head outline = a drawn ring on the head's camera silhouette, placed 0.85 R in front of the head centre so the full circle shows
     (chin line drawn over the body); the arc is cut only where a hat/hair covers the top (user: "not full 360 outlined").
 C4d. Nothing of the body may stick out in front of the chin: no collar ring; the head is moved 10 cm toward the camera and sinks

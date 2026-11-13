@@ -139,16 +139,16 @@ def skin_mat(name, face_png, proj, R, shift=0.0, squeeze=1.0, light_side=1.0, dr
     g = lin(sp.outputs['X'], -light_side / R, 0.0)
     shade = n.new('ShaderNodeMapRange'); shade.interpolation_type = 'SMOOTHSTEP'; shade.inputs[1].default_value = -0.05; shade.inputs[2].default_value = 1.0
     L.new(g, shade.inputs[0])
-    glow = n.new('ShaderNodeMapRange'); glow.interpolation_type = 'SMOOTHSTEP'; glow.inputs[1].default_value = 0.20; glow.inputs[2].default_value = 1.0
+    glow = n.new('ShaderNodeMapRange'); glow.interpolation_type = 'SMOOTHSTEP'; glow.inputs[1].default_value = -0.35; glow.inputs[2].default_value = 1.0
     L.new(lin(sp.outputs['X'], light_side / R, 0.0), glow.inputs[0])
     c1 = n.new('ShaderNodeMix'); c1.data_type = 'RGBA'; L.new(shade.outputs[0], c1.inputs['Factor'])
-    c1.inputs['A'].default_value = (*skin, 1); c1.inputs['B'].default_value = (0.66, 0.66, 0.74, 1)       # soft cool-grey shade side
+    c1.inputs['A'].default_value = (*skin, 1); c1.inputs['B'].default_value = (0.58, 0.58, 0.68, 1)       # soft cool-grey shade side
     c2 = n.new('ShaderNodeMix'); c2.data_type = 'RGBA'; L.new(glow.outputs[0], c2.inputs['Factor'])
-    L.new(c1.outputs['Result'], c2.inputs['A']); c2.inputs['B'].default_value = (1.0, 0.95, 0.86, 1)       # faint warm lamp glow
-    gl = n.new('ShaderNodeMath'); gl.operation = 'MULTIPLY'; gl.inputs[1].default_value = 0.45; L.new(glow.outputs[0], gl.inputs[0]); L.new(gl.outputs[0], c2.inputs['Factor'])
+    L.new(c1.outputs['Result'], c2.inputs['A']); c2.inputs['B'].default_value = (1.0, 0.68, 0.30, 1)       # warm lamp-beam light on the lit side
+    gl = n.new('ShaderNodeMath'); gl.operation = 'MULTIPLY'; gl.inputs[1].default_value = 0.70; L.new(glow.outputs[0], gl.inputs[0]); L.new(gl.outputs[0], c2.inputs['Factor'])
     mx = n.new('ShaderNodeMix'); mx.data_type = 'RGBA'; L.new(im.outputs['Alpha'], mx.inputs['Factor'])
     L.new(c2.outputs['Result'], mx.inputs['A']); L.new(im.outputs['Color'], mx.inputs['B'])
-    em = n.new('ShaderNodeEmission'); em.inputs['Strength'].default_value = 3.7; L.new(mx.outputs['Result'], em.inputs['Color'])
+    em = n.new('ShaderNodeEmission'); em.inputs['Strength'].default_value = 6.0; L.new(mx.outputs['Result'], em.inputs['Color'])
     L.new(em.outputs[0], out.inputs['Surface'])
     return m
 
@@ -212,16 +212,21 @@ _t = _n.new('ShaderNodeBsdfTransparent'); _lp = _n.new('ShaderNodeLightPath'); _
 OUTM.node_tree.links.new(_lp.outputs['Is Camera Ray'], _m.inputs[0]); OUTM.node_tree.links.new(_t.outputs[0], _m.inputs[1])
 OUTM.node_tree.links.new(_e.outputs[0], _m.inputs[2]); OUTM.node_tree.links.new(_m.outputs[0], _o.inputs[0])
 
-def head_outline(hc, R, cam, width=0.015, top_cut=None, name="outline"):
+def head_outline(hc, R, cam, width=0.017, top_cut=None, name="outline"):
     """A drawn ring exactly on the head's silhouette as seen from the camera, placed 0.85 R in front of the head centre
     so the body never hides it (the full circle incl. the chin line over the body). top_cut: skip the arc above this height (hat)."""
     hc = Vector(hc); d = Vector(cam) - hc; D = d.length; nrm = d / D
     up = (Vector((0, 0, 1)) - nrm * nrm.z).normalized(); rt = up.cross(nrm)
     off = 0.85 * R; k = (D - off) / math.sqrt(D * D - R * R); r_in = R * k * 0.995; r_out = r_in + width * (D - off) / D
-    c = hc + nrm * off; verts = []; faces = []; N = 160
+    c = hc + nrm * off; verts = []; faces = []; N = 240
+    # hand-drawn: the radius wanders a little (low-frequency wobble) and the pen pressure (line width) varies along the stroke
+    import random as _hr
+    rg = _hr.Random(hash(name) & 0xffff); ph = [rg.uniform(0, 6.283) for _ in range(6)]
+    def wob(a): return 0.014 * math.sin(2 * a + ph[0]) + 0.009 * math.sin(3 * a + ph[1]) + 0.005 * math.sin(5 * a + ph[2])
+    def wid(a): return 0.80 + 0.22 * math.sin(a + ph[3]) + 0.12 * math.sin(3 * a + ph[4]) + 0.06 * math.sin(7 * a + ph[5])
     for i in range(N + 1):
         a = 2 * math.pi * i / N; dirv = rt * math.cos(a) + up * math.sin(a)
-        verts += [c + dirv * r_in, c + dirv * r_out]
+        ri = r_in * (1 + wob(a)); verts += [c + dirv * ri, c + dirv * (ri + (r_out - r_in) * wid(a))]
     for i in range(N):
         a = 2 * math.pi * (i + 0.5) / N
         if top_cut is not None and math.sin(a) * R > top_cut: continue
@@ -311,7 +316,7 @@ def character(key, base, yaw, look_at, expr, coat, coat_dark, hat=None, hair=Non
         el, hd = arms[s]; ink_tube([sh[s], el, hd], 0.016, key + f"_arm{s}")
         mitten(hd, hd - el, INKM, key + f"_hand{s}")
     for o in parts:
-        if o.type == 'MESH': hull(o, 0.012)
+        if o.type == 'MESH': hull(o, 0.006 if o.name.endswith("_head") else 0.012)
     head_outline(hc, R, CAMP, top_cut=(R * 0.36 if hat else (R * 0.25 if hair else None)), name=key + "_outline")
     return head
 
