@@ -99,7 +99,11 @@ def hull(o,thick=0.012):
         hm=bpy.data.materials.new("hull"); hm.use_nodes=True; nt=hm.node_tree; n=nt.nodes; n.clear()
         out=n.new('ShaderNodeOutputMaterial'); em=n.new('ShaderNodeEmission'); em.inputs[0].default_value=(*INK,1)
         tr=n.new('ShaderNodeBsdfTransparent'); mx=n.new('ShaderNodeMixShader'); geo=n.new('ShaderNodeNewGeometry')
-        link(nt,geo.outputs['Backfacing'],mx.inputs[0]); link(nt,em.outputs[0],mx.inputs[1]); link(nt,tr.outputs[0],mx.inputs[2]); link(nt,mx.outputs[0],out.inputs[0])
+        # ink only for camera rays: light/shadow/bounce rays pass through the shell (otherwise it shadows the body inside it)
+        lp=n.new('ShaderNodeLightPath'); inv=n.new('ShaderNodeMath'); inv.operation='SUBTRACT'; inv.inputs[0].default_value=1.0
+        link(nt,lp.outputs['Is Camera Ray'],inv.inputs[1]); mxf=n.new('ShaderNodeMath'); mxf.operation='MAXIMUM'
+        link(nt,geo.outputs['Backfacing'],mxf.inputs[0]); link(nt,inv.outputs[0],mxf.inputs[1])
+        link(nt,mxf.outputs[0],mx.inputs[0]); link(nt,em.outputs[0],mx.inputs[1]); link(nt,tr.outputs[0],mx.inputs[2]); link(nt,mx.outputs[0],out.inputs[0])
         # front faces of the shell are transparent, back faces are ink -> works in Cycles and EEVEE
         hm.use_backface_culling=False; _mats["__hull"]=hm
     o.data.materials.append(hm); s=o.modifiers.new("ink",'SOLIDIFY'); s.thickness=thick; s.offset=1; s.use_flip_normals=True

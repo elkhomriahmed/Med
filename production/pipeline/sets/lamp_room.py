@@ -41,7 +41,7 @@ def build(state="night"):
         ca=a+math.pi/n; rr=R/math.cos(math.pi/n)
         cyl((rr*math.cos(ca),rr*math.sin(ca),(WZ0+WZ1)/2),0.045,WZ1-WZ0,trim,verts=12,coll=S,name="post")
     # roof: cone with normals flipped inward so it is visible from inside
-    bpy.ops.mesh.primitive_cone_add(vertices=8,radius1=R/math.cos(math.pi/n)+0.15,radius2=0.12,depth=1.2,location=(0,0,WZ1+0.7),rotation=(0,0,math.pi/n))
+    bpy.ops.mesh.primitive_cone_add(vertices=8,radius1=R/math.cos(math.pi/n)+0.15,radius2=0.12,depth=1.2,location=(0,0,WZ1+0.7),rotation=(0,0,math.pi/n),end_fill_type='NOTHING')   # open at the bottom: no flat cap hiding the roof
     roof=bpy.context.object; roof.name="roof"; roof.data.materials.append(copper)
     bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT'); bpy.ops.mesh.flip_normals(); bpy.ops.object.mode_set(mode='OBJECT')
     for c in roof.users_collection: c.objects.unlink(roof)

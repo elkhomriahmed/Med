@@ -1,3 +1,61 @@
+# STYLE FORMULA v12 — RULES (in progress: frame → sample → full video). Builds on locked v11; nothing in v11 is removed.
+
+Reference: the competitor's latest short `How Mine Salting Worked` (61 s) + the 13 earlier shorts. Evidence: `research/audit_v11_smoothness_logic.md`,
+`research/mine_salting_breakdown.md`. Look-dev still: `look_dev/still_v12.py` + `look_dev/grade_v12.py`.
+
+## R. Rendering (root cause of "flat 2D backgrounds")
+R1. Render with real light (Cycles path tracing for stills; EEVEE/Cycles-fast for motion), NOT bake → Workbench. Bump, wood grain,
+    gaps between boards, ambient occlusion in corners and cast shadows only exist with real light.
+R2. Render linear (EXR), grade in post (`grade_v12.py`): exposure → soft shoulder (faces never clip to white) → sRGB → saturation ~1.35
+    → warm highlights / cool shadows → gentle S-contrast → bloom on light sources only → vignette.
+R3. No coplanar faces anywhere (they self-shadow to black under real light): keep every overlap ≥ 2 cm (fixed: gallery deck, roof caps).
+R4. Outline shells (inverted hull) are visible to the camera only — never to light/shadow rays (fixed in `toon.hull`).
+
+## C. Characters (user points: round shaded heads, competitor torsos)
+C1. Head = a lit sphere, warm cream skin (0.95,0.88,0.78), never paper-white. The scene lights shade it: warm on the light-source side,
+    a coloured shadow on the far side, a darker ring just inside the outline (light bounce / roundness). Faces must read as spheres.
+C2. Face features are drawn ON the sphere (projected from the look direction), not on a flat card: they wrap round the head, take the
+    scene light, and the hat/hair geometry covers them (fixes "features through the hat" when looking down or nodding).
+C3. Ink = warm dark brown (0.11,0.075,0.06) for outlines, facial lines, limbs, hands, boots. Outline ~1.2 cm on heads/torsos.
+C4. Torso = bean/pear, as wide as the head (±10%), height 1.3–1.5 head diameters, slightly wider at the bottom; the head sits on it.
+C5. Clothes are cloth, not plastic: weave/knit bump, a pattern per character (plaid, tweed, knit ribs, seams), collar ring, placket,
+    buttons, pockets; one signature accessory (glasses, rose, monocle, watch chain, badge).
+C6. Hands = small dark mittens (palm + thumb), 2× the old balls; always in front of the body when gesturing (never inside the torso);
+    check every frame that each hand is visible when the action needs it.
+C7. Limbs: thin dark ink tubes; legs a bit longer than the torso; small dark oval boots.
+
+## A. Acting and faces
+A1. Calm by default: neutral, half-lidded, smirk, side-eye, small "o" mouth. Peak reactions (laugh, shock, scream, furious) ≤ 15% of
+    the time and ≤ 1 s each, then back to calm. No character stays wide-eyed for a whole scene.
+A2. Talking partners turn ~50° to each other and stay open to the camera (gaze = 60% partner + 40% camera).
+A3. Bodies stay calm: weight shifts, small leans, hands talk; jumps/shakes only on real story beats.
+
+## F. Framing and camera
+F1. Head width ≈ 18–25% of frame width (median). Dialogue close-ups ≤ 30%, rare. Full bodies in medium/wide shots. Never crop the top
+    of a head. Measured target: competitors 21% median; v11 was 37.5% (too close).
+F2. One continuous spline per shot (no ease-to-zero at every key); ease only at shot start/end; holds ≥ 1.2 s; speed/acceleration caps.
+F3. Between places: real camera flights through the connected world, or a hard cut when time jumps. No double-exposure dissolves.
+F4. Per-frame camera check: nothing within 0.6 m of the lens, no wall/plank filling the frame, both heads fully in frame when they talk.
+
+## L. Light logic
+L1. Every scene has a visible key source (lamp, window, lantern, sun) and the characters are lit FROM it; plus a soft warm fill on faces
+    from the camera side, and a cool rim from the opposite side at night.
+L2. Night interiors: warm pools of light with falloff, darker corners, cool moonlight through windows — never studio-flat.
+L3. The lighthouse lamp is a real light INSIDE the lens: glowing core, warm glass that never blows out to a white blob; beams start
+    inside the lens, soft additive cones that fade with distance and never sweep across the camera as a slab.
+L4. Night exteriors keep contrast: warm windows, moon rim, sea highlights — not one flat blue.
+
+## W. World (user: "backgrounds look 2D")
+W1. Every surface has relief: wood grain + gaps, plank-to-plank tone variation, rock/plaster with cracks and bump, metal with wear.
+W2. Ceilings and upper walls are built (rafters, beams, pipes, lamps) — never an empty flat cone.
+W3. Dressing in every shot: props with jokes (signs, newspaper headlines, calendars, labelled crates), scattered small debris on floors.
+W4. Depth layers in every frame: foreground prop, characters, mid-ground set, lit background through a window/door.
+
+## S. Sound and voice
+S1. Master at −14.0 LUFS (v11 was −14.9). More distinct sounds (target ≥ 30 different effects per video).
+S2. Voice 3.8 words/s, pauses ≤ 0.34 s (needs the new recording).
+
+
 # STYLE FORMULA — LOCKED v11 (approved by the user on the lamp-room sample `videos/00_tests/t13_style_v11.mp4`)
 
 Every layer below (v2 … v11) is cumulative: newer notes refine older ones, they never delete them. A video must satisfy ALL of:

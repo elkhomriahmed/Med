@@ -53,12 +53,13 @@ def build(state="night"):
     stone=mat("ext_rock",(0.42,0.40,0.38),0.9,0.1,vary=0.12); sea=mat("ext_sea",(0.10,0.28,0.42),0.25,0.6,vary=0.05)
     deck=wood("ext_deck",(0.50,0.34,0.20),(0.32,0.21,0.12),axis="Y",grain=6,bump=0.15)
     # gallery deck + railing around the lamp room
-    _g(cyl((0,0,-0.10),3.95,0.20,deck,verts=64),"tower")
+    _g(cyl((0,0,-0.13),3.95,0.20,deck,verts=64),"tower")   # top 3 cm under the lamp-room floor (no coplanar faces)
     for k in range(40):
         a=2*math.pi*k/40; _g(cyl((3.8*math.cos(a),3.8*math.sin(a),0.55),0.025,1.1,iron,verts=8,bevel=0),"tower")
     _g(torus((0,0,1.10),3.8,0.035,iron),"tower"); _g(torus((0,0,0.6),3.8,0.02,iron),"tower")
     # outside of the roof (the lamp room's roof faces inward) + vent ball on top
-    _g(cyl((0,0,3.55),3.25,1.2,copper,verts=8,r2=0.14,rot=(0,0,math.pi/8),bevel=0),"tower")
+    bpy.ops.mesh.primitive_cone_add(vertices=8,radius1=3.32,radius2=0.16,depth=1.25,location=(0,0,3.57),rotation=(0,0,math.pi/8),end_fill_type='NOTHING')
+    o=bpy.context.object; o.data.materials.append(copper); _g(o,"tower")   # open at the bottom (the lamp room's own roof shows inside)
     _g(sph((0,0,4.25),(0.28,0.28,0.28),copper,seg=20),"tower")
     # tower: white with red bands, tapering out to the rock; windows up the side
     n=6
