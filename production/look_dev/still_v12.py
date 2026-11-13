@@ -86,25 +86,11 @@ box((*bxy(0, 0.02), 1.05), (0.68, 0.035, 0.52), wood("chalk_frame", (0.55, 0.36,
 for dx in (-0.22, 0.22): cyl((*bxy(dx, 0.05), 0.42), 0.018, 0.84, wood("easel", (0.5, 0.32, 0.16), (0.32, 0.2, 0.1), axis="Z", grain=6), rot=(0.12, 0, BR), name="easel")
 for txt, dz, sz in (("DAYS WITHOUT A", 0.13, 0.06), ("SHIPWRECK:", 0.04, 0.07), ("3", -0.11, 0.16)):
     text3d("chalktext", txt, sz, (0.92, 0.92, 0.86), (*bxy(0, -0.025), 1.05 + dz), (math.pi / 2, 0, BR), emit=0.15)
-stool = wood("fg_stool", (0.5, 0.32, 0.16), (0.32, 0.2, 0.1), axis="X", grain=6, bump=0.5)
-cyl((-0.50, -1.40, 0.45), 0.20, 0.04, stool, verts=24, name="fg_stool_top")
-for k in range(3): cyl((-0.50 + 0.13 * math.cos(k * 2.1), -1.40 + 0.13 * math.sin(k * 2.1), 0.22), 0.02, 0.44, stool, verts=8, name="fg_stool_leg")
-cyl((-0.53, -1.37, 0.55), 0.06, 0.16, mat("fg_can", (0.55, 0.12, 0.08), 0.4, 0.4), verts=16, name="fg_can")
-cyl((-0.43, -1.45, 0.53), 0.05, 0.12, mat("fg_can2", (0.20, 0.42, 0.25), 0.4, 0.4), verts=16, name="fg_can2")
-cyl((0.95, -1.05, 0.13), 0.13, 0.26, mat("fg_bucket", (0.45, 0.47, 0.50), 0.4, 0.6), verts=20, r2=0.155, name="fg_bucket")
-torus((0.95, -1.05, 0.27), 0.155, 0.011, mat("fg_bucket_rim", (0.30, 0.31, 0.33), 0.3, 0.7), name="fg_bucket_rim")
-box((0.30, -1.25, 0.012), (0.30, 0.22, 0.01), mat("rag", (0.62, 0.20, 0.16), 0.95, 0.05, vary=0.2), 0.004, rot=(0, 0, 0.5), name="rag")
 box((-1.05, 2.35, 1.78), (0.95, 0.04, 0.42), wood("sign_board", (0.55, 0.36, 0.18), (0.35, 0.22, 0.10), axis="X", grain=6), 0.01, rot=(0, 0, -0.35), name="signboard")
 for txt, dz, sz in (("KEEPER OF THE YEAR", 0.07, 0.085), ("1871 - 1901", -0.08, 0.11)):
     text3d("signtext", txt, sz, (0.92, 0.80, 0.40), (-1.05 - 0.03 * math.sin(0.35), 2.35 - 0.03 * math.cos(0.35), 1.78 + dz), (math.pi / 2, 0, -0.35), emit=0.3)
-# small debris on the floor: nails, wood chips, a dropped wrench
 import random as _rr
-_rr.seed(8); chip = wood("chip", (0.6, 0.42, 0.24), (0.4, 0.26, 0.12), axis="X", grain=6)
-for k in range(14):
-    x, y = _rr.uniform(-1.6, 1.6), _rr.uniform(-2.2, -0.9)
-    if abs(x - KP0[0]) < 0.3 and abs(y - KP0[1]) < 0.3: continue
-    box((x, y, 0.006), (_rr.uniform(0.03, 0.08), _rr.uniform(0.015, 0.03), 0.008), chip, 0.002, rot=(0, 0, _rr.uniform(0, 3.14)), name="chip")
-box((-0.25, -1.45, 0.012), (0.20, 0.035, 0.02), mat("wrench", (0.45, 0.46, 0.48), 0.3, 0.8), 0.006, rot=(0, 0, 0.6), name="wrench")
+_rr.seed(8)
 # dust in the lamp light (tiny glowing motes), denser near the lens
 dustm = bpy.data.materials.new("dust"); dustm.use_nodes = True; _dn = dustm.node_tree.nodes; _dn.clear()
 _do = _dn.new('ShaderNodeOutputMaterial'); _de = _dn.new('ShaderNodeEmission'); _de.inputs[0].default_value = (1.0, 0.85, 0.6, 1); _de.inputs[1].default_value = 6.0
@@ -112,7 +98,7 @@ dustm.node_tree.links.new(_de.outputs[0], _do.inputs[0])
 for k in range(110):
     r = 0.65 + 1.4 * _rr.random() ** 1.5; a = _rr.uniform(0, 2 * math.pi); z = _rr.uniform(0.9, 2.6)
     p_ = (r * math.cos(a), 0.3 + r * math.sin(a), z)
-    if p_[1] < -2.2: continue
+    if p_[1] < 0.0: continue          # dust only around/behind the lens, never in front of the faces
     sph(p_, (0.004,) * 3, dustm, seg=6, name="dust").visible_shadow = False
 # the lens: warm glow from inside without blowing out
 for m in bpy.data.materials:
@@ -133,7 +119,7 @@ def warm_face(src):
     im[..., :3] = im[..., :3] * (1 - dark) + np.array(INK_W) * dark
     Image.fromarray((im * 255).astype(np.uint8)).save(dst); return dst
 
-def skin_mat(name, face_png, proj, R, skin=(0.95, 0.88, 0.78)):
+def skin_mat(name, face_png, proj, R, skin=(0.97, 0.965, 0.95)):
     """Lit sphere skin + face projected from `proj` (local +Z = where the face looks) + darker ring inside the outline."""
     m = bpy.data.materials.new(name); m.use_nodes = True; nt = m.node_tree; n = nt.nodes; L = nt.links
     p = n["Principled BSDF"]; p.inputs["Roughness"].default_value = 0.55; p.inputs["Specular IOR Level"].default_value = 0.25
@@ -244,7 +230,7 @@ def character(key, base, yaw, look_at, expr, coat, coat_dark, hat=None, hair=Non
     def W(px, py, pz):            # local (x right, y forward=-Y... body faces -Y rotated by yaw) -> world
         return Vector((x0 + px * ca - py * sa, y0 + px * sa + py * ca, pz))
     TW, TD, TH, TP = 0.21, 0.15, 0.31, 0.06          # half width / depth / height, taper
-    hip = 0.64; tz = hip + TH; top = tz + TH; head_z = top + R * 0.80   # head sits ON the body: chin outline shows
+    hip = 0.64; tz = hip + TH; top = tz + TH; head_z = top + R * 0.70   # head sits ON the body: chin outline shows
     def fy(z): t = (z - tz) / TH; return -TD * cap_r(t) * (1 - TP * t)   # front surface (local y) at height z
     parts = []
     coatm = tweed(key + "_coat", coat, coat_dark) if key == "engineer" else cloth(key + "_coat", coat, rib=14, bump=0.25); darkm = cloth(key + "_coatd", coat_dark, bump=0.2)
@@ -265,9 +251,6 @@ def character(key, base, yaw, look_at, expr, coat, coat_dark, hat=None, hair=Non
         nt.links.new(mx.outputs['Result'], pb.inputs['Base Color'])
     orient(t, (0, 0, yaw), W(0, 0, tz)); parts.append(t)
     # collar (two soft wedges) + placket + buttons + pocket flap
-    cr = torus(W(0, 0, top - 0.035), 0.095, 0.03, cloth(key + "_collar", collar), name=key + "_collar"); cr.scale = (1, 1, 0.6)
-    bpy.ops.object.select_all(action='DESELECT'); cr.select_set(True); bpy.context.view_layer.objects.active = cr
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True); parts.append(cr)
     pl = box(W(0, fy(tz) - 0.014, tz - 0.01), (0.03, 0.02, 0.46), darkm, 0.008, rot=(0.0, 0, yaw), name=key + "_placket"); parts.append(pl)
     for k in range(3):
         z = tz + 0.15 - k * 0.13; yy = fy(z) - 0.026

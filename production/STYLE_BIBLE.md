@@ -12,7 +12,7 @@ R3. No coplanar faces anywhere (they self-shadow to black under real light): kee
 R4. Outline shells (inverted hull) are visible to the camera only — never to light/shadow rays (fixed in `toon.hull`).
 
 ## C. Characters (user points: round shaded heads, competitor torsos)
-C1. Head = a lit sphere, warm cream skin (0.95,0.88,0.78), never paper-white. The scene lights shade it: warm on the light-source side,
+C1. Head = a lit sphere, WHITE skin (0.97,0.965,0.95) — not human/cream skin tone (user, after v12c) — with only light shading. The scene lights shade it: warm on the light-source side,
     a coloured shadow on the far side, a darker ring just inside the outline (light bounce / roundness). Faces must read as spheres.
 C2. Face features are drawn ON the sphere (projected from the look direction), not on a flat card: they wrap round the head, take the
     scene light, and the hat/hair geometry covers them (fixes "features through the hat" when looking down or nodding).
@@ -25,6 +25,8 @@ C1b. Heads stay FLAT/illustrated: ~68% flat colour over the lit sphere, edge dar
     still 2D" (user, after still v12b).
 C4c. Head outline = a drawn ring on the head's camera silhouette, placed 0.85 R in front of the head centre so the full circle shows
     (chin line drawn over the body); the arc is cut only where a hat/hair covers the top (user: "not full 360 outlined").
+C4d. Nothing of the body may stick out in front of the chin: no collar ring; the head sinks 0.30 R onto the torso so the torso top
+    hides inside the head and the chin line lands exactly on the face edge (user, after v12c).
 CL1. Colour separation: each character wears a colour that stands out from the set (contrasting shirt/coat panels); the set's
     upper areas stay darker/neutral, warm light stays in pools and shadows go cool (grade: cool shadows, warmth 0.035).
 C5. Clothes are cloth, not plastic: weave/knit bump, a pattern per character (plaid, tweed, knit ribs, seams), collar ring, placket,
@@ -59,8 +61,8 @@ W1. Every surface has relief: wood grain + gaps, plank-to-plank tone variation, 
 W2. Ceilings and upper walls are built (rafters, beams, pipes, lamps) — never an empty flat cone.
 W3. Dressing in every shot: props with jokes (signs, newspaper headlines, calendars, labelled crates), scattered small debris on floors.
 W4. Depth layers in every frame: foreground prop, characters, mid-ground set, lit background through a window/door.
-W5. Detail kit per interior: joke sign/chalkboard, foreground props, floor debris (chips, a dropped tool), dust motes in the key
-    light, stars/haze in windows.
+W5. Detail kit per interior: joke sign/chalkboard, dust motes in the key light (never in front of faces), stars/haze in windows.
+    No clutter props in the lower foreground of the frame (user removed the stool/cans/bucket/rag/debris after v12c).
 
 ## S. Sound and voice
 S1. Master at −14.0 LUFS (v11 was −14.9). More distinct sounds (target ≥ 30 different effects per video).
