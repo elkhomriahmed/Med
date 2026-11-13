@@ -137,8 +137,8 @@ def skin_mat(name, face_png, proj, R, skin=(0.97, 0.965, 0.95)):
     fa = n.new('ShaderNodeMath'); fa.operation = 'MULTIPLY'; L.new(im.outputs['Alpha'], fa.inputs[0]); L.new(front.outputs[0], fa.inputs[1])
     # darker ring toward the silhouette (light bounce / roundness): facing-based
     lw = n.new('ShaderNodeLayerWeight'); lw.inputs[0].default_value = 0.5
-    ring = n.new('ShaderNodeMapRange'); ring.inputs[1].default_value = 0.35; ring.inputs[2].default_value = 0.95
-    ring.inputs[3].default_value = 1.0; ring.inputs[4].default_value = 0.86; L.new(lw.outputs['Facing'], ring.inputs[0])
+    ring = n.new('ShaderNodeMapRange'); ring.inputs[1].default_value = 0.60; ring.inputs[2].default_value = 0.98
+    ring.inputs[3].default_value = 1.0; ring.inputs[4].default_value = 0.84; L.new(lw.outputs['Facing'], ring.inputs[0])
     sk = n.new('ShaderNodeMix'); sk.data_type = 'RGBA'; sk.blend_type = 'MULTIPLY'; sk.inputs['Factor'].default_value = 1
     sk.inputs['A'].default_value = (*skin, 1); cr = n.new('ShaderNodeCombineColor'); L.new(ring.outputs[0], cr.inputs[0]); L.new(ring.outputs[0], cr.inputs[1]); L.new(ring.outputs[0], cr.inputs[2])
     L.new(cr.outputs[0], sk.inputs['B'])
@@ -146,6 +146,10 @@ def skin_mat(name, face_png, proj, R, skin=(0.97, 0.965, 0.95)):
     L.new(mx.outputs['Result'], p.inputs['Base Color'])
     # ink stays ink: no specular on the drawn lines
     rr = n.new('ShaderNodeMapRange'); rr.inputs[3].default_value = 0.55; rr.inputs[4].default_value = 1.0; L.new(fa.outputs[0], rr.inputs[0]); L.new(rr.outputs[0], p.inputs['Roughness'])
+    # mostly flat/2D: 88% flat colour (emission) over the lit sphere -> only a light hint of roundness from the scene light
+    out = n["Material Output"]; em = n.new('ShaderNodeEmission'); em.inputs['Strength'].default_value = 3.7
+    L.new(mx.outputs['Result'], em.inputs['Color']); ms = n.new('ShaderNodeMixShader'); ms.inputs[0].default_value = 0.88
+    L.new(p.outputs[0], ms.inputs[1]); L.new(em.outputs[0], ms.inputs[2]); L.new(ms.outputs[0], out.inputs['Surface'])
     return m
 
 def tweed(name, col, col2):
@@ -230,7 +234,7 @@ def character(key, base, yaw, look_at, expr, coat, coat_dark, hat=None, hair=Non
     def W(px, py, pz):            # local (x right, y forward=-Y... body faces -Y rotated by yaw) -> world
         return Vector((x0 + px * ca - py * sa, y0 + px * sa + py * ca, pz))
     TW, TD, TH, TP = 0.21, 0.15, 0.31, 0.06          # half width / depth / height, taper
-    hip = 0.64; tz = hip + TH; top = tz + TH; head_z = top + R * 0.70   # head sits ON the body: chin outline shows
+    hip = 0.64; tz = hip + TH; top = tz + TH; head_z = top + R * 0.76   # head sits ON the body: chin outline shows
     def fy(z): t = (z - tz) / TH; return -TD * cap_r(t) * (1 - TP * t)   # front surface (local y) at height z
     parts = []
     coatm = tweed(key + "_coat", coat, coat_dark) if key == "engineer" else cloth(key + "_coat", coat, rib=14, bump=0.25); darkm = cloth(key + "_coatd", coat_dark, bump=0.2)
@@ -260,6 +264,7 @@ def character(key, base, yaw, look_at, expr, coat, coat_dark, hat=None, hair=Non
         parts.append(box(W(s * 0.105, yy, tz - 0.10), (0.085, 0.02, 0.04), darkm, 0.01, rot=(0, 0, yaw), name=key + "_pocket"))
     # head + face projector
     hc = W(0, 0, head_z)
+    tocam = Vector(CAMP) - hc; tocam.z = 0; hc = hc + tocam.normalized() * 0.10   # head always in front of the body from the camera
     proj = bpy.data.objects.new(key + "_faceproj", None); sc.collection.objects.link(proj); proj.location = hc
     dv = (Vector(look_at) - hc); dv.z *= 0.3
     proj.rotation_euler = dv.normalized().to_track_quat('Z', 'Y').to_euler()

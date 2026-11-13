@@ -21,11 +21,13 @@ C4. Torso = slim rounded CAPSULE (flat-ish sides, rounded top/bottom; profile |t
     diameters tall, only slightly wider at the bottom (taper 0.07), thin front-to-back. NOT a fat bean (user, after still v12a).
 C4b. The head sits ON the torso (chin only ~6 cm into it) so the outline runs all the way round the head, including the chin line
     over the body (user: "the down part of the head circle is not outlined").
-C1b. Heads stay FLAT/illustrated: ~68% flat colour over the lit sphere, edge darkening only to 0.86 — "just a bit rounded but
-    still 2D" (user, after still v12b).
+C1b. Heads stay FLAT/illustrated, "mostly 2D with 3D vibes": 88% flat white (emission) over the lit sphere, a soft darker edge
+    only at the rim (facing 0.60–0.98 → 1.0–0.84). The camera-facing part of the face must stay bright white (user, after v12d).
+    Code check: the flat blend MUST be wired (an earlier silent text-replace left it out; v12b–v12d heads were fully 3D-lit).
 C4c. Head outline = a drawn ring on the head's camera silhouette, placed 0.85 R in front of the head centre so the full circle shows
     (chin line drawn over the body); the arc is cut only where a hat/hair covers the top (user: "not full 360 outlined").
-C4d. Nothing of the body may stick out in front of the chin: no collar ring; the head sinks 0.30 R onto the torso so the torso top
+C4d. Nothing of the body may stick out in front of the chin: no collar ring; the head is moved 10 cm toward the camera and sinks
+    0.24 R onto the torso so the torso top
     hides inside the head and the chin line lands exactly on the face edge (user, after v12c).
 CL1. Colour separation: each character wears a colour that stands out from the set (contrasting shirt/coat panels); the set's
     upper areas stay darker/neutral, warm light stays in pools and shadows go cool (grade: cool shadows, warmth 0.035).
