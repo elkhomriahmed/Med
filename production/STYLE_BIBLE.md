@@ -1,4 +1,25 @@
-# STYLE FORMULA v11 (current — overrides anything below that conflicts)
+# STYLE FORMULA — LOCKED v11 (approved by the user on the lamp-room sample `videos/00_tests/t13_style_v11.mp4`)
+
+Every layer below (v2 … v11) is cumulative: newer notes refine older ones, they never delete them. A video must satisfy ALL of:
+1. **Story & script** — hook in the first sentence, mystery → rhetorical question → explanation → running joke → twist →
+   button; funny exaggerated lines; ~3.8 words/s after the speed-up, no pause over ~0.35 s; > 60 s.
+2. **Every line has its own picture** (shot list first), with a visual gag or sign joke wherever possible.
+3. **One connected 3D world:** places built where they really are (lamp room on top of the tower, tower on a rock in the sea,
+   cottage below, harbour town across the water) and the camera flies between them; hard cuts only for real jumps in time or
+   place; quick dissolves for night ↔ day.
+4. **Characters** (puppet v11): outlined round cream heads sitting on short fabric bodies with patterns, bending ink limbs,
+   navy ink, soft shading INSIDE the outline; 2D faces that turn ~50° towards whoever they talk to (3/4, features partly hidden),
+   lip-sync, expressions changing every ~0.6–1 s, moving eyes, blinks, 2D emotion graphics.
+5. **Acting:** calm human bodies with real-life logic (sit, put things down, lean-push-rise, head leads turns, feet step round),
+   exaggerated faces, hands that illustrate the words, listeners react, everyone relates to each other.
+6. **Look:** baked textured sets + set dressing in every shot + foreground props; real character shadows on the floor; depth
+   air; lens blur; warm sources against cool ambience; bloom on lights only; dust; grade per mood (actors only lightly graded);
+   vignette.
+7. **Sound:** voice + ambience bed per place + an effect on every action + music bed ~13 dB under the voice; −14 LUFS.
+8. **Captions:** one word, bounce-in, fixed spot ~70% down.
+9. **Checks:** low-res still checks of every beat before the full render; no flashes (max frame-to-frame jump checked).
+
+# STYLE FORMULA v11 notes
 
 v11 (user review of v10):
 - **Characters look at each other:** when talking or reacting, the head turns TO the other person (45-70 degrees), not to the
