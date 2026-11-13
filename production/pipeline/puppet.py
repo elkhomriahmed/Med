@@ -220,6 +220,16 @@ def bake_puppet(name,spp=48,size=1024,light="neutral"):
         sh_=0.58 if gname=="head" else 0.52   # shading INSIDE the outline: heads get a visible soft shadow side
         x=np.clip((nl-0.30)/0.32,0,1); y_=np.clip((nl-0.86)/0.12,0,1); q=sh_+(0.94-sh_)*(x*x*(3-2*x))+0.14*(y_*y_*(3-2*y_))   # shadow side / lit / pale streak   # shadow / lit / pale streak
         lit=lit/np.maximum(lum,1e-4)[...,None]*(q*ref*0.80)[...,None]
+        if gname=="head":   # volumetric round head (style principle): spherical gradient + directional highlight + side/under occlusion
+            sc_=bpy.context.scene; sc_.render.bake.normal_space='OBJECT'
+            nm=bake.img_np(bake.bake_pass([g],'NORMAL',512,1))*2.0-1.0
+            n_=nm/np.maximum(np.linalg.norm(nm,axis=-1,keepdims=True),1e-4)
+            Ld=np.array((-0.45,-0.55,0.70),np.float32); Ld/=np.linalg.norm(Ld)
+            ndl=np.clip((n_*Ld).sum(-1),0,1); front=np.clip(-n_[...,1],0,1); under=np.clip(-n_[...,2],0,1)
+            def sm(e0,e1,v): v=np.clip((v-e0)/(e1-e0),0,1); return v*v*(3-2*v)
+            ao=1.0-0.34*sm(0.25,1.0,1.0-front)-0.16*under
+            shade=(0.66+0.34*sm(0.0,1.0,ndl))*ao+0.10*sm(0.86,0.98,ndl)
+            lit=np.repeat(cv2.resize(shade.astype(np.float32),(lit.shape[1],lit.shape[0]))[...,None],3,-1)*ref*0.86
         emi=bake.img_np(bake.bake_pass([g],'EMIT',512,1))
         inkmask=bake.ink_mask([g],size,3,min_angle=65)
         bake.apply_baked([g],bake.compose(alb,lit,emi,inkmask,exposure=0.92,sat=1.15,contrast=1.08),name=f"atlas_PUP_{name}_{gname}")

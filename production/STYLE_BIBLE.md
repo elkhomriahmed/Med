@@ -19,6 +19,16 @@ Every layer below (v2 … v11) is cumulative: newer notes refine older ones, the
 8. **Captions:** one word, bounce-in, fixed spot ~70% down.
 9. **Checks:** low-res still checks of every beat before the full render; no flashes (max frame-to-frame jump checked).
 
+## Visual principles (user, locked with v11)
+*Stylized 3D cartoon animation: clean, dark-outlined 2D facial features on softly rounded, volumetric heads. Faces keep a flat
+illustrated look, while subtle spherical gradients, directional highlights, soft shadows and ambient occlusion along the sides
+of the heads give a convincing 3D form. Environments are fully 3D, highly detailed and richly textured, with realistic materials,
+intricate elements and strong spatial depth. Vibrant, highly saturated cinematic grading with rich warm highlights, contrasting
+shadows and atmospheric light — a polished animated-movie look: simple illustrated characters in immersive 3D worlds.*
+- Implementation: head bake = spherical gradient from the head's own normals + upper-left highlight + side/under occlusion
+  (`puppet.bake_puppet`); faces take a share of each place's light in post (night 36%, interior 22%, morning 25%, day/town 15%)
+  but never turn fully blue; grades are vivid and warm (saturation 1.3–1.6).
+
 # STYLE FORMULA v11 notes
 
 v11 (user review of v10):

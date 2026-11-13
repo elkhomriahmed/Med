@@ -8,13 +8,14 @@ import sys, os, json, glob, numpy as np, cv2
 from multiprocessing import Pool
 
 GRADES={  # (lift rgb, gain rgb, saturation, contrast)
- "day":     ((0.02,0.02,0.04),(1.08,1.04,0.98),1.28,1.08),
- "morning": ((0.02,0.01,0.03),(1.06,1.00,0.92),1.08,1.05),
+ "day":     ((0.02,0.02,0.04),(1.10,1.04,0.94),1.35,1.10),
+ "morning": ((0.02,0.01,0.03),(1.10,1.01,0.90),1.30,1.08),
  "night":   ((0.01,0.02,0.06),(1.02,0.99,1.02),1.06,1.08),
- "interior":((0.01,0.01,0.03),(1.06,1.01,0.93),1.08,1.06),
+ "interior":((0.01,0.01,0.03),(1.10,1.02,0.90),1.30,1.09),
+ "town":    ((0.02,0.01,0.02),(1.12,1.03,0.86),1.60,1.12),
  "actor":   ((0.00,0.00,0.01),(1.00,1.00,1.00),1.06,1.03),
 }
-def night_vivid(x,tint=(0.74,0.84,1.18),lift=(0.03,0.04,0.12),sat=1.30,gam=0.74):
+def night_vivid(x,tint=(0.74,0.84,1.18),lift=(0.03,0.04,0.12),sat=1.40,gam=0.74):
     """Competitor-style night (style v4): hue-preserving blue moonlight. Every object keeps its own colour, lit by
     strong blue light; warm sources and light pools stay warm; whites (faces, shirts) stay bright lavender-white."""
     r,b=x[...,0],x[...,2]; mx=x.max(-1); mn=x.min(-1); s=(mx-mn)/(mx+1e-4)
@@ -126,7 +127,9 @@ def process(img,polys,kind,bloom,fidx,P):
         return grade(shadows(img,polys),kind,bloom,fidx)
     img=shadow_pass(img,P); img=air(img,P,kind); img=shadows(img,polys)
     world=grade(img,kind,bloom,fidx)
-    actor=grade(img,"actor",0.0,fidx,particles_on=False)   # actors are never filtered: faces stay cream/near-white
+    actor=grade(img,"actor",0.0,fidx,particles_on=False)   # actors keep their own colours...
+    mood={"town":0.15,"night":0.36,"interior":0.22,"morning":0.25,"day":0.15}.get(kind,0.2)   # ...but take a share of the place's light
+    actor=(actor.astype(np.float32)*(1-mood)+world.astype(np.float32)*mood).astype(np.uint8)
     H,W=img.shape[:2]; m=cv2.resize(cv2.GaussianBlur(P[1].astype(np.float32),(0,0),0.8),(W,H),interpolation=cv2.INTER_LINEAR)[...,None]
     return (world.astype(np.float32)*(1-m)+actor.astype(np.float32)*m).astype(np.uint8)
 

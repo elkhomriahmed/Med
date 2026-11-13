@@ -445,7 +445,7 @@ if SEG in ("B1","B2"):
 if SEG=="T":
     TW.build(); TW.lights(); EX.build_sky("day",image_live,live)
     movs=bake_scene(sc,[],spp=int(E("SPP","24")),set_atlas=2048)
-    sc["passes"]=1; sc["shadow_light"]=json.dumps({"pos":[7,-9,12],"fov":70}); sc["air_dens"]=0.006; GRADE="interior"
+    sc["passes"]=1; sc["shadow_light"]=json.dumps({"pos":[7,-9,12],"fov":70}); sc["air_dens"]=0.006; GRADE="town"
     LH=Vector((40,-120,15))
     F=PP.Puppet("fisher",(-1.4,0.1,0),yaw_to((-1.4,0.1),(1.0,-3.0)),cam=cam,light="soft")
     L=PP.Puppet("lady",(1.55,0.55,0),yaw_to((1.55,0.55),(2.35,0.95)),cam=cam,light="soft")
