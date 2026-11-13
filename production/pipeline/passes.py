@@ -13,7 +13,7 @@ import bpy, json, math, os
 import numpy as np
 from mathutils import Vector, Matrix
 
-DEPTH_MAX=40.0
+DEPTH_MAX=400.0
 ATTR="pass_depth"
 
 def actors(sc):
@@ -111,6 +111,6 @@ def matrices(sc,lc,path):
         if rx>=ry: tw=h; th=h*ry/rx
         else: th=h; tw=h*rx/ry
         return dict(M=M,tw=tw,th=th)   # half view size at distance 1 (camera looks down -Z)
-    r=sc.render; out={"cam":camdata(sc.camera,r.resolution_x,r.resolution_y),"depth_max":DEPTH_MAX}
+    r=sc.render; out={"cam":camdata(sc.camera,r.resolution_x,r.resolution_y),"depth_max":DEPTH_MAX,"air":float(sc.get("air_dens",-1))}
     if lc is not None: out["light"]=camdata(lc,1,1)
     json.dump(out,open(path,"w"))

@@ -366,3 +366,14 @@ Every video follows these rules.
 - **Light beams:** use `engine.light_beam` (banded wedge fading from warm core to sky colour) + `engine.beam_update` each frame (flattens a beam arm when the camera looks along it). The fast renderer has no transparency or texture gradients, so never use a single flat mesh for light.
 - **Sky panorama cylinders sit far out (≈14 m)** so beams, ships and other outside objects have room in front of them.
 - **Check model joins in a wide still** (caps, lids, tops sitting on what they belong to) before the full render.
+
+### Video 1 rebuild in locked v11 (build_v11.py) — world layout used
+- Lamp room at the origin on top of the tower (`sets/exterior.py`: gallery, banded tower, rock, sea, far harbour town, sky dome);
+  the camera flies out of the windows for "the beam sweeps" and "the ships stayed safe", and looks back in through the window
+  for the ending. Ships sail the real sea outside the windows (near-miss by the rocks, safe pass under the beam).
+- Cottage below the tower (day → winter dissolve, gulls with a spyglass on the ledge).
+- Harbour town across the water (`sets/town.py`): signs (FISH, BAKERY, TAVERN, GOSSIP & TEA), well, bunting, boats; townsfolk
+  puppets (fisher, baker, lady, kid) laughing, pointing at the lighthouse, tapping their heads, the kid imitating the keeper.
+- Segment joins: hard cut only for the hook → "You see" (time jump back); dissolves for night ↔ morning ↔ cottage ↔ winter ↔ town ↔ night.
+- Background depth: real distant geography (sea, horizon, town lights), depth fog per scene (`air_dens`), lens blur f/1.8,
+  foreground props in interior shots.

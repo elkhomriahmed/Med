@@ -30,6 +30,14 @@ BASE=dict(R=0.29, hip=0.64, torso_h=0.80, torso_w=0.20, torso_d=0.165, upper=0.2
 OUTFITS={
  "keeper":dict(coat=(0.70,0.48,0.07),coat_dark=(0.36,0.20,0.02),hat="beanie",hair=None,pattern=("seams",(0.30,0.17,0.02)),
                details=["collar","placket","toggles","pockets","hem"],face="keeper",torso_h=0.72,torso_w=0.215,torso_d=0.17),
+ "fisher":dict(coat=(0.16,0.22,0.38),coat_dark=(0.07,0.10,0.20),hat="beanie",hat_col=(0.16,0.40,0.32),hair=None,pattern=("seams",(0.07,0.10,0.20)),
+               details=["collar","pockets","hem"],face="folkb",torso_h=0.74,torso_w=0.22,torso_d=0.17),
+ "baker":dict(coat=(0.90,0.88,0.82),coat_dark=(0.62,0.58,0.52),hat=None,hair=(0.20,0.12,0.06),pattern=("plaid",(0.70,0.66,0.60)),
+               details=["shirt_collar","belt"],face="folk",torso_h=0.74,torso_w=0.22,torso_d=0.17),
+ "lady":dict(coat=(0.52,0.22,0.40),coat_dark=(0.30,0.10,0.22),hat=None,hair=(0.58,0.30,0.12),pattern=("seams",(0.30,0.10,0.22)),
+               details=["collar","toggles","hem"],face="folk",torso_h=0.70,torso_w=0.19,torso_d=0.16),
+ "kid":dict(coat=(0.85,0.45,0.15),coat_dark=(0.50,0.24,0.06),hat=None,hair=(0.92,0.72,0.30),pattern=("seams",(0.50,0.24,0.06)),
+               details=["pockets","hem"],face="folk",R=0.25,hip=0.42,torso_h=0.50,torso_w=0.17,torso_d=0.14,thigh=0.22,shin=0.22,upper=0.21,fore=0.21),
  "engineer":dict(coat=(0.20,0.085,0.03),coat_dark=(0.10,0.04,0.015),shirt=(0.70,0.71,0.70),hat=None,hair=(0.26,0.13,0.05),
                  details=["shirt_collar","vest","tie","belt","trousers","vest_buttons"],tie=(0.22,0.36,0.62),trousers=(0.045,0.055,0.085),face="engineer",
                  R=0.285,torso_w=0.205,torso_h=0.72,torso_d=0.165,pattern=("plaid",(0.11,0.045,0.015))),
@@ -138,11 +146,11 @@ def build_puppet(name):
     # ---- head
     head=sph((0,0,hz),(R,R*0.94,R*0.98),mat("pup_skin",(0.86,0.84,0.80),0.45,0.4,emit=0.06),seg=48); parts_h.append(head)
     if O["hat"]=="beanie":
-        bc=striped(name+"_beanie",(0.56,0.06,0.05),(0.36,0.03,0.025),26,'X',0.9)
+        hc_=O.get("hat_col",(0.56,0.06,0.05)); bc=striped(name+"_beanie",hc_,tuple(x*0.64 for x in hc_),26,'X',0.9)
         o=sph((0,0,hz),(R*1.035,R*1.0,R*1.28),bc,seg=48); bm=bmesh.new(); bm.from_mesh(o.data)
         bmesh.ops.bisect_plane(bm,geom=bm.verts[:]+bm.edges[:]+bm.faces[:],plane_co=(0,0,hz+R*0.55),plane_no=(0,-0.1,1),clear_inner=True)
         bm.to_mesh(o.data); bm.free(); parts_h.append(o)
-        cuff=cyl((0,0.01,hz+R*0.58),R*0.99,R*0.24,striped(name+"_cuff",(0.48,0.05,0.04),(0.30,0.025,0.02),40,'X',0.9),verts=48,rot=(-0.15,0,0),bevel=0)
+        cuff=cyl((0,0.01,hz+R*0.58),R*0.99,R*0.24,striped(name+"_cuff",tuple(x*0.86 for x in hc_),tuple(x*0.54 for x in hc_),40,'X',0.9),verts=48,rot=(-0.15,0,0),bevel=0)
         b=cuff.modifiers.new("round",'BEVEL'); b.width=R*0.08; b.segments=4; parts_h.append(cuff)
         parts_h.append(sph((0,0.04,hz+R*1.30),(R*0.2,R*0.2,R*0.2),mat(name+"_pom",(0.94,0.91,0.85),0.95,0.05),seg=20))
     if O["hair"]:
@@ -258,7 +266,7 @@ class Spring:
             a=w*w*(target-self.x)-2*z*w*self.v; self.v+=a*h; self.x+=self.v*h
         return self.x
 
-CH=("lean","side","twist","bend","sbend","crouch","nod","tilt","turn","squash","air","yaw","look","shake","feetfwd","cross")
+CH=("lean","side","twist","bend","sbend","crouch","nod","tilt","turn","squash","air","yaw","look","shake","feetfwd","cross","zoff")
 HEADCH=("nod","tilt","turn")
 class Puppet:
     def __init__(self,name,loc=(0,0,0),yaw=0.0,cam=None,inst=None,tint=(1.0,1.0,1.0),light="neutral"):
@@ -330,7 +338,7 @@ class Puppet:
         self.gaze_log=[]
         self.anim=[self.A,self.P,self.torso,self.head,self.LOOK,self.froll,self.fx]+list(self.hands.values())+list(self.boots.values())
         self.pose0=dict(pos=tuple(loc[:2]),yaw=yaw,crouch=0.0,lean=0.0,side=0.0,twist=0.0,bend=0.0,sbend=0.0,nod=0.0,tilt=0.0,turn=0.0,
-                        air=0.0,squash=0.0,look=0.0,shake=0.0,feetfwd=0.0,cross=0.0,arms={-1:("rest",),1:("rest",)},snap=0.38,damp=0.72,jump=None)
+                        air=0.0,squash=0.0,look=0.0,shake=0.0,feetfwd=0.0,cross=0.0,zoff=0.0,arms={-1:("rest",),1:("rest",)},snap=0.38,damp=0.72,jump=None)
         self.look_target=None; self.spr["yaw"].x=yaw; self.phase=(hash(self.name)%100)/100.0*6.28; self.landed=set()
     # ---------------- pose keys
     def _full(self,i):
@@ -397,7 +405,7 @@ class Puppet:
         side=V["side"]+0.026*math.sin(2*math.pi*0.21*t+ph)
         nod=V["nod"]+0.02*math.sin(2*math.pi*0.16*t+ph*1.7)+0.03*g+0.04*sh5
         breath=math.sin(2*math.pi*0.3*t+ph)
-        self.A.location=Vector((x,y,0)); self.A.rotation_euler=(0,0,V["yaw"])
+        self.A.location=Vector((x,y,V["zoff"])); self.A.rotation_euler=(0,0,V["yaw"])   # zoff < 0: below the floor (rising through a hatch)
         bob=0.025*abs(math.sin(math.pi*t/0.17)) if moving else 0.0
         self.P.location=(0,0,D["hip"]-0.22*V["crouch"]+air+bob)
         lean=V["lean"]+(0.10 if moving else 0.0)
@@ -463,7 +471,7 @@ class Puppet:
                 twist=abs(((V["yaw"]-self.fyaw[s]+math.pi)%(2*math.pi))-math.pi)
                 if (far>0.07 or twist>0.38) and not self.step.get(-s):
                     self.step[s]=(t,self.feet[s].copy(),rest+(rest-self.feet[s])*0.2*Vector((1,1,0)),self.fyaw[s],V["yaw"])
-            if air<=0.02: self.feet[s].z=max(self.feet[s].z,0.0)
+            if air<=0.02: self.feet[s].z=max(self.feet[s].z,V["zoff"])
         stepping=[s for s in (-1,1) if s in self.step]
         if stepping:   # shift the hips over the standing foot while the other foot is in the air
             k=(t-self.step[stepping[0]][0])/0.18; w=math.sin(math.pi*max(0.0,min(1.0,k)))

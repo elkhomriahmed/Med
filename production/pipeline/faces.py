@@ -118,7 +118,7 @@ def make(path,expr,extra=(),variant=None):
         if m in ("open","shout","o","grin","grit"): mouth(d,m)
     else: mouth(d,m)
     im.resize((1024,1024),Image.LANCZOS).save(path)
-CAST={"keeper":("beard",),"engineer":("glasses",)}
+CAST={"keeper":("beard",),"engineer":("glasses",),"folk":(),"folkb":("beard",)}
 GAZE_KINDS=("open","lidded","wide")
 def fx_sprites(outdir):
     """2D emotion graphics drawn over the face (same canvas as the face): sweat drop, blush, tears, anger vein, none."""

@@ -103,7 +103,8 @@ def shadow_pass(img,P,strength=0.5,col=(0.20,0.24,0.45)):
 def air(img,P,kind):
     """Atmospheric depth: far things fade into the scene's air colour (actors never filtered)."""
     z,actor,S,M=P; col,dens=FOG.get(kind,FOG["day"])
-    f=1-np.exp(-np.maximum(0,z-1.5)*dens); f[actor]=0
+    if M.get("air",-1)>=0: dens=M["air"]
+    f=np.minimum(0.72,1-np.exp(-np.maximum(0,z-1.5)*dens)); f[actor]=0
     H,W=img.shape[:2]; f=cv2.resize(cv2.GaussianBlur(f.astype(np.float32),(0,0),1.0),(W,H),interpolation=cv2.INTER_LINEAR)[...,None]
     x=img.astype(np.float32)/255.0; c=np.array(col,np.float32)**(1/2.2)
     return np.clip((x*(1-f)+c*f)*255,0,255).astype(np.uint8)
