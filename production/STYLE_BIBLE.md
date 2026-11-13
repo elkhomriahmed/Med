@@ -21,9 +21,11 @@ C4. Torso = slim rounded CAPSULE (flat-ish sides, rounded top/bottom; profile |t
     diameters tall, only slightly wider at the bottom (taper 0.07), thin front-to-back. NOT a fat bean (user, after still v12a).
 C4b. The head sits ON the torso (chin only ~6 cm into it) so the outline runs all the way round the head, including the chin line
     over the body (user: "the down part of the head circle is not outlined").
-C1b. Heads stay FLAT/illustrated, "mostly 2D with 3D vibes": 88% flat white (emission) over the lit sphere, a soft darker edge
-    only at the rim (facing 0.60–0.98 → 1.0–0.84). The camera-facing part of the face must stay bright white (user, after v12d).
-    Code check: the flat blend MUST be wired (an earlier silent text-replace left it out; v12b–v12d heads were fully 3D-lit).
+C1b. FACES ARE FLAT 2D DRAWINGS (user, most important, after v12e): the face drawing is projected from the CAMERA direction, so it
+    never bends around the sphere; the turn toward the partner (~35–50°) is shown as a sideways shift (sin(a)·0.62 R) + slight
+    horizontal squeeze (0.55+0.45 cos a) of the flat drawing. No 3D sphere shading on the face: flat white (emission) plus a soft
+    2D fade-shade on the side away from the key light (to cool grey 0.66) and a faint warm glow on the lit side.
+    Hat wearers: drawing dropped 0.10 R so the eyebrows sit under the brim, not behind it.
 C4c. Head outline = a drawn ring on the head's camera silhouette, placed 0.85 R in front of the head centre so the full circle shows
     (chin line drawn over the body); the arc is cut only where a hat/hair covers the top (user: "not full 360 outlined").
 C4d. Nothing of the body may stick out in front of the chin: no collar ring; the head is moved 10 cm toward the camera and sinks

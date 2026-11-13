@@ -119,37 +119,37 @@ def warm_face(src):
     im[..., :3] = im[..., :3] * (1 - dark) + np.array(INK_W) * dark
     Image.fromarray((im * 255).astype(np.uint8)).save(dst); return dst
 
-def skin_mat(name, face_png, proj, R, skin=(0.97, 0.965, 0.95)):
-    """Lit sphere skin + face projected from `proj` (local +Z = where the face looks) + darker ring inside the outline."""
-    m = bpy.data.materials.new(name); m.use_nodes = True; nt = m.node_tree; n = nt.nodes; L = nt.links
-    p = n["Principled BSDF"]; p.inputs["Roughness"].default_value = 0.55; p.inputs["Specular IOR Level"].default_value = 0.25
-    p.inputs["Coat Weight"].default_value = 0.08
+def skin_mat(name, face_png, proj, R, shift=0.0, squeeze=1.0, light_side=1.0, drop=0.0, skin=(0.97, 0.965, 0.95)):
+    """FLAT 2D face (competitor style): the head is a flat white disc as seen by the camera.
+    - features are projected from the CAMERA direction (proj local +Z points at the camera), so they stay a flat drawing;
+      the turn toward the partner is a sideways shift + slight horizontal squeeze of the drawing (no wrap-around)
+    - no 3D sphere shading: flat colour (emission) + a soft 2D fade-shade on the side away from the light and a faint warm
+      glow on the lit side (light_side = +1 when the key light is screen-right of the head, -1 when screen-left)."""
+    m = bpy.data.materials.new(name); m.use_nodes = True; nt = m.node_tree; n = nt.nodes; L = nt.links; n.clear()
+    out = n.new('ShaderNodeOutputMaterial')
     tc = n.new('ShaderNodeTexCoord'); tc.object = proj; sp = n.new('ShaderNodeSeparateXYZ'); L.new(tc.outputs['Object'], sp.inputs[0])
     def lin(src, k, b):
         a = n.new('ShaderNodeMath'); a.operation = 'MULTIPLY_ADD'; a.inputs[1].default_value = k; a.inputs[2].default_value = b
         L.new(src, a.inputs[0]); return a.outputs[0]
-    u = lin(sp.outputs['X'], 1 / (2.6 * R), 0.5); v = lin(sp.outputs['Y'], 1 / (2.6 * R), 0.5)
+    u = lin(sp.outputs['X'], 1 / (2.6 * R * squeeze), 0.5 - shift / (2.6 * R * squeeze)); v = lin(sp.outputs['Y'], 1 / (2.6 * R), 0.5 + drop / (2.6 * R))
     cx = n.new('ShaderNodeCombineXYZ'); L.new(u, cx.inputs[0]); L.new(v, cx.inputs[1])
     im = n.new('ShaderNodeTexImage'); im.image = bpy.data.images.load(face_png); im.extension = 'CLIP'; im.interpolation = 'Cubic'
     L.new(cx.outputs[0], im.inputs[0])
-    front = n.new('ShaderNodeMapRange'); front.inputs[1].default_value = 0.05 * R; front.inputs[2].default_value = 0.25 * R
-    L.new(sp.outputs['Z'], front.inputs[0])
-    fa = n.new('ShaderNodeMath'); fa.operation = 'MULTIPLY'; L.new(im.outputs['Alpha'], fa.inputs[0]); L.new(front.outputs[0], fa.inputs[1])
-    # darker ring toward the silhouette (light bounce / roundness): facing-based
-    lw = n.new('ShaderNodeLayerWeight'); lw.inputs[0].default_value = 0.5
-    ring = n.new('ShaderNodeMapRange'); ring.inputs[1].default_value = 0.60; ring.inputs[2].default_value = 0.98
-    ring.inputs[3].default_value = 1.0; ring.inputs[4].default_value = 0.84; L.new(lw.outputs['Facing'], ring.inputs[0])
-    sk = n.new('ShaderNodeMix'); sk.data_type = 'RGBA'; sk.blend_type = 'MULTIPLY'; sk.inputs['Factor'].default_value = 1
-    sk.inputs['A'].default_value = (*skin, 1); cr = n.new('ShaderNodeCombineColor'); L.new(ring.outputs[0], cr.inputs[0]); L.new(ring.outputs[0], cr.inputs[1]); L.new(ring.outputs[0], cr.inputs[2])
-    L.new(cr.outputs[0], sk.inputs['B'])
-    mx = n.new('ShaderNodeMix'); mx.data_type = 'RGBA'; L.new(fa.outputs[0], mx.inputs['Factor']); L.new(sk.outputs['Result'], mx.inputs['A']); L.new(im.outputs['Color'], mx.inputs['B'])
-    L.new(mx.outputs['Result'], p.inputs['Base Color'])
-    # ink stays ink: no specular on the drawn lines
-    rr = n.new('ShaderNodeMapRange'); rr.inputs[3].default_value = 0.55; rr.inputs[4].default_value = 1.0; L.new(fa.outputs[0], rr.inputs[0]); L.new(rr.outputs[0], p.inputs['Roughness'])
-    # mostly flat/2D: 88% flat colour (emission) over the lit sphere -> only a light hint of roundness from the scene light
-    out = n["Material Output"]; em = n.new('ShaderNodeEmission'); em.inputs['Strength'].default_value = 3.7
-    L.new(mx.outputs['Result'], em.inputs['Color']); ms = n.new('ShaderNodeMixShader'); ms.inputs[0].default_value = 0.88
-    L.new(p.outputs[0], ms.inputs[1]); L.new(em.outputs[0], ms.inputs[2]); L.new(ms.outputs[0], out.inputs['Surface'])
+    # 2D side fade: g = 0 at the centre line .. 1 at the shaded edge (screen-space across the disc)
+    g = lin(sp.outputs['X'], -light_side / R, 0.0)
+    shade = n.new('ShaderNodeMapRange'); shade.interpolation_type = 'SMOOTHSTEP'; shade.inputs[1].default_value = -0.05; shade.inputs[2].default_value = 1.0
+    L.new(g, shade.inputs[0])
+    glow = n.new('ShaderNodeMapRange'); glow.interpolation_type = 'SMOOTHSTEP'; glow.inputs[1].default_value = 0.20; glow.inputs[2].default_value = 1.0
+    L.new(lin(sp.outputs['X'], light_side / R, 0.0), glow.inputs[0])
+    c1 = n.new('ShaderNodeMix'); c1.data_type = 'RGBA'; L.new(shade.outputs[0], c1.inputs['Factor'])
+    c1.inputs['A'].default_value = (*skin, 1); c1.inputs['B'].default_value = (0.66, 0.66, 0.74, 1)       # soft cool-grey shade side
+    c2 = n.new('ShaderNodeMix'); c2.data_type = 'RGBA'; L.new(glow.outputs[0], c2.inputs['Factor'])
+    L.new(c1.outputs['Result'], c2.inputs['A']); c2.inputs['B'].default_value = (1.0, 0.95, 0.86, 1)       # faint warm lamp glow
+    gl = n.new('ShaderNodeMath'); gl.operation = 'MULTIPLY'; gl.inputs[1].default_value = 0.45; L.new(glow.outputs[0], gl.inputs[0]); L.new(gl.outputs[0], c2.inputs['Factor'])
+    mx = n.new('ShaderNodeMix'); mx.data_type = 'RGBA'; L.new(im.outputs['Alpha'], mx.inputs['Factor'])
+    L.new(c2.outputs['Result'], mx.inputs['A']); L.new(im.outputs['Color'], mx.inputs['B'])
+    em = n.new('ShaderNodeEmission'); em.inputs['Strength'].default_value = 3.7; L.new(mx.outputs['Result'], em.inputs['Color'])
+    L.new(em.outputs[0], out.inputs['Surface'])
     return m
 
 def tweed(name, col, col2):
@@ -266,10 +266,15 @@ def character(key, base, yaw, look_at, expr, coat, coat_dark, hat=None, hair=Non
     hc = W(0, 0, head_z)
     tocam = Vector(CAMP) - hc; tocam.z = 0; hc = hc + tocam.normalized() * 0.10   # head always in front of the body from the camera
     proj = bpy.data.objects.new(key + "_faceproj", None); sc.collection.objects.link(proj); proj.location = hc
-    dv = (Vector(look_at) - hc); dv.z *= 0.3
-    proj.rotation_euler = dv.normalized().to_track_quat('Z', 'Y').to_euler()
+    tc_ = (Vector(CAMP) - hc).normalized(); proj.rotation_euler = tc_.to_track_quat('Z', 'Y').to_euler()   # faces the camera: flat drawing
+    bpy.context.view_layer.update(); X = proj.matrix_world.to_3x3().col[0]
+    lk = Vector(look_at) - hc; lk.z = 0; tch = Vector((tc_.x, tc_.y, 0))
+    ang = min(0.87, lk.normalized().angle(tch.normalized()))                                  # how far the face turns (<= ~50 deg)
+    side = 1.0 if lk.dot(X) > 0 else -1.0
+    f_shift = side * math.sin(ang) * 0.62 * R; f_squeeze = 0.55 + 0.45 * math.cos(ang)
+    lamp = Vector((LR.LENS_C[0], LR.LENS_C[1], 1.5)); l_side = 1.0 if (lamp - hc).dot(X) > 0 else -1.0
     face = warm_face(f"{FACES}/{key}_{expr}.png")
-    head = sph(hc, (R, R * 0.96, R * 0.99), skin_mat(key + "_skin", face, proj, R), seg=64, name=key + "_head")
+    head = sph(hc, (R, R * 0.96, R * 0.99), skin_mat(key + "_skin", face, proj, R, f_shift, f_squeeze, l_side, drop=(0.10 * R if hat else 0.0)), seg=64, name=key + "_head")
     for p in head.data.polygons: p.use_smooth = True
     parts.append(head)
     if hat == "beanie":
