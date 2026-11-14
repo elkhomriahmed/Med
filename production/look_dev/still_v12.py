@@ -138,15 +138,15 @@ def skin_mat(name, face_png, proj, R, shift=0.0, squeeze=1.0, light_side=1.0, dr
     L.new(cx.outputs[0], im.inputs[0])
     # 2D side fade: g = 0 at the centre line .. 1 at the shaded edge (screen-space across the disc)
     g = lin(sp.outputs['X'], -light_side / R, 0.0)
-    shade = n.new('ShaderNodeMapRange'); shade.interpolation_type = 'SMOOTHSTEP'; shade.inputs[1].default_value = -0.05; shade.inputs[2].default_value = 1.0
+    shade = n.new('ShaderNodeMapRange'); shade.interpolation_type = 'SMOOTHSTEP'; shade.inputs[1].default_value = -0.25; shade.inputs[2].default_value = 1.0
     L.new(g, shade.inputs[0])
-    glow = n.new('ShaderNodeMapRange'); glow.interpolation_type = 'SMOOTHSTEP'; glow.inputs[1].default_value = -0.35; glow.inputs[2].default_value = 1.0
+    glow = n.new('ShaderNodeMapRange'); glow.interpolation_type = 'SMOOTHSTEP'; glow.inputs[1].default_value = -0.50; glow.inputs[2].default_value = 1.0
     L.new(lin(sp.outputs['X'], light_side / R, 0.0), glow.inputs[0])
     c1 = n.new('ShaderNodeMix'); c1.data_type = 'RGBA'; L.new(shade.outputs[0], c1.inputs['Factor'])
-    c1.inputs['A'].default_value = (*skin, 1); c1.inputs['B'].default_value = (0.58, 0.58, 0.68, 1)       # soft cool-grey shade side
+    c1.inputs['A'].default_value = (*skin, 1); c1.inputs['B'].default_value = (0.48, 0.48, 0.60, 1)       # soft cool-grey shade side
     c2 = n.new('ShaderNodeMix'); c2.data_type = 'RGBA'; L.new(glow.outputs[0], c2.inputs['Factor'])
     L.new(c1.outputs['Result'], c2.inputs['A']); c2.inputs['B'].default_value = (1.0, 0.68, 0.30, 1)       # warm lamp-beam light on the lit side
-    gl = n.new('ShaderNodeMath'); gl.operation = 'MULTIPLY'; gl.inputs[1].default_value = 0.70; L.new(glow.outputs[0], gl.inputs[0]); L.new(gl.outputs[0], c2.inputs['Factor'])
+    gl = n.new('ShaderNodeMath'); gl.operation = 'MULTIPLY'; gl.inputs[1].default_value = 0.85; L.new(glow.outputs[0], gl.inputs[0]); L.new(gl.outputs[0], c2.inputs['Factor'])
     mx = n.new('ShaderNodeMix'); mx.data_type = 'RGBA'; L.new(im.outputs['Alpha'], mx.inputs['Factor'])
     L.new(c2.outputs['Result'], mx.inputs['A']); L.new(im.outputs['Color'], mx.inputs['B'])
     em = n.new('ShaderNodeEmission'); em.inputs['Strength'].default_value = 6.0; L.new(mx.outputs['Result'], em.inputs['Color'])
@@ -224,8 +224,8 @@ def head_outline(hc, R, cam, width=0.022, top_cut=None, name="outline"):
     # slightly lumpy, not-perfect circle; the pen width varies along the stroke. Outer edge always covers the true silhouette.
     import random as _hr
     rg = _hr.Random(sum(map(ord, name))); ph = [rg.uniform(0, 6.283) for _ in range(7)]
-    def bite(a): return min(0.075, max(0.008, 0.034 + 0.020 * math.sin(2 * a + ph[0]) + 0.012 * math.sin(3 * a + ph[1]) + 0.006 * math.sin(5 * a + ph[2])))
-    def wid(a): return 0.78 + 0.24 * math.sin(a + ph[3]) + 0.12 * math.sin(3 * a + ph[4]) + 0.06 * math.sin(6 * a + ph[5])
+    def bite(a): return min(0.13, max(0.010, 0.055 + 0.038 * math.sin(2 * a + ph[0]) + 0.022 * math.sin(3 * a + ph[1]) + 0.010 * math.sin(5 * a + ph[2]) + 0.006 * math.sin(8 * a + ph[6])))
+    def wid(a): return 0.85 + 0.35 * math.sin(a + ph[3]) + 0.16 * math.sin(3 * a + ph[4]) + 0.08 * math.sin(6 * a + ph[5])
     wbase = width * (D - off) / D
     for i in range(N + 1):
         a = 2 * math.pi * i / N; dirv = rt * math.cos(a) + up * math.sin(a)
@@ -308,8 +308,10 @@ def character(key, base, yaw, look_at, expr, coat, coat_dark, hat=None, hair=Non
         parts.append(h)
     # legs + boots
     for s in (-1, 1):
-        ink_tube([W(s * 0.07, 0, hip + 0.10), W(s * 0.08, -0.02, hip * 0.5), W(s * 0.09, 0, 0.05)], 0.016, key + f"_leg{s}")
-        bt = sph(W(s * 0.09, -0.04, 0.035), (0.055, 0.085, 0.04), INKM, seg=20, name=key + "_boot"); orient(bt, (0, 0, yaw), W(s * 0.09, -0.04, 0.035)); parts.append(bt)
+        ank = W(s * 0.09, 0.0, 0.017); toe = W(s * 0.115, -0.105, 0.017)          # short forward foot stroke (an "L"), no boots
+        ink_tube([W(s * 0.07, 0, hip + 0.10), W(s * 0.08, -0.02, hip * 0.5), ank], 0.015, key + f"_leg{s}")
+        ink_tube([ank, (ank + toe) / 2, toe], 0.015, key + f"_foot{s}")
+        for q in (ank, toe): sph(q, (0.015,) * 3, INKM, seg=12, name=key + "_joint")
     # arms: shoulder -> elbow -> mitten
     sh = {s: W(s * 0.185, -0.02, top - 0.14) for s in (-1, 1)}
     if pose == "talk":     # one hand opens toward the partner, the other rests
@@ -317,8 +319,11 @@ def character(key, base, yaw, look_at, expr, coat, coat_dark, hat=None, hair=Non
     else:                  # listening, skeptical: both hands on the hips, elbows out
         arms = {s: (W(s * 0.36, -0.03, tz + 0.04), W(s * 0.215, -0.07, tz - 0.16)) for s in (-1, 1)}
     for s in (-1, 1):
-        el, hd = arms[s]; ink_tube([sh[s], el, hd], 0.016, key + f"_arm{s}")
-        mitten(hd, hd - el, INKM, key + f"_hand{s}")
+        el, hd = arms[s]; ink_tube([sh[s], el, hd], 0.015, key + f"_arm{s}")
+        d_ = (hd - el).normalized(); inward = (W(0, -0.05, hd.z) - hd); inward.z = 0
+        tip = hd + (d_ * 0.35 + inward.normalized() * 0.55 + Vector((0, 0, 0.45))).normalized() * 0.038   # small finger hook
+        ink_tube([hd, (hd + tip) / 2, tip], 0.014, key + f"_hand{s}")
+        for q in (hd, tip): sph(q, (0.0145,) * 3, INKM, seg=12, name=key + "_joint")
     for o in parts:
         if o.type == 'MESH': hull(o, 0.006 if o.name.endswith("_head") else 0.012)
     head_outline(hc, R, CAMP, top_cut=(R * 0.36 if hat else (R * 0.25 if hair else None)), name=key + "_outline")

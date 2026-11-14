@@ -28,9 +28,9 @@ C1b. FACES ARE FLAT 2D DRAWINGS (user, most important, after v12e): the face dra
     No 3D sphere shading on the face: flat white (emission) plus a soft 2D fade-shade on the side away from the key light.
     Hat wearers: drawing dropped 0.10 R so the eyebrows sit under the brim, not behind it.
 C1c. Faces read WHITE (≈215–220/255 after grade, emission 6.0) with "a bit of beam light": warm lamp tint (1.0,0.68,0.30) up to 70%
-    fading in from the lamp side, cool-grey fade (0.58,0.58,0.68) on the far side (user, after v12f).
+    fading in from the lamp side, cool-grey fade (0.48,0.48,0.60) on the far side, warm up to 85% on the lamp side — more light & shade (user, after v12h).
 C4e. Head outline is a HAND-DRAWN MARKER STROKE, never a perfect circle (competitor heads): thick (~2.2 cm ≈ 3.8% of the head
-    diameter), the stroke bites 1–7.5% irregularly into the head edge (2/3/5-lobe wobble, random per character) so the VISIBLE head
+    diameter), the stroke bites 1–13% irregularly into the head edge (clearly uneven, user after v12h) (2/3/5-lobe wobble, random per character) so the VISIBLE head
     shape is slightly lumpy; pen width 0.5–1.2× along the stroke; outer edge always ≥ 1.03× the true silhouette (user, after v12g).
 C4c. Head outline = a drawn ring on the head's camera silhouette, placed 0.85 R in front of the head centre so the full circle shows
     (chin line drawn over the body); the arc is cut only where a hat/hair covers the top (user: "not full 360 outlined").
@@ -41,9 +41,11 @@ CL1. Colour separation: each character wears a colour that stands out from the s
     upper areas stay darker/neutral, warm light stays in pools and shadows go cool (grade: cool shadows, warmth 0.035).
 C5. Clothes are cloth, not plastic: weave/knit bump, a pattern per character (plaid, tweed, knit ribs, seams), collar ring, placket,
     buttons, pockets; one signature accessory (glasses, rose, monocle, watch chain, badge).
-C6. Hands = small dark mittens (palm + thumb), 2× the old balls; always in front of the body when gesturing (never inside the torso);
+C6. Hands = NO blobs/mittens (competitor): the thin arm line simply ends in a small finger hook (~4 cm stroke) that grips props;
+    always in front of the body when gesturing (never inside the torso);
     check every frame that each hand is visible when the action needs it.
-C7. Limbs: thin dark ink tubes; legs a bit longer than the torso; small dark oval boots.
+C7. Limbs: thin dark ink lines (r 1.5 cm); legs a bit longer than the torso; FEET = a short forward stroke at the ankle (an "L",
+    ~10 cm), no boots or balls (user + competitor frames, after v12h).
 
 ## A. Acting and faces
 A1. Calm by default: neutral, half-lidded, smirk, side-eye, small "o" mouth. Peak reactions (laugh, shock, scream, furious) ≤ 15% of
