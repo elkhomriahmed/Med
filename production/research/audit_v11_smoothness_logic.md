@@ -33,3 +33,9 @@ Every claim below was checked against the frames, the render code, or measuremen
 - Expressions: calm default (neutral, half-lidded, smirk, side-eye); peaks at most about 15% of the time and under 1 s each; smaller body reactions.
 - Framing: head width target about 18–25% of frame width (25–30% for dialogue close-ups, rarely); full bodies in wide shots; automatic framing from the head positions.
 - Hat: draw the face on a curved patch that hugs the head sphere (a conformed decal, not a flat disc); clip the face texture above the cuff line; for nods, rotate the decal with the head instead of tracking only the look target.
+
+## Render benchmark, locked v12 frame (1080x1920, 32 samples, Cycles)
+| Machine | s/frame | sample (218 fr) | full video (1871 fr) |
+|---|---|---|---|
+| Cloud: Xeon 2.1 GHz, 4 threads, 15.7 GB, no GPU | 246 | 14.9 h | 128 h |
+| User laptop: i5-1135G7, 8 threads, Iris Xe (not usable by Cycles) | 241 | 14.6 h | 125 h |
