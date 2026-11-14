@@ -1,3 +1,29 @@
+# ★ STYLE v12 — LOCKED (user approved still v12j, 2026-11-14: "almost the perfect visual style")
+Reference frame: `look_dev/STYLE_v12_LOCKED_reference.png`. Exact recipe frozen in `look_dev/still_v12_LOCKED.py` +
+`look_dev/grade_v12_LOCKED.py` (render: `still_v12_LOCKED.py OUT.exr 100 128`, grade: `grade_v12_LOCKED.py IN.exr OUT.png -2.1`).
+Git tag: `style-v12-locked`. Every rule below (R, C, A, F, L, W, S, CL) is part of the lock. Changes from here on are additions
+(new notes appended), never silent replacements. Do not edit the LOCKED files; copy them for new work.
+
+Locked settings, in one place:
+- Render: Cycles path tracing, OpenImageDenoise, linear EXR → grade (exposure -2.1, Reinhard white 6, sRGB, sat 1.30, warm 0.035,
+  cool shadows, S-contrast 0.18, bloom on >0.82, vignette 0.28). Camera 16 mm-equivalent framing as in the frame, f/4, focus 2 m.
+- Light (night lamp room): lamp point light inside the lens (warm), moon sun (0.45,0.58,1.0) ×7, face spot fill from the camera side
+  (warm, 110 W, 48°), warm bounce under the roof (35 W), lantern 220 W. Outline hulls are camera-only (toon.hull).
+- Faces: flat white (0.97,0.965,0.95) emission ×6; 2D side fade to (0.48,0.48,0.60) away from the light; warm (1.0,0.68,0.30) up to
+  85% on the lamp side; features drawn from the camera direction, centred, compact (scale 2.15 R); gaze by pupils (_L/_R);
+  hat wearers' drawing dropped 0.10 R; face images with ink recoloured to warm dark brown.
+- Head outline: hand-drawn marker ring, width 2.2 cm, bite 1–13% (2/3/5/8 lobes, random per character), pen width 0.5–1.2×,
+  0.85 R in front of the head centre; beanie cut 0.36 R; hair cut 0.44 R with taper into the hairline. Head hull 0.6 cm.
+- Body: head R 0.29 on a slim capsule torso (half w 0.21, d 0.15, h 0.31, taper 0.06, profile |t|^3.2), head 10 cm toward the
+  camera and 0.76 R above the torso top, no collar; buttons/placket/pockets, knit or tweed fabric + contrasting shirt panel.
+- Limbs: ink tubes r 1.5 cm; hands = arm line ending in a 4 cm finger hook; feet = 10 cm forward "L" stroke; no balls/boots/mittens.
+- World: real relief on every surface (bump ×2.2), planked ceiling with rafters, joke chalkboard + sign, dust only behind
+  characters, stars + horizon haze in windows, no clutter props in the lower foreground.
+
+Known notes to improve over time (not blocking): ceiling dominates the top third and is very orange; keeper's beard edge is
+zig-zag; the engineer's raised finger hook is thin against the check coat; more texture variety in the set.
+
+
 # STYLE FORMULA v12 — RULES (in progress: frame → sample → full video). Builds on locked v11; nothing in v11 is removed.
 
 Reference: the competitor's latest short `How Mine Salting Worked` (61 s) + the 13 earlier shorts. Evidence: `research/audit_v11_smoothness_logic.md`,
