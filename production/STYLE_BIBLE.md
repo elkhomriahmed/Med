@@ -1,7 +1,7 @@
 # ★ STYLE v12 — LOCKED (user approved still v12j, 2026-11-14: "almost the perfect visual style")
 Reference frame: `look_dev/STYLE_v12_LOCKED_reference.png`. Exact recipe frozen in `look_dev/still_v12_LOCKED.py` +
 `look_dev/grade_v12_LOCKED.py` (render: `still_v12_LOCKED.py OUT.exr 100 128`, grade: `grade_v12_LOCKED.py IN.exr OUT.png -2.1`).
-Git tag: `style-v12-locked`. Every rule below (R, C, A, F, L, W, S, CL) is part of the lock. Changes from here on are additions
+Locked in commit `64031ae` on branch `claude/shorts-competitor-analysis-59gfay`. Every rule below (R, C, A, F, L, W, S, CL) is part of the lock. Changes from here on are additions
 (new notes appended), never silent replacements. Do not edit the LOCKED files; copy them for new work.
 
 Locked settings, in one place:
