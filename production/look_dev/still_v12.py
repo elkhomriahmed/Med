@@ -213,7 +213,7 @@ _t = _n.new('ShaderNodeBsdfTransparent'); _lp = _n.new('ShaderNodeLightPath'); _
 OUTM.node_tree.links.new(_lp.outputs['Is Camera Ray'], _m.inputs[0]); OUTM.node_tree.links.new(_t.outputs[0], _m.inputs[1])
 OUTM.node_tree.links.new(_e.outputs[0], _m.inputs[2]); OUTM.node_tree.links.new(_m.outputs[0], _o.inputs[0])
 
-def head_outline(hc, R, cam, width=0.022, top_cut=None, name="outline"):
+def head_outline(hc, R, cam, width=0.022, top_cut=None, name="outline", taper=False):
     """A drawn ring exactly on the head's silhouette as seen from the camera, placed 0.85 R in front of the head centre
     so the body never hides it (the full circle incl. the chin line over the body). top_cut: skip the arc above this height (hat)."""
     hc = Vector(hc); d = Vector(cam) - hc; D = d.length; nrm = d / D
@@ -230,7 +230,7 @@ def head_outline(hc, R, cam, width=0.022, top_cut=None, name="outline"):
     for i in range(N + 1):
         a = 2 * math.pi * i / N; dirv = rt * math.cos(a) + up * math.sin(a)
         ri = r_in * (1 - bite(a)); ro = max(r_in * 1.03, ri + wbase * wid(a))
-        if top_cut is not None:   # the stroke tapers off as it runs under the hat brim (no blunt ends on the hat)
+        if top_cut is not None and taper:   # the stroke tapers off as it runs into the hairline (no blunt ends on the hat)
             t_ = max(0.0, min(1.0, (top_cut - math.sin(a) * R) / (0.12 * R))); ri = ro - (ro - ri) * (0.35 + 0.65 * t_)
         verts += [c + dirv * ri, c + dirv * ro]
     for i in range(N):
@@ -328,7 +328,7 @@ def character(key, base, yaw, look_at, expr, coat, coat_dark, hat=None, hair=Non
         for q in (hd, tip): sph(q, (0.0145,) * 3, INKM, seg=12, name=key + "_joint")
     for o in parts:
         if o.type == 'MESH': hull(o, 0.006 if o.name.endswith("_head") else 0.012)
-    head_outline(hc, R, CAMP, top_cut=(R * 0.47 if hat else (R * 0.25 if hair else None)), name=key + "_outline")
+    head_outline(hc, R, CAMP, top_cut=(R * 0.36 if hat else (R * 0.44 if hair else None)), taper=bool(hair and not hat), name=key + "_outline")
     return head
 
 # keeper (left) and engineer (right) face each other ~50 deg, both still open to the camera
