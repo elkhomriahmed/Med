@@ -32,6 +32,8 @@ C1c. Faces read WHITE (≈215–220/255 after grade, emission 6.0) with "a bit o
 C4e. Head outline is a HAND-DRAWN MARKER STROKE, never a perfect circle (competitor heads): thick (~2.2 cm ≈ 3.8% of the head
     diameter), the stroke bites 1–13% irregularly into the head edge (clearly uneven, user after v12h) (2/3/5-lobe wobble, random per character) so the VISIBLE head
     shape is slightly lumpy; pen width 0.5–1.2× along the stroke; outer edge always ≥ 1.03× the true silhouette (user, after v12g).
+    Hat wearers: the stroke continues up to just under the brim (cut at 0.47 R) and tapers to a point there — no gap between the
+    face outline and the hat, no blunt ends drawn on the hat (user, after v12i).
 C4c. Head outline = a drawn ring on the head's camera silhouette, placed 0.85 R in front of the head centre so the full circle shows
     (chin line drawn over the body); the arc is cut only where a hat/hair covers the top (user: "not full 360 outlined").
 C4d. Nothing of the body may stick out in front of the chin: no collar ring; the head is moved 10 cm toward the camera and sinks
