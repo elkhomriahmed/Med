@@ -56,6 +56,8 @@ function faceMat(h) {
         vec3 skin = vec3(0.97,0.965,0.95);
         float sh = smoothstep(-0.25, 1.0, -ls*x/R); vec3 c = mix(skin, vec3(0.48,0.48,0.60), sh);
         float gl = smoothstep(-0.50, 1.0, ls*x/R)*0.85*GW; c = mix(c, vec3(1.0,0.68,0.30), gl);
+        float red = smoothstep(0.04, 0.12, f.r - max(f.g, f.b));          // mouth fill (red in the drawings) -> dark ink
+        f.rgb = mix(f.rgb, vec3(0.11, 0.075, 0.06), red);
         c = mix(c, f.rgb, f.a);
         gl_FragColor = vec4(lin(c)*k, 1.0); }`,
   });

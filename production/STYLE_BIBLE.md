@@ -20,6 +20,8 @@ Locked settings, in one place:
 - World: real relief on every surface (bump ×2.2), planked ceiling with rafters, joke chalkboard + sign, dust only behind
   characters, stars + horizon haze in windows, no clutter props in the lower foreground.
 
+Addition (user, 2026-11-15): the inside of open mouths is BLACK (dark ink), not red.
+
 Known notes to improve over time (not blocking): ceiling dominates the top third and is very orange; keeper's beard edge is
 zig-zag; the engineer's raised finger hook is thin against the check coat; more texture variety in the set.
 
