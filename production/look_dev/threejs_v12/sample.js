@@ -10,7 +10,7 @@ import { N8AOPostPass } from "n8ao";
 
 const P = Object.fromEntries(new URLSearchParams(location.search));
 const A = "assets/";
-const K_PT = 0.008, K_SUN = 0.15, K_FILL = 25, HEMI = 1.3, SAT = 0.12, FACE = 0.95, K_BOUNCE = 14;
+const K_PT = 0.008, K_SUN = 0.15, K_FILL = 4, HEMI = 0.30, ROOM = 0.14, SAT = 0.12, FACE = 0.95, K_BOUNCE = 14;
 const T0 = 19.25, DUR = 7.3;
 const info = await (await fetch(A + "scene.json")).json();
 const WORDS = await (await fetch(A + "words.json")).json();
@@ -48,9 +48,9 @@ function faceTexture(name) { if (!faceTex[name]) faceTex[name] = tload(A + "face
 function faceMat() {
   return new THREE.ShaderMaterial({
     uniforms: { hc: { value: new THREE.Vector3() }, X: { value: new THREE.Vector3() }, Y: { value: new THREE.Vector3() }, Z: { value: new THREE.Vector3() },
-      R: { value: 0.29 }, drop: { value: 0 }, ls: { value: 1 }, face: { value: null }, k: { value: FACE }, GW: { value: 0.45 } },
+      R: { value: 0.29 }, drop: { value: 0 }, ls: { value: 1 }, face: { value: null }, k: { value: FACE }, GW: { value: 0.45 }, lit: { value: 0 } },
     vertexShader: `varying vec3 wp; void main(){ vec4 w = modelMatrix*vec4(position,1.0); wp = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }`,
-    fragmentShader: `uniform vec3 hc,X,Y,Z; uniform float R,drop,ls,k,GW; uniform sampler2D face; varying vec3 wp;
+    fragmentShader: `uniform vec3 hc,X,Y,Z; uniform float R,drop,ls,k,GW,lit; uniform sampler2D face; varying vec3 wp;
       vec3 lin(vec3 c){ return pow(c, vec3(2.2)); }
       void main(){ vec3 d = wp-hc; float x = dot(d,X), y = dot(d,Y), z = dot(d,Z); float FS = 2.15*R;
         vec2 uv = vec2(x/FS+0.5, y/FS+0.5+drop/FS);
@@ -63,13 +63,14 @@ function faceMat() {
         float sh = smoothstep(-0.25, 1.0, -ls*x/R); vec3 c = mix(skin, vec3(0.48,0.48,0.60), sh);
         float gl = smoothstep(-0.50, 1.0, ls*x/R)*0.85*GW; c = mix(c, vec3(1.0,0.68,0.30), gl);
         c = mix(c, f.rgb, f.a);
-        gl_FragColor = vec4(lin(c)*k, 1.0); }` });
+        c = mix(c, c*vec3(1.0,0.86,0.62), 0.45*lit);
+        gl_FragColor = vec4(lin(c)*k*(0.78 + 0.32*lit), 1.0); }` });
 }
 
 // ---------------------------------------------------------------- hand-drawn head outline ring (locked C4e), rebuilt per frame
-function ringGeometry(hc, R, campos, seed, topCut, taper) {
+function ringGeometry(hc, R, campos, seed, topCut, taper, headUp) {
   const d = campos.clone().sub(hc), D = d.length(), nrm = d.clone().divideScalar(D);
-  const up = new THREE.Vector3(0, 1, 0).sub(nrm.clone().multiplyScalar(nrm.y)).normalize(), rt = up.clone().cross(nrm);
+  const up = headUp.clone().sub(nrm.clone().multiplyScalar(headUp.dot(nrm))).normalize(), rt = up.clone().cross(nrm);   // follows the head's tilt
   const off = 0.85 * R, kk = (D - off) / Math.sqrt(D * D - R * R), rIn = R * kk * 0.995, wbase = 0.022 * (D - off) / D;
   const c = hc.clone().add(nrm.clone().multiplyScalar(off)), N = 240, ph = seed;
   const bite = (a) => Math.min(0.13, Math.max(0.010, 0.055 + 0.038 * Math.sin(2 * a + ph[0]) + 0.022 * Math.sin(3 * a + ph[1]) +
@@ -227,21 +228,30 @@ function pose(p, t) {
   }
   // face: flat drawing facing the camera, a little head roll, light side from the lamp
   const hc = p.neck.localToWorld(p.hcLocal.clone());
-  const Z = cam.position.clone().sub(hc).normalize(), Y = new THREE.Vector3(0, 1, 0).sub(Z.clone().multiplyScalar(Z.y)).normalize();
-  Y.applyAxisAngle(Z, -p.val("tilt", t) * 0.6); const X = Y.clone().cross(Z);
+  const headUp = new THREE.Vector3(0, 0, 1).transformDirection(p.neck.matrixWorld);
+  const Z = cam.position.clone().sub(hc).normalize(), Y = headUp.clone().sub(Z.clone().multiplyScalar(headUp.dot(Z))).normalize(); const X = Y.clone().cross(Z);
   const u = p.head.material.uniforms; u.hc.value.copy(hc); u.X.value.copy(X); u.Y.value.copy(Y); u.Z.value.copy(Z);
   u.drop.value = (c.hat ? 0.10 * p.R : 0) + p.val("nod", t) * 0.10 * p.R;
   u.ls.value = bw(0, 0.3, 1.5).sub(hc).dot(X) > 0 ? 1 : -1;
   u.face.value = faceTexture(faceName(p, t));
-  p.ring.geometry.dispose(); p.ring.geometry = ringGeometry(hc, p.R, cam.position, p.seed, p.topCut, p.taper);
+  p.ring.geometry.dispose(); p.ring.geometry = ringGeometry(hc, p.R, cam.position, p.seed, p.topCut, p.taper, headUp);
+  u.lit.value = beamLit(hc);
 }
 
 // ---------------------------------------------------------------- camera: one continuous move (Catmull-Rom, eased only at the ends)
-const CAMK = [[V(0.55, -2.40, 1.80), V(-0.02, -0.58, 1.10)], [V(0.10, -2.45, 1.32), V(0.0, -0.62, 1.22)], [V(-0.10, -2.38, 1.36), V(-0.08, -0.64, 1.26)],
-  [V(-0.30, -2.35, 1.40), V(0.05, -0.62, 1.28)], [V(0.12, -2.40, 1.42), V(0.02, -0.42, 1.26)]];
-const camPath = new THREE.CatmullRomCurve3(CAMK.map((k) => k[0]), false, "centripetal"), tgtPath = new THREE.CatmullRomCurve3(CAMK.map((k) => k[1]), false, "centripetal");
-function camAt(t) { const u = 0.5 - 0.5 * Math.cos(Math.PI * Math.max(0, Math.min(1, t / DUR)));
-  const p = camPath.getPoint(u), g = tgtPath.getPoint(u); cam.position.copy(bw(p.x, p.y, p.z)); cam.up.set(0, 1, 0); cam.lookAt(bw(g.x, g.y, g.z)); cam.updateMatrixWorld(); }
+// focus: who/what the story is about at each moment (Blender coords), distance from it
+const FOCUS = [[0, V(-0.02, -0.66, 1.30), 1.95], [T(69), V(-0.30, -0.66, 1.34), 1.70], [T(70), V(-0.02, -0.68, 1.36), 1.72],
+  [T(74) - 0.1, V(-0.18, -0.25, 1.42), 1.80], [T(77), V(-0.50, -0.70, 1.44), 1.30], [T(80), V(-0.05, -0.68, 1.36), 1.70],
+  [T(83), V(0.42, -0.74, 1.38), 1.45], [T(86), V(0.02, -0.15, 1.38), 1.95]];
+function focusAt(t) { let f = FOCUS[0]; for (const k of FOCUS) if (t >= k[0]) f = k; return f; }
+function camAt(t) {   // critically damped follow (settles in ~0.8 s): smooth, never stops dead, always aimed at the action
+  const w = 5.0, dt = 1 / 120; let g = FOCUS[0][1].clone(), gv = new THREE.Vector3(), dist = FOCUS[0][2], dv = 0;
+  for (let s = 0; s < t; s += dt) { const f = focusAt(s); const acc = f[1].clone().sub(g).multiplyScalar(w * w).sub(gv.clone().multiplyScalar(2 * w));
+    gv.add(acc.multiplyScalar(dt)); g.add(gv.clone().multiplyScalar(dt)); dv += (w * w * (f[2] - dist) - 2 * w * dv) * dt; dist += dv * dt; }
+  const az = -Math.PI / 2 + 0.16 * Math.sin(t * 0.55) + 0.10 * (g.x), el = 0.10 + 0.04 * Math.cos(t * 0.4);
+  let pos = g.clone().add(V(Math.cos(az) * Math.cos(el), Math.sin(az) * Math.cos(el), Math.sin(el)).multiplyScalar(dist));
+  const r = Math.hypot(pos.x, pos.y); if (r > 2.55) { pos.x *= 2.55 / r; pos.y *= 2.55 / r; }
+  cam.position.copy(bw(pos.x, pos.y, pos.z)); cam.up.set(0, 1, 0); cam.lookAt(bw(g.x, g.y, g.z - 0.06)); cam.updateMatrixWorld(); }
 
 // ---------------------------------------------------------------- sky, lights, post (same as the locked-frame test)
 const skyT = tload(A + "sky.png", THREE.SRGBColorSpace);
@@ -249,16 +259,52 @@ scene.add(new THREE.Mesh(new THREE.SphereGeometry(420, 64, 32), new THREE.MeshBa
 RectAreaLightUniformsLib.init();
 for (const L of info.lights) {
   const col = new THREE.Color(...L.color), p = b2t(L.pos), d = b2t(L.dir); let l;
-  if (L.type === "POINT") { l = new THREE.PointLight(col, L.energy * K_PT * (L.energy < 100 ? K_BOUNCE : 1), 0, 2); l.position.copy(p);
-    if (L.energy > 1000) { l.intensity *= 0.5; const sp = new THREE.SpotLight(col, L.energy * K_PT * 0.5 * 1.15, 0, 1.25, 0.7, 2); sp.position.copy(p);
+  if (L.type === "POINT") { l = new THREE.PointLight(col, L.energy * K_PT * (L.energy < 100 ? K_BOUNCE * ROOM * 2 : (L.energy > 1000 ? 1 : 0.6)), 0, 2); l.position.copy(p);
+    if (L.energy > 1000) { l.intensity *= 0.5 * ROOM; const sp = new THREE.SpotLight(col, L.energy * K_PT * 0.5 * 1.15 * ROOM, 0, 1.25, 0.7, 2); sp.position.copy(p);
       sp.target.position.copy(bw(0.05, -2.4, 0.2)); scene.add(sp.target); sp.castShadow = true; sp.shadow.mapSize.set(2048, 2048);
       sp.shadow.bias = -0.0005; sp.shadow.camera.near = 0.2; sp.shadow.camera.far = 12; scene.add(sp); } }
   else if (L.type === "SPOT") { l = new THREE.SpotLight(col, L.energy * K_PT * K_FILL, 0, L.spot / 2, L.blend, 2); l.position.copy(p); l.target.position.copy(p.clone().add(d)); scene.add(l.target); }
   else if (L.type === "SUN") { l = new THREE.DirectionalLight(col, L.energy * K_SUN); l.position.copy(p.clone().sub(d.clone().multiplyScalar(20))); l.target.position.copy(p); scene.add(l.target); }
   else if (L.type === "AREA") { l = new THREE.RectAreaLight(col, L.energy * K_PT * 0.5, L.size, L.size); l.position.copy(p); l.lookAt(p.clone().add(d)); }
-  if (l) scene.add(l);
+  if (l) { if (P.beamonly) l.intensity = 0; scene.add(l); }
 }
-scene.add(new THREE.HemisphereLight(0x6a78a8, 0x8a5a30, HEMI));
+scene.add(new THREE.HemisphereLight(0x6a78a8, 0x8a5a30, P.beamonly ? 0.05 : HEMI));
+// LIGHTHOUSE BEAMS: the lamp shines out through the two round bullseye panels (a = 0 and pi on the lens) -> two real spotlights
+// turning with the lens + visible light shafts in the air + glowing panels. The room stays mid-lit; things light up as a beam passes.
+const LAMP_B = new THREE.Vector3(0, 0.3, 1.54), BEAM_ANG = 0.21, beams = [];
+const shaftMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+  uniforms: { col: { value: new THREE.Color(1.0, 0.78, 0.45) }, vis: { value: 1 }, camp: { value: new THREE.Vector3() }, axis: { value: new THREE.Vector3() }, apex: { value: new THREE.Vector3() } },
+  vertexShader: `varying vec3 wp; varying vec3 wn; void main(){ vec4 w = modelMatrix*vec4(position,1.0); wp = w.xyz; wn = normalize(mat3(modelMatrix)*normal);
+    gl_Position = projectionMatrix*viewMatrix*w; }`,
+  fragmentShader: `uniform vec3 col,camp,axis,apex; uniform float vis; varying vec3 wp; varying vec3 wn;
+    void main(){ float along = dot(wp-apex,axis); vec3 v = normalize(camp-wp);
+      float thick = pow(abs(dot(wn, v)), 1.6);                       // looking through the middle of the shaft = more air lit
+      float a = thick * smoothstep(0.0,0.5,along) * exp(-along*0.12);
+      a *= 1.0-smoothstep(0.75,0.97,abs(dot(v,axis)));                // never a flash straight into the camera
+      gl_FragColor = vec4(col*a*1.6*vis, 1.0); }` });
+for (const sgn of [1, -1]) {
+  const sp = new THREE.SpotLight(0xffc27a, 900, 0, BEAM_ANG, 0.5, 1.3); sp.castShadow = !P.noshadow; sp.shadow.mapSize.set(1024, 1024);
+  sp.shadow.bias = -0.0005; sp.shadow.camera.near = 0.3; sp.shadow.camera.far = 30; scene.add(sp); scene.add(sp.target);
+  const L = 12, cone = new THREE.Mesh(new THREE.ConeGeometry(L * Math.tan(BEAM_ANG), L, 48, 1, true), shaftMat.clone()); scene.add(cone);
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(0.24, 40), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 0.85, 0.55).multiplyScalar(14), toneMapped: false }));
+  lensPivot.add(disc); disc.position.set(sgn * 0.64, 0, 1.54); disc.rotation.set(0, sgn * Math.PI / 2, 0);
+  beams.push({ sgn, sp, cone, L });
+}
+function updateBeams() {
+  const th = lensPivot.rotation.z, apex = bw(LAMP_B.x, LAMP_B.y, LAMP_B.z);
+  for (const b of beams) {
+    const db = new THREE.Vector3(b.sgn * Math.cos(th), b.sgn * Math.sin(th), -0.02), far = LAMP_B.clone().add(db.clone().multiplyScalar(10));
+    const axis = bw(far.x, far.y, far.z).sub(apex).normalize(); b.axis = axis;
+    b.sp.position.copy(apex); b.sp.target.position.copy(apex.clone().add(axis.clone().multiplyScalar(10))); b.sp.target.updateMatrixWorld();
+    b.cone.position.copy(apex.clone().add(axis.clone().multiplyScalar(b.L / 2))); b.cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), axis);
+    const u = b.cone.material.uniforms; u.axis.value.copy(axis); u.apex.value.copy(apex); u.camp.value.copy(cam.position);
+    const rc = cam.position.clone().sub(apex), al = Math.max(rc.dot(axis), 0.01), off = rc.clone().sub(axis.clone().multiplyScalar(al)).length();
+    const k = off / (al * Math.tan(BEAM_ANG)); u.vis.value = rc.dot(axis) < 0 ? 1 : Math.min(1, Math.max(0, (k - 1.3) / 1.2));   // camera in/near the shaft -> fade it
+  }
+}
+function beamLit(hc) { const apex = bw(LAMP_B.x, LAMP_B.y, LAMP_B.z), v = hc.clone().sub(apex).normalize(); let m = 0;
+  for (const b of beams) { const c = v.dot(b.axis); m = Math.max(m, Math.min(1, Math.max(0, (c - Math.cos(BEAM_ANG * 1.9)) / (Math.cos(BEAM_ANG * 0.6) - Math.cos(BEAM_ANG * 1.9))))); }
+  return m * m * (3 - 2 * m); }
 const composer = new EffectComposer(renderer, { frameBufferType: THREE.HalfFloatType });
 composer.addPass(new RenderPass(scene, cam));
 const ao = new N8AOPostPass(scene, cam, W, H); Object.assign(ao.configuration, { aoRadius: 0.6, distanceFalloff: 0.4, intensity: 2.5, aoSamples: 16, denoiseSamples: 8, halfRes: false });
@@ -270,6 +316,6 @@ composer.addPass(new EffectPass(cam, new BloomEffect({ intensity: 1.3, luminance
 // preload every face drawing the timeline uses, then expose renderAt(t)
 for (let t = 0; t <= DUR; t += 1 / 60) for (const p of [KEE, ENG]) faceTexture(faceName(p, t));
 await Promise.all(pending); await new Promise((r) => setTimeout(r, 100));
-window.renderAt = (t) => { camAt(t); lensPivot.rotation.z = 1.6 * (t + 4.0); for (const p of [KEE, ENG]) pose(p, t); composer.render();
+window.renderAt = (t) => { camAt(t); lensPivot.rotation.z = 0.95 * t + 3.4; updateBeams(); for (const p of [KEE, ENG]) pose(p, t); composer.render();
   const g = renderer.getContext(), px = new Uint8Array(4); g.readPixels(0, 0, 1, 1, g.RGBA, g.UNSIGNED_BYTE, px); return true; };
-window.__ready = true;
+window.__dbg = { beams, lensPivot, cam, scene, KEE, ENG, beamLit, renderer }; window.__ready = true;
