@@ -42,7 +42,7 @@ const surface = (name) => new THREE.MeshStandardMaterial({ map: tex(`${name}_alb
 // face drawing projected from the camera direction, centred (scale 2.15 R), hat wearers dropped 0.10 R
 function faceMat(h) {
   const X = b2t(h.X), Y = b2t(h.Y), Z = new THREE.Vector3().crossVectors(X, Y);
-  const ft = tl.load(A + h.face); ft.colorSpace = THREE.SRGBColorSpace;
+  const ft = tl.load(A + h.face); ft.colorSpace = THREE.NoColorSpace;   // raw sRGB values: the shader converts once (lin)
   return new THREE.ShaderMaterial({
     uniforms: { hc: { value: b2t(h.center) }, X: { value: X }, Y: { value: Y }, Z: { value: Z }, R: { value: h.R }, drop: { value: h.drop },
       ls: { value: h.light_side }, face: { value: ft }, k: { value: FACE }, GW: { value: +(P.gw ?? 0.45) } },
@@ -76,6 +76,7 @@ const meshes = []; gltf.scene.traverse((o) => { if (o.isMesh) meshes.push(o); })
 for (const o of meshes) {
   const n = o.name;
   if (n.startsWith("set_in") || n.startsWith("set_out")) { o.material = surface(n.startsWith("set_in") ? "set_in" : "set_out"); o.receiveShadow = true; }
+  else if (n.startsWith("limbs")) { o.material = surface("limbs"); o.castShadow = true; }
   else if (n.startsWith("chars")) { o.material = surface("chars"); o.castShadow = true; o.receiveShadow = true; hull(o, 0.012); }
   else if (heads[n]) { o.material = faceMat(heads[n]); o.castShadow = true; hull(o, 0.006); }
   else if (n.endsWith("_outline")) { o.material = new THREE.MeshBasicMaterial({ color: inkCol }); }

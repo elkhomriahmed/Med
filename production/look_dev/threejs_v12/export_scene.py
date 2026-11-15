@@ -38,19 +38,20 @@ def __EXPORT__():
     shutil.copy(os.path.join(OUTD, "sky_night_v12.png"), os.path.join(OUTD, "sky.png"))
     # ---- sort objects into groups
     skip = lambda o: o.name in ("sky",) or o.name.startswith(("dust", "cam_target"))
-    chars, heads, rings, setin, setout = [], [], [], [], []
+    chars, limbs, heads, rings, setin, setout = [], [], [], [], [], []
     for o in list(bpy.data.objects):
         if o.type not in ('MESH', 'CURVE', 'FONT') or skip(o): continue
         n = o.name
         if n.endswith("_head"): heads.append(o); continue
         if n.endswith("_outline"): rings.append(o); continue
-        if n.startswith(("keeper", "engineer")): chars.append(o); continue
+        if n.startswith(("keeper", "engineer")):   # ink limbs (arms, legs, feet, finger hooks, joints) get no outline
+            (limbs if (o.type == 'CURVE' or "_joint" in n) else chars).append(o); continue
         bb = [o.matrix_world @ Vector(c) for c in o.bound_box]; c = sum(bb, Vector()) / 8; size = max((bb[6] - bb[0]).length, 0)
         (setin if (c.xy.length < 3.6 and -0.5 < c.z < 4.5 and size < 9) else setout).append(o)
-    for o in chars + setin + setout + heads:   # outlines are redrawn in three.js; keep bevels (applied by convert)
+    for o in chars + limbs + setin + setout + heads:   # outlines are redrawn in three.js; keep bevels (applied by convert)
         for md in [m for m in o.modifiers if m.type == 'SOLIDIFY']: o.modifiers.remove(md)
     out = []
-    for name, objs, size in (("set_in", setin, 4096), ("set_out", setout, 2048), ("chars", chars, 2048)):
+    for name, objs, size in (("set_in", setin, 4096), ("set_out", setout, 2048), ("chars", chars, 2048), ("limbs", limbs, 512)):
         objs = B.to_mesh(objs); j = B.join(objs, name); B.unwrap([j], margin=0.002)
         alb = B.bake_pass([j], 'DIFFUSE', size, 1, filt=['COLOR'])
         sc.render.bake.normal_space = 'TANGENT'; nrm = B.bake_pass([j], 'NORMAL', size, 1)
