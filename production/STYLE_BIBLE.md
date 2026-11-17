@@ -553,3 +553,6 @@ Every video follows these rules.
   never a raw hard cut (raw cuts looked glitchy and make viewers scroll away).
 - **Colour (user, 2026-11-17, after video 1):** one harmonious palette per place (dominant + accent family); characters contrast
   with it instead of fighting it.
+- **Opening retention (user, 2026-11-17, after video 1):** the first 10–15 s must never drop in pace (video 1 slowed at ~3–3.5 s
+  after the hook). Camera always moving (no resting keys), a new picture/strong action every ~1.5–2 s, no raw cuts, no voice
+  pauses, an accent sound on every beat.

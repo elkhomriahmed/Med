@@ -10,3 +10,4 @@
    scroll away. These transitions must feel deliberate and smooth.
 
 The user may add more notes after rewatching.
+7. **Pace drop at ~3–3.5 s** (added after approval): a slow moment right after the hook; the first 10–15 s must never lose pace.

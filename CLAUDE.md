@@ -136,6 +136,10 @@ sending; never hand over a video with a known problem as if it were finished.
   In short: every transition designed (no raw cuts on context changes; flights never abrupt or empty); sound effects accurate to
   the picture; quoted character lines in the character's own voice/tone; calm, natural narration (no exaggerated parts);
   one harmonious palette per place; truly 3D, highly textured backgrounds (see below); frame camera by distance in small rooms.
+- **Retention in the first 10–15 s (user, 2026-11-17):** no drop in pace anywhere in the opening (video 1 dipped at ~3–3.5 s,
+  right after the hook). In the first 15 s: the camera never rests (no `stop: true` keys, no slow holds), a new picture or
+  strong action at least every ~1.5–2 s, no raw cuts, no voice pauses, a sound accent on every beat. Check the opening's
+  motion/energy curve on the low-res render before anything else.
 - **3D depth and texture (user, 2026-11-17):** the world behind the characters must read as fully 3D and highly textured, not flat
   (video 1's town especially). Every place needs: real geometry relief (bricks, beams, window frames, sills, cornices, roof tiles,
   cobbles with height, not just normal maps on flat walls), many layers of depth (near props, mid set, far set, distant

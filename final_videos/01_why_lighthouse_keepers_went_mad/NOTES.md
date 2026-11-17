@@ -21,7 +21,10 @@
    (one dominant + one accent family, characters contrasting with it) before building.
 6. **Context changes without a flight (the hard cuts at "You see," 3.1 s and "By winter" 42.4 s) looked glitchy** → people scroll
    away. Every non-flight transition must be a designed, deliberate transition, never a raw cut.
-7. **Backgrounds not 3D or textured enough**, especially the town: flat facades, little relief and depth (see STYLE_BIBLE note
+7. **Pace drop at ~3–3.5 s** (user, after approval): right after the hook the energy dips; viewers can scroll away here.
+   Cause in the build: the hook's last camera key and the first key of the clockwork shot were both `stop: true` (camera at rest
+   on both sides of the "You see," cut), plus a raw cut and a short pause in the voice at the same moment.
+8. **Backgrounds not 3D or textured enough**, especially the town: flat facades, little relief and depth (see STYLE_BIBLE note
    2026-11-17 "3D depth and texture").
 
 ## Process lessons (time)
