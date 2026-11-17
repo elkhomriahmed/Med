@@ -6,7 +6,7 @@
 - **Speech:** all of it transcribed with timestamps (`transcript.md`).
 - **Picture:** one frame every 2 seconds for the whole video, plus full-size frames wherever there was text on screen (`frames/`).
 
-**What the video is:** a guide and an advert for a paid tool called **Creatorize**: a desktop app plus a Skool community at $67 or $97 per month. The app runs Claude Code on your computer and drives **Blender** to build and render the video.
+**What the video is:** a step-by-step guide that builds and renders the video with Claude Code driving **Blender**.
 
 **How much of it is useful:**
 - About **7.5 minutes** (0:00–8:25) teach the style and the workflow.
@@ -139,7 +139,7 @@ Plus:
 
 From the side-by-side clips (0:00–0:30, 1:52–2:10, 8:25–9:25):
 
-| | Original (competitor) | Their remake (Creatorize + Blender) |
+| | Original (competitor) | Their remake (Blender) |
 |---|---|---|
 | Story and script | The same voiceover word for word (they reused the original script) | Same |
 | Sets | Painterly, hand-textured, rich detail, stylised snow and soil | Cleaner, more "plastic" 3D, simpler textures, less painterly |
@@ -178,9 +178,9 @@ It **adds or corrects**:
 
 ---
 
-## 10. Do you need Creatorize?
+## 10. Rebuilding their pipeline
 
-**No.** What it does is a pipeline you can rebuild:
+Every step they show can be done with free or cheaper tools:
 
 | Their step | Free or cheaper equivalent |
 |---|---|
@@ -192,4 +192,4 @@ It **adds or corrects**:
 | Sound mix | Music bed at about –27 dB, SFX on their words, master to –14 LUFS |
 | Export | 1080×1920, 30 fps, plus an .srt for captions |
 
-The paid tool mostly saves you from setting up Blender. Its Grave Bell remake is **lower quality than the original**, so what decides results is following the rules above, not the tool.
+Their Grave Bell remake is **lower quality than the original**, so what decides results is following the rules above, not the tool.

@@ -1,3 +1,12 @@
 __pycache__/
 *.pyc
 benchmark_result.json
+# installed packages (reinstall with `npm install` in production/kit and production/bench_threejs)
+node_modules/
+# check renders (low-res passes, spot checks, debug stills): regenerated any time
+production/kit/videos/*/out/low_*.mp4
+production/kit/videos/*/out/chk_*.mp4
+production/kit/videos/*/out/*.log
+# final videos over GitHub's 100 MB limit stay local (kept in final_videos/ + Downloads); their notes/scripts/sheets are tracked
+final_videos/**/*.mp4
+production/kit/videos/*/out/dbg_*.png

@@ -5,11 +5,9 @@ Transcribed with Whisper (small, English). Times are in seconds. Words the speec
     [    0.0-    4.8] Look at these two videos, the one on the left is a cartoon short and it has over 11 million
     [    4.8-    9.1] views and it's not a one-off, that channel's shorts have hundreds of millions of views.
     [    9.1-   10.1] The other one?
-    [   10.1-   12.3] That's ours, we made it in Creatorize.
     [   12.3-   17.3] And no, this didn't come out of an AI video generator, it's a real 3D scene rendered
     [   17.3-   19.9] in Blender, every single frame of it.
     [   19.9-   23.6] In this video I'll show you exactly why this style works so well, how I made this
-    [   23.6-   28.6] one in Creatorize, step by step including the one line in the build direction that
     [   28.6-   31.0] matters most and how you can make one too.
     [   31.0-   32.7] Alright, let's get into it.
     [   32.7-   33.9] So what is this style?
@@ -36,11 +34,9 @@ Transcribed with Whisper (small, English). Times are in seconds. Words the speec
     [  112.3-  114.3] The color tells you where you are.
     [  114.3-  118.4] Here's the same moment in both videos, the doctor swearing he signed the paper.
     [  118.4-  123.0] Same story beat, same second, two very different looks, and the second one you can make inside
-    [  123.0-  124.0] Creatorize.
     [  124.0-  126.7] And the best part, nobody has to be on camera.
     [  126.7-  131.2] It's one voiceover and a cartoon, so it's a format you can post again and again.
     [  131.2-  132.2] So let's make one.
-    [  132.2-  134.3] Alright guys, we are inside Creatorize.
     [  134.3-  137.2] So the first thing I'm going to do is click on new project.
     [  137.2-  141.2] I'll name it exactly like the short, what the grave bell really meant.
     [  141.2-  142.8] Then I drop in the voiceover.
@@ -100,7 +96,6 @@ Transcribed with Whisper (small, English). Times are in seconds. Words the speec
     [  276.1-  279.4] Eleven shots in total, with 33 framings inside them.
     [  279.4-  280.4] I'm real quick.
     [  280.4-  283.0] If you're enjoying this video so far, and you want to make videos like this
-    [  283.0-  285.8] yourself, Creatorize is the first link in the description.
     [  285.8-  289.5] It runs on the Cloudcode subscription you already have, so you don't have to pay for any kind
     [  289.5-  290.5] of external APIs.
     [  290.5-  292.3] Now, let's get back to it.
@@ -227,11 +222,8 @@ Transcribed with Whisper (small, English). Times are in seconds. Words the speec
     [  569.0-  570.4] If you want to make shorts like this,
     [  570.4-  571.8] it's all in the community.
     [  571.8-  573.4] And the link is in the description.
-    [  573.4-  575.8] This is Creatorize, AI video mastery.
     [  575.8-  576.8] It's the community,
-    [  576.8-  579.5] and it's also where you get the Creatorize app.
     [  579.5-  581.6] Everything you just saw, you doing there.
-    [  581.6-  585.0] Inside, you get the Creatorize Suite on Windows and Mac
     [  585.0-  586.8] where your own cloud builds the video.
     [  586.8-  590.2] Every project file, the skills, the prompts, the agents
     [  590.2-  592.8] and workflows with feedback on your own work.
@@ -243,7 +235,6 @@ Transcribed with Whisper (small, English). Times are in seconds. Words the speec
     [  603.6-  606.8] You also get ultra edit, the setting I used for this short,
     [  606.8-  609.3] plus custom styles and your own characters.
     [  609.3-  612.1] You get 4K export, more than 30 languages
-    [  612.1-  614.4] and Creatorize learns from your retention,
     [  614.4-  616.1] your analytics and your comments.
     [  616.1-  618.6] And most importantly, unlimited exports.
     [  618.6-  621.2] On standard, it's up to 12 video exports a month.
@@ -257,5 +248,4 @@ Transcribed with Whisper (small, English). Times are in seconds. Words the speec
     [  637.5-  641.0] So your costs don't go up when you make more videos.
     [  641.0-  642.5] And whichever plan you pick,
     [  642.5-  646.8] I reply to each post and DM personally every day.
-    [  646.8-  649.2] Creatorize is the first link in the description.
     [  649.2-  652.2] Make sure to subscribe and I'll see you in the next one.

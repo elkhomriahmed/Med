@@ -11,4 +11,8 @@
 
 `../analysis/` holds the competitor study (style breakdown, transcripts, the tutorial breakdown).
 
+**Pipeline change (2026-11-16):** Blender is retired for production (too slow). New videos are built in code with three.js + Remotion,
+assets from Poly Haven / ambientCG, voice and SFX from ElevenLabs, with parallel agents each working in its own folder. `pipeline/`
+(Blender) and the `*_LOCKED.py` files stay as the look reference. See `STYLE_BIBLE.md`.
+
 Not stored in git (too large; they live on the render machine): Blender itself, the speech-timing model, and rendered frames.

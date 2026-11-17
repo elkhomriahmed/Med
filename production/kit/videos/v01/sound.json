@@ -1,0 +1,297 @@
+{
+ "end": 64.0,
+ "music": {
+  "src": "music/music_bed_v01.mp3",
+  "gain_db": -12
+ },
+ "sfx": [
+  {
+   "src": "finger_glass_glide",
+   "at": 0.1,
+   "db": -8
+  },
+  {
+   "src": "mercury_wobble",
+   "at": 1.66,
+   "db": -12
+  },
+  {
+   "src": "gears_creak_ping",
+   "at": 4.86,
+   "db": -8
+  },
+  {
+   "src": "crank_ratchet",
+   "at": 6.78,
+   "db": -9
+  },
+  {
+   "src": "clock_fast",
+   "at": 7.72,
+   "db": -12
+  },
+  {
+   "src": "sandwich_bite",
+   "at": 9.23,
+   "db": -8
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 9.59,
+   "db": -10
+  },
+  {
+   "src": "ship_creak_wave",
+   "at": 10.38,
+   "db": -8
+  },
+  {
+   "src": "sailors_panic",
+   "at": 10.72,
+   "db": -12
+  },
+  {
+   "src": "flight_long_whoosh",
+   "at": 11.04,
+   "db": -11
+  },
+  {
+   "src": "rowboat_bump",
+   "at": 11.92,
+   "db": -8
+  },
+  {
+   "src": "steps_toolbox",
+   "at": 12.6,
+   "db": -10
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 13.02,
+   "db": -11
+  },
+  {
+   "src": "jump_back",
+   "at": 13.84,
+   "db": -16
+  },
+  {
+   "src": "mercury_pour",
+   "at": 15.06,
+   "db": -8
+  },
+  {
+   "src": "finger_poke",
+   "at": 16.98,
+   "db": -7
+  },
+  {
+   "src": "blow_finger",
+   "at": 17.63,
+   "db": -10
+  },
+  {
+   "src": "lens_spin",
+   "at": 18.98,
+   "db": -8
+  },
+  {
+   "src": "record_scratch",
+   "at": 19.86,
+   "db": -9
+  },
+  {
+   "src": "jump_back",
+   "at": 20.21,
+   "db": -12
+  },
+  {
+   "src": "laugh_kneeslap",
+   "at": 20.87,
+   "db": -9
+  },
+  {
+   "src": "chest_poke",
+   "at": 22.34,
+   "db": -9
+  },
+  {
+   "src": "mercury_wobble",
+   "at": 25.32,
+   "db": -12
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 25.54,
+   "db": -11
+  },
+  {
+   "src": "beam_sweep",
+   "at": 27.16,
+   "db": -9
+  },
+  {
+   "src": "flight_long_whoosh",
+   "at": 28.06,
+   "db": -12
+  },
+  {
+   "src": "rag_polish",
+   "at": 29.34,
+   "db": -10
+  },
+  {
+   "src": "notes_pop",
+   "at": 33.28,
+   "db": -10
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 33.8,
+   "db": -11
+  },
+  {
+   "src": "boat_horn",
+   "at": 34.94,
+   "db": -12
+  },
+  {
+   "src": "question_boing",
+   "at": 35.6,
+   "db": -10
+  },
+  {
+   "src": "post_handshake",
+   "at": 36.8,
+   "db": -9
+  },
+  {
+   "src": "barrel_climb",
+   "at": 38.58,
+   "db": -9
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 38.95,
+   "db": -11
+  },
+  {
+   "src": "oilcan_spill",
+   "at": 40.6,
+   "db": -9
+  },
+  {
+   "src": "oilcan_spill",
+   "at": 41.56,
+   "db": -9
+  },
+  {
+   "src": "keeper_yell",
+   "at": 42.94,
+   "db": -12
+  },
+  {
+   "src": "seagulls",
+   "at": 43.34,
+   "db": -10
+  },
+  {
+   "src": "flight_long_whoosh",
+   "at": 45.03,
+   "db": -11
+  },
+  {
+   "src": "town_laugh",
+   "at": 45.88,
+   "db": -10
+  },
+  {
+   "src": "head_knock",
+   "at": 48.52,
+   "db": -9
+  },
+  {
+   "src": "flight_long_whoosh",
+   "at": 49.06,
+   "db": -11
+  },
+  {
+   "src": "plaque_ding",
+   "at": 52.16,
+   "db": -9
+  },
+  {
+   "src": "lens_spin",
+   "at": 53.6,
+   "db": -11
+  },
+  {
+   "src": "vapour_hiss",
+   "at": 56.42,
+   "db": -11
+  },
+  {
+   "src": "hatch_bolt",
+   "at": 58.28,
+   "db": -9
+  },
+  {
+   "src": "snore",
+   "at": 59.44,
+   "db": -14
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 60.77,
+   "db": -11
+  },
+  {
+   "src": "beam_sweep",
+   "at": 61.18,
+   "db": -10
+  },
+  {
+   "src": "foghorn",
+   "at": 62.4,
+   "db": -15
+  }
+ ],
+ "beds": [
+  {
+   "src": "night_sea_loop",
+   "a": 0.0,
+   "b": 28.46,
+   "db": -24
+  },
+  {
+   "src": "morning_sea",
+   "a": 28.46,
+   "b": 34.2,
+   "db": -22
+  },
+  {
+   "src": "night_sea_loop",
+   "a": 34.2,
+   "b": 42.38,
+   "db": -25
+  },
+  {
+   "src": "winter_wind_loop",
+   "a": 42.38,
+   "b": 45.48,
+   "db": -20
+  },
+  {
+   "src": "town_ambience_loop",
+   "a": 45.48,
+   "b": 49.26,
+   "db": -21
+  },
+  {
+   "src": "night_sea_loop",
+   "a": 49.26,
+   "b": 64.0,
+   "db": -24
+  }
+ ]
+}

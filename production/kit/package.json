@@ -1,0 +1,1 @@
+{"name":"shorts-kit","private":true,"type":"module","dependencies":{"@remotion/cli":"^4.0.544","n8ao":"^1.9.4","postprocessing":"^6.36.4","react":"^18.3.1","react-dom":"^18.3.1","remotion":"^4.0.544","three":"^0.170.0"}}

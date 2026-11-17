@@ -22,8 +22,50 @@ Locked settings, in one place:
 
 Addition (user, 2026-11-15): the inside of open mouths is BLACK (dark ink), not red.
 
+Additions (user, 2026-11-16), apply to EVERY character:
+- **ONE PIECE.** A character is a single rigid unit, not stacked layers. Head, face, outline, body, clothes, hat and limbs move
+  together, in the same frame, with no lag, no follow-through offset between parts, no outline change and nothing appearing or
+  disappearing during a move. (Replaces the older v3 "head 30% slower / hands lag the body" spring offsets.)
+- **2D CHARACTER, NO LIMB THROUGH THE BODY.** Pointing or reaching uses the hand on the target's side. If the far hand must be
+  used, the arm goes directly across IN FRONT of the torso toward the target: never through the torso, never behind it and out
+  the other side, never looping round the outside of the body.
+
+Pipeline change (user, 2026-11-16) — **Blender is retired** (Cycles ≈ 240 s/frame, a full video ≈ 125 h). Everything is now
+generated in code: **three.js** for the 3D scenes and characters, **Remotion** for timing, composition, captions and the final
+render. Target: **1–2 hours per finished video**. Free asset libraries for textures/HDRIs/models: **Poly Haven, ambientCG**
+(and other CC0 sources). **Voiceover and sound effects: ElevenLabs** (connected by the user). Work is split across parallel
+agents, each in its **own folder** so they never touch each other's files. The v12 LOCKED look (faces, outlines, proportions,
+light, grade) is still the target; only the tools change. The `still_v12_LOCKED.py` / `grade_v12_LOCKED.py` files stay as the
+look reference, not the production path.
+
 Known notes to improve over time (not blocking): ceiling dominates the top third and is very orange; keeper's beard edge is
 zig-zag; the engineer's raised finger hook is thin against the check coat; more texture variety in the set.
+
+Additions (user, 2026-11-17), apply to EVERY full video:
+- **Length is measured on the final voiceover:** after the speed-up, the finished voiceover itself must run **over 60 s** (not
+  just the script on paper). Check the duration of the sped-up audio before building any scene; if it's short, lengthen the script
+  and re-record.
+- **Speed without losing quality:** follow the production workflow from start to finish and keep it efficient, but never cut a
+  quality step (still checks, fixes, sound) just to finish sooner.
+- **Every known issue gets fixed in the full build:** lighting logic, camera movement and tracking, textured 3D backgrounds,
+  character movement, expressions, hands, faces, lip-sync, and the camera moves between places.
+- **One connected world, fast flights between places.** All (or almost all) places of a video are built next to each other in
+  the same world. To change place, the camera flies through the world to the next one with a fast, sped-up move (no cut). A
+  normal transition (cut or dissolve) is used only when the next place is too far away to fly to, for a jump into the past
+  (flashback) or a dream, or when the whole context changes.
+- **Only finished videos are delivered.** The MP4 sent to the user has nothing broken, missing, lagging or left to fix later; it
+  meets every rule in this bible. The final full-res render is checked against all of them (checklist in `CLAUDE.md`), fixed and
+  re-rendered until it passes. A problem that truly can't be fixed is reported before sending, never hidden.
+- **No character glitches:** while a character talks, gestures or changes expression, no body part jumps, pops, vanishes or
+  flickers (engineer's hand, keeper's outline): checked frame by frame on every talking/gesture stretch.
+- **No short glitches anywhere:** nothing in the background, props, light, shadows or characters may disappear for a couple
+  of frames, appear from nowhere for a couple of frames, or move without a reason. Every render is scanned frame against
+  neighbouring frames to catch these, and each one is traced to its cause and fixed.
+- **Shadows and reflections follow the light:** characters cast shadows matching the key light; objects catch and reflect the
+  real sources; everything sits in its place.
+- **Captions:** fairly thick black outline + small shadow; each word bounces in exactly when it's spoken.
+- **Sound effects and music from ElevenLabs** (effects accurate to their action); if ElevenLabs fails, the user provides a
+  folder of effects and a music pack.
 
 
 # STYLE FORMULA v12 — RULES (in progress: frame → sample → full video). Builds on locked v11; nothing in v11 is removed.
@@ -500,3 +542,14 @@ Every video follows these rules.
 - Segment joins: hard cut only for the hook → "You see" (time jump back); dissolves for night ↔ morning ↔ cottage ↔ winter ↔ town ↔ night.
 - Background depth: real distant geography (sea, horizon, town lights), depth fog per scene (`air_dens`), lens blur f/1.8,
   foreground props in interior shots.
+- **Captions size (user, 2026-11-17):** font 72 px at 1080 wide (was 92, ~22% smaller), outline 9 px, scaled with the video width.
+- **3D depth and texture (user, 2026-11-17, after video 1):** backgrounds must read as fully 3D and highly textured, never flat
+  (video 1's town facades were too flat). Real modelled relief on every surface (bricks, beams, frames, sills, cornices, roof tiles,
+  raised cobbles), several depth layers (foreground props, mid set, far set, distant silhouettes) with visible parallax in camera
+  moves, varied worn materials, AO/contact shadows in corners, and rich small detail in every still.
+- **Voice (user, 2026-11-17, after video 1):** quoted character lines are spoken in that character's own voice/tone (not the
+  narrator's); the narration stays calm and natural, never exaggerated.
+- **Transitions (user, 2026-11-17, after video 1):** a change of context without a camera flight is always a designed transition,
+  never a raw hard cut (raw cuts looked glitchy and make viewers scroll away).
+- **Colour (user, 2026-11-17, after video 1):** one harmonious palette per place (dominant + accent family); characters contrast
+  with it instead of fighting it.
