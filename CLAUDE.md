@@ -145,7 +145,7 @@ sending; never hand over a video with a known problem as if it were finished.
   sheets + `tools/popscan.py`), and fix whole categories of problems per round instead of one shot at a time.
 
 ## Project check (2026-11-17): things to know
-- **Video 1 is finished** (2026-11-17): `production/videos/01_lighthouse_mercury/lighthouse_mercury_v12_final.mp4`, script v4
+- **Video 1 is finished** (2026-11-17): `final_videos/01_why_lighthouse_keepers_went_mad/01_why_lighthouse_keepers_went_mad.mp4` (+ a copy in Downloads), script v4
   (`script_v4_text.txt`, 242 words), voice `kit/public/audio/vo_v4.wav` (63.9 s), direction in `kit/videos/v01/` = the template
   for the next videos (world assembly, word-keyed acting, camera with flights, props in hands, gag overlays, sound plan + pre-mix).
 - **Git (user, 2026-11-17):** this folder IS the git checkout of https://github.com/elkhomriahmed/Med, branch
