@@ -148,7 +148,10 @@ sending; never hand over a video with a known problem as if it were finished.
 - **Video 1 is finished** (2026-11-17): `production/videos/01_lighthouse_mercury/lighthouse_mercury_v12_final.mp4`, script v4
   (`script_v4_text.txt`, 242 words), voice `kit/public/audio/vo_v4.wav` (63.9 s), direction in `kit/videos/v01/` = the template
   for the next videos (world assembly, word-keyed acting, camera with flights, props in hands, gag overlays, sound plan + pre-mix).
-- **This folder is not a git repo** (it came from a zip). STYLE_BIBLE's "commit 64031ae" can't be looked up here; back up before big changes.
+- **Git (user, 2026-11-17):** this folder IS the git checkout of https://github.com/elkhomriahmed/Med, branch
+  `claude/shorts-competitor-analysis-59gfay` (the repo's default). The work stays on this laptop; push updates to that branch
+  (commit + `git push`) whenever work is saved, e.g. after a video is approved or rules/libraries change. Never commit files over
+  100 MB (final MP4s stay in `final_videos/`, ignored) or `node_modules/`; check `git status` before each commit.
 - Music: only `cartoon_funny_quirky_5min.mp3` is cleared for use; check the licence of `everything_in_its_right_place.mp3` first.
 - Built places in code: lamp room (`world/lampRoom.js`), lighthouse exterior + sea + sky + jetty + ships (`world/exterior/`),
   harbour town (`world/town/`). Cast: 9 characters in `characters/specs.js`. Tools: `kit/tools/popscan.py` (glitch scan),
