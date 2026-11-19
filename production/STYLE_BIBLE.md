@@ -556,3 +556,6 @@ Every video follows these rules.
 - **Opening retention (user, 2026-11-17, after video 1):** the first 10–15 s must never drop in pace (video 1 slowed at ~3–3.5 s
   after the hook). Camera always moving (no resting keys), a new picture/strong action every ~1.5–2 s, no raw cuts, no voice
   pauses, an accent sound on every beat.
+- **Characters on screens and prints (user, 2026-11-19):** anyone shown on a TV, CCTV monitor, photo, newspaper, poster or book is
+  a REAL render of our locked characters (marker outline, flat white face drawing, capsule body, lit), rendered into the
+  screen/print texture — never a minimal placeholder drawing (thin smiley faces, flat cardboard bodies).
