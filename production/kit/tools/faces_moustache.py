@@ -25,8 +25,11 @@ def make(path, expr, variant=None):
     if variant == "E": m = "grit"
     if variant == "talk": m = {"flat": "o", "smirk": "open", "smile": "open", "frown": "o", "grin": "open", "grit": "shout", "o": "open", "open": "o", "shout": "open"}.get(m, "open")
     im = Image.new("RGBA", (F.S, F.S), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    g0 = F.GAZE
+    if e == "wide": F.GAZE = g0 * 0.62                    # keep the pupil inside the white on wide eyes
     for s in (-1, 1):
         x = s * F.EX; F.eye(d, x, e, s); F.brow(d, x, b, s)
+    F.GAZE = g0
     F.mouth(d, m)                     # mouth first, the moustache sits over its top edge like a real one
     moustache(d)
     im.resize((1024, 1024), Image.LANCZOS).save(path)
@@ -34,7 +37,7 @@ out = sys.argv[1]; n = 0
 for k in F.EXPR:
     gz = [0.0] + ([-1.0, 1.0] if F.EXPR[k][0] in F.GAZE_KINDS else [])
     for gv in gz:
-        F.GAZE = gv; suf = "" if gv == 0 else ("_L" if gv < 0 else "_R")
+        F.GAZE = gv * 1.9; suf = "" if gv == 0 else ("_L" if gv < 0 else "_R")
         make(f"{out}/folkm_{k}{suf}.png", k); make(f"{out}/folkm_{k}_talk{suf}.png", k, "talk")
         for v in ("A", "O", "E"): make(f"{out}/folkm_{k}_{v}{suf}.png", k, v)
         n += 5

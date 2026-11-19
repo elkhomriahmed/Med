@@ -32,6 +32,7 @@ ID = {
  "lib_kid_a":        dict(desc="kid, big round eyes, thin brows, freckles, small mouth", eyes="round", brows="thin",   ex=0.29, mouth=0.8, freckles=True),
  "lib_kid_b":        dict(desc="kid, big lashed eyes, rosy cheeks, small mouth",         eyes="lash_round", brows="thin", ex=0.29, mouth=0.8, blush=True),
 }
+GAZE_GAIN = 1.9   # pupils shift ~0.12 R toward the look target (0.065 R read as "looking at the camera" on screen)
 INK = F.INK; P = F.P; W = F.W; stroke = F.stroke; blob = F.blob; arc_pts = F.arc_pts
 
 def eye(d, x, kind, s, L):
@@ -41,7 +42,8 @@ def eye(d, x, kind, s, L):
     if kind == "open":
         if st in ("round", "lash_round"):
             d.ellipse([*P(x - 0.11 * sz, EY + 0.11 * sz), *P(x + 0.11 * sz, EY - 0.11 * sz)], fill=F.WHITE, outline=INK, width=W(0.04))
-            d.ellipse([*P(x + g - 0.055 * sz, EY + 0.055 * sz), *P(x + g + 0.055 * sz, EY - 0.055 * sz)], fill=INK)
+            gr = max(-0.05 * sz, min(0.05 * sz, g))                       # keep the pupil inside the white
+            d.ellipse([*P(x + gr - 0.055 * sz, EY + 0.055 * sz), *P(x + gr + 0.055 * sz, EY - 0.055 * sz)], fill=INK)
         elif st == "bean":
             d.ellipse([*P(x + g - 0.06, EY + 0.13), *P(x + g + 0.06, EY - 0.11)], fill=INK)
         else:
@@ -53,7 +55,8 @@ def eye(d, x, kind, s, L):
     elif kind == "wide":
         k = 1.15 if st in ("round", "lash_round") else 1.0
         d.ellipse([*P(x - 0.13 * k, EY + 0.15 * k), *P(x + 0.13 * k, EY - 0.15 * k)], fill=F.WHITE, outline=INK, width=W(0.045))
-        d.ellipse([*P(x + g * 1.1 - 0.05, EY + 0.05), *P(x + g * 1.1 + 0.05, EY - 0.05)], fill=INK)
+        gw = max(-0.07 * k, min(0.07 * k, g * 1.1))
+        d.ellipse([*P(x + gw - 0.05, EY + 0.05), *P(x + gw + 0.05, EY - 0.05)], fill=INK)
     elif kind == "happy":
         stroke(d, arc_pts(x, EY - 0.03, 0.11 * sz ** 0.5, 0.09, 10, 170), 0.03, 0.03, 0.07)
     elif kind == "closed":
@@ -143,7 +146,7 @@ def extras(d, L):
 
 def make(job):
     name, expr, variant, gv, path = job
-    L = ID[name]; F.GAZE = gv; F.EX = L["ex"]
+    L = ID[name]; F.GAZE = gv * GAZE_GAIN; F.EX = L["ex"]
     e, b, m = F.EXPR[expr]
     if variant == "blink": e = "closed"
     if variant == "A": m = "open"

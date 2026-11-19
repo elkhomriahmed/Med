@@ -143,6 +143,8 @@ sending; never hand over a video with a known problem as if it were finished.
 - **Face library (user, 2026-11-19):** never give everyone the same face. Cast faces per video from
   `production/visual_library/FACES.md` (21 face sets, preview `faces_sheet.png`); no two main characters share a face set; add new
   identities with `kit/tools/face_library.py` + `kit/tools/face_index.py`.
+- **Eye-lines (user, 2026-11-19):** set `lookAt` on every character in every beat: partners look at each other, watchers at the
+  thing watched; pupils move, features stay centred; camera-look only when the beat is aimed at the viewer. Check it in stills.
 - **Characters on screens and prints (user, 2026-11-19):** TV/CCTV/photo/newspaper/book images of people are real renders of our
   locked characters into the texture (render target → screen), never placeholder drawings.
 - **3D depth and texture (user, 2026-11-17):** the world behind the characters must read as fully 3D and highly textured, not flat

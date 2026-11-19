@@ -922,7 +922,16 @@ export async function createCharacter(spec = {}) {
       if (hairMat) hairMat.roughness = hairRough + (0.5 - hairRough) * wet;           // slightly damp hair (no gloss)
       u.ls.value = key ? Math.max(-1, Math.min(1, tmp.subVectors(key, hcW).normalize().dot(X) * 2.5)) : 0.6;
       u.lit.value = opts.faceLit ?? 0; u.k.value = opts.faceGain ?? 0.95; u.GW.value = opts.faceGlow ?? 0.45; u.SHK.value = opts.faceShade ?? 0.6;
-      const fname = faceName(faceSet, state.expression || "neutral", state.mouth || "", state.gaze || "");
+      // GAZE (user rule 2026-11-19): features stay centred, only the pupils move. `state.lookAt` (world Vector3: the person or
+      // thing the character attends to) picks the pupils automatically: target to the screen-left of the head -> "_L",
+      // screen-right -> "_R", roughly toward the camera -> "" (looking at the viewer only when that's the point of the beat).
+      let gaze = state.gaze;
+      if (gaze == null && state.lookAt) {
+        const d = tmp.subVectors(state.lookAt, hcW); const L = d.length() || 1;
+        const sx = d.dot(X) / L;                                  // X = screen-right axis of this frame's camera
+        gaze = sx < -0.18 ? "_L" : sx > 0.18 ? "_R" : "";
+      }
+      const fname = faceName(faceSet, state.expression || "neutral", state.mouth || "", gaze || "");
       if (fname !== lastFace) { u.face.value = faceTex(fname); u.hasFace.value = 1; lastFace = fname; }
 
       // outline ring toward the camera (root-local positions)
