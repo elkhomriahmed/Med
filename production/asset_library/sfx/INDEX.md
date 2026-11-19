@@ -63,3 +63,27 @@ Check here FIRST. Only generate with ElevenLabs if nothing fits; then save the n
 | voice | `keeper_yell.mp3` | 1.2 | old man shouting angrily, short gruff cartoon yell, no words | ElevenLabs (2026-11-17) | video 01 |
 | voice | `snore.mp3` | 2.0 | old man snoring softly, slow wheezy breaths | ElevenLabs (2026-11-17) | video 01 |
 | voice/cartoon | `laugh_kneeslap.mp3` | 1.4 | old man's hearty belly laugh with a loud knee slap | ElevenLabs (2026-11-17) | video 01 |
+| food/liquid | `lemon_squeeze.mp3` | 0.9 | juicy lemon squeezed hard in a fist, wet squelch + juice splatter | ElevenLabs (2026-11-19) | video 02 |
+| retro/transition | `vhs_rewind.mp3` | 1.5 | VHS tape rewinding fast, mechanical whir rising (designed time-jump back) | ElevenLabs (2026-11-19) | video 02 |
+| retro/camera | `polaroid_flash_eject.mp3` | 1.6 | instant camera shutter click + flash pop, motor whirring the photo out | ElevenLabs (2026-11-19) | video 02 |
+| retro/electronic | `cctv_beep_servo.mp3` | 1.0 | security camera electronic beep + soft servo whir | ElevenLabs (2026-11-19) | video 02 |
+| foley | `brush_scribble.mp3` | 1.0 | quick handwriting scribble with a wet brush on paper | ElevenLabs (2026-11-19) | video 02 |
+| voice/cartoon | `comedic_sniff.mp3` | 0.8 | one loud comedic sniff of the air | ElevenLabs (2026-11-19) | video 02 |
+| door | `bank_door_chime.mp3` | 1.4 | heavy glass (bank) door pushed open + small entry bell chime | ElevenLabs (2026-11-19) | video 02 |
+| foley | `footsteps_marble.mp3` | 1.6 | confident sneaker footsteps on polished marble, quiet hall | ElevenLabs (2026-11-19) | video 02 |
+| cartoon | `sparkle_twinkle.mp3` | 0.8 | soft magical sparkle twinkle (cheeky grin, idea) | ElevenLabs (2026-11-19) | video 02 |
+| foley | `paper_bag_rustle.mp3` | 1.0 | brown paper grocery bag rustling as it's carried/swung | ElevenLabs (2026-11-19) | video 02 |
+| music sting | `tv_news_sting.mp3` | 2.2 | short dramatic 1990s TV evening news intro sting (brass + synth) | ElevenLabs (2026-11-19) | video 02 |
+| door | `police_knock.mp3` | 1.2 | three hard loud police knocks on a wooden apartment door | ElevenLabs (2026-11-19) | video 02 |
+| retro/machine | `vcr_insert_play.mp3` | 1.5 | VCR tape pushed in (clunk), play click, motor hum | ElevenLabs (2026-11-19) | video 02 |
+| cartoon | `facepalm_slap.mp3` | 0.6 | single comedic facepalm slap on a forehead | ElevenLabs (2026-11-19) | video 02 |
+| metal/prison | `cell_door_clang.mp3` | 1.6 | jail cell barred door sliding shut + heavy metal clang | ElevenLabs (2026-11-19) | video 02 |
+| foley/school | `chalk_writing.mp3` | 2.0 | chalk writing quickly on a chalkboard, scratchy taps | ElevenLabs (2026-11-19) | video 02 |
+| foley | `book_slam.mp3` | 0.8 | heavy hardcover book slammed shut on a wooden desk | ElevenLabs (2026-11-19) | video 02 |
+| retro/electronic | `tv_channel_static.mp3` | 0.8 | CRT TV switching channel: static burst + click | ElevenLabs (2026-11-19) | video 02 |
+| city | `police_siren_distant.mp3` | 2.5 | distant police siren passing on a city street at night | ElevenLabs (2026-11-19) | video 02 |
+| cartoon | `eyes_sting_sizzle.mp3` | 1.0 | comedic stinging eyes: short sizzle hiss + pained whimper | ElevenLabs (2026-11-19) | video 02 |
+| ambience (loop) | `city_day_loop.mp3` | 5.0 | busy 1990s US city street by day: light traffic, distant horns, footsteps | ElevenLabs (2026-11-19) | video 02 |
+| ambience (loop) | `city_night_apartment_loop.mp3` | 5.0 | quiet city night from an apartment: distant traffic, far dog bark, faint TV | ElevenLabs (2026-11-19) | video 02 |
+| ambience (loop) | `bank_lobby_loop.mp3` | 5.0 | quiet bank lobby: soft murmur, printer, pen click, AC hum | ElevenLabs (2026-11-19) | video 02 |
+| foley | `newspaper_snap.mp3` | 1.0 | newspaper opened and snapped straight, crisp rustle | ElevenLabs (2026-11-19) | video 02 |

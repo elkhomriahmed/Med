@@ -1,0 +1,299 @@
+{
+ "end": 62.86,
+ "sfx_dir": "../asset_library/sfx",
+ "music": {
+  "src": "../asset_library/music/music_bed_v01.mp3",
+  "gain_db": -12
+ },
+ "sfx": [
+  {
+   "src": "cctv_beep_servo",
+   "at": 0.0,
+   "db": -10
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 0.25,
+   "db": -14
+  },
+  {
+   "src": "sparkle_twinkle",
+   "at": 1.81,
+   "db": -12
+  },
+  {
+   "src": "lemon_squeeze",
+   "at": 3.08,
+   "db": -11
+  },
+  {
+   "src": "vhs_rewind",
+   "at": 3.98,
+   "db": -9
+  },
+  {
+   "src": "brush_scribble",
+   "at": 5.28,
+   "db": -11
+  },
+  {
+   "src": "page_turn",
+   "at": 7.2,
+   "db": -13
+  },
+  {
+   "src": "bell_ding",
+   "at": 8.5,
+   "db": -14
+  },
+  {
+   "src": "whoosh",
+   "at": 9.24,
+   "db": -16
+  },
+  {
+   "src": "cctv_beep_servo",
+   "at": 10.2,
+   "db": -12
+  },
+  {
+   "src": "lemon_squeeze",
+   "at": 12.5,
+   "db": -10
+  },
+  {
+   "src": "lemon_squeeze",
+   "at": 12.97,
+   "db": -11
+  },
+  {
+   "src": "lemon_squeeze",
+   "at": 13.62,
+   "db": -10
+  },
+  {
+   "src": "polaroid_flash_eject",
+   "at": 14.93,
+   "db": -9
+  },
+  {
+   "src": "page_turn",
+   "at": 16.33,
+   "db": -14
+  },
+  {
+   "src": "eyes_sting_sizzle",
+   "at": 17.38,
+   "db": -11
+  },
+  {
+   "src": "bell_ding",
+   "at": 18.82,
+   "db": -13
+  },
+  {
+   "src": "comedic_sniff",
+   "at": 20.21,
+   "db": -9
+  },
+  {
+   "src": "flight_long_whoosh",
+   "at": 23.02,
+   "db": -12
+  },
+  {
+   "src": "bank_door_chime",
+   "at": 24.41,
+   "db": -11
+  },
+  {
+   "src": "footsteps_marble",
+   "at": 24.84,
+   "db": -14
+  },
+  {
+   "src": "cctv_beep_servo",
+   "at": 25.92,
+   "db": -12
+  },
+  {
+   "src": "sparkle_twinkle",
+   "at": 26.5,
+   "db": -11
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 26.81,
+   "db": -12
+  },
+  {
+   "src": "bank_door_chime",
+   "at": 28.18,
+   "db": -12
+  },
+  {
+   "src": "paper_bag_rustle",
+   "at": 29.24,
+   "db": -12
+  },
+  {
+   "src": "sparkle_twinkle",
+   "at": 30.46,
+   "db": -12
+  },
+  {
+   "src": "whoosh",
+   "at": 31.72,
+   "db": -14
+  },
+  {
+   "src": "flight_long_whoosh",
+   "at": 32.43,
+   "db": -12
+  },
+  {
+   "src": "tv_news_sting",
+   "at": 33.52,
+   "db": -12
+  },
+  {
+   "src": "tv_channel_static",
+   "at": 37.5,
+   "db": -14
+  },
+  {
+   "src": "police_siren_distant",
+   "at": 35.7,
+   "db": -20
+  },
+  {
+   "src": "police_knock",
+   "at": 36.46,
+   "db": -9
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 38.6,
+   "db": -12
+  },
+  {
+   "src": "vcr_insert_play",
+   "at": 38.77,
+   "db": -11
+  },
+  {
+   "src": "facepalm_slap",
+   "at": 42.83,
+   "db": -11
+  },
+  {
+   "src": "cell_door_clang",
+   "at": 44.27,
+   "db": -10
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 45.07,
+   "db": -12
+  },
+  {
+   "src": "newspaper_snap",
+   "at": 45.64,
+   "db": -11
+  },
+  {
+   "src": "clock_ticking",
+   "at": 47.18,
+   "db": -22
+  },
+  {
+   "src": "chalk_writing",
+   "at": 50.36,
+   "db": -14
+  },
+  {
+   "src": "chalk_writing",
+   "at": 52.42,
+   "db": -14
+  },
+  {
+   "src": "chalk_writing",
+   "at": 55.28,
+   "db": -14
+  },
+  {
+   "src": "bell_ding",
+   "at": 58.3,
+   "db": -13
+  },
+  {
+   "src": "book_slam",
+   "at": 59.5,
+   "db": -10
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 59.75,
+   "db": -13
+  },
+  {
+   "src": "coins_drop",
+   "at": 60.32,
+   "db": -16
+  },
+  {
+   "src": "page_turn",
+   "at": 61.3,
+   "db": -13
+  },
+  {
+   "src": "sparkle_twinkle",
+   "at": 62.14,
+   "db": -11
+  }
+ ],
+ "beds": [
+  {
+   "src": "bank_lobby_loop",
+   "a": 0.0,
+   "b": 4.28,
+   "db": -24
+  },
+  {
+   "src": "city_day_loop",
+   "a": 4.28,
+   "b": 23.12,
+   "db": -30
+  },
+  {
+   "src": "city_day_loop",
+   "a": 23.12,
+   "b": 32.58,
+   "db": -24
+  },
+  {
+   "src": "bank_lobby_loop",
+   "a": 24.56,
+   "b": 26.86,
+   "db": -26
+  },
+  {
+   "src": "bank_lobby_loop",
+   "a": 28.38,
+   "b": 32.58,
+   "db": -26
+  },
+  {
+   "src": "city_night_apartment_loop",
+   "a": 32.58,
+   "b": 45.22,
+   "db": -24
+  },
+  {
+   "src": "city_night_apartment_loop",
+   "a": 59.6,
+   "b": 62.86,
+   "db": -26
+  }
+ ]
+}

@@ -10,17 +10,17 @@ def fade(x, a, b):
     if a: x[:a] *= np.linspace(0, 1, a)[:, None]
     if b: x[-b:] *= np.linspace(1, 0, b)[:, None]
     return x
-plan = json.load(open(sys.argv[1])); N = int((plan["end"]) * SR); out = np.zeros((N, 2), np.float32)
+plan = json.load(open(sys.argv[1])); SFX = plan.get("sfx_dir", "public/sfx/v01"); N = int((plan["end"]) * SR); out = np.zeros((N, 2), np.float32)
 db = lambda g: 10 ** (g / 20)
-m = load("public/" + plan["music"]["src"])[:N]; m = fade(m, 0.3, 0.5) * db(plan["music"]["gain_db"]); out[:len(m)] += m
+m = load(plan["music"]["src"] if plan["music"]["src"].startswith("..") else "public/" + plan["music"]["src"])[:N]; m = fade(m, 0.3, 0.5) * db(plan["music"]["gain_db"]); out[:len(m)] += m
 for b in plan["beds"]:
-    src = load("public/sfx/v01/" + b["src"] + ".mp3"); a0, a1 = int(b["a"] * SR), min(N, int(b["b"] * SR)); L = a1 - a0
+    src = load(SFX + "/" + b["src"] + ".mp3"); a0, a1 = int(b["a"] * SR), min(N, int(b["b"] * SR)); L = a1 - a0
     reps = int(np.ceil(L / len(src))) + 1; xf = int(0.08 * SR); seg = np.zeros((L + xf, 2), np.float32); pos = 0
     while pos < L:                                   # loop with short crossfades so the seam never clicks
         piece = fade(src.copy(), 0.08, 0.08); k = min(len(piece), L + xf - pos); seg[pos:pos + k] += piece[:k]; pos += len(src) - xf
     seg = fade(seg[:L], 0.3, 0.3) * db(b["db"]); out[a0:a1] += seg
 for s in plan["sfx"]:
-    x = fade(load("public/sfx/v01/" + s["src"] + ".mp3"), 0.005, 0.06) * db(s["db"]); a = int(s["at"] * SR)
+    x = fade(load(SFX + "/" + s["src"] + ".mp3"), 0.005, 0.06) * db(s["db"]); a = int(s["at"] * SR)
     if a < 0: x = x[-a:]; a = 0
     k = min(len(x), N - a); out[a:a + k] += x[:k]
 pk = np.abs(out).max(); print("fx peak %.2f" % pk)
