@@ -118,7 +118,7 @@ async function build(canvas, W, H) {
       if (a.props.photo) { P.photo.userData.setDevelop?.(Math.min(1, (t - 15.3) / 1.0)); }
       P.polaroid.userData.setFlash?.(a.fx.flash); P.polaroid.userData.setEject?.(a.props.photo?.eject ? 1 : 0);
       if (a.props.squirt) { P.squirt.visible = true; P.squirt.position.copy(a.props.squirt.at); P.squirt.userData.set?.(a.props.squirt.k); } else P.squirt.visible = false;
-      lemonRow.visible = z === "apt" && t < 12.3;
+      lemonRow.visible = z === "apt" && t < 14.1;
       // screens
       if (a.ctrl.screens.aptTv === "news") { await mini.render(mini.anchor, { expression: "neutral", mouth: Math.sin(t * 15) > 0 ? "_A" : "", lookAt: mini.anchor.cam.position }, t);
         aptScreen.draw("news", t, { photo: mini.suspect.out, anchor: mini.anchor.out, banner: a.ctrl.screens.banner }); }

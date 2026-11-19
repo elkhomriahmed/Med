@@ -54,7 +54,7 @@ export function makeDirection(W) {
   const C = W.city.anchors, AP = W.apt.anchors, B1 = W.bank1.anchors, B2 = W.bank2.anchors, PO = W.police.anchors, OF = W.office.anchors;
   const FY = 3.6;
   // ---- spots
-  const R_KITCH = V(-1.75, FY, -12.55), TABLE = V(-2.2, FY + 0.76, -12.05);          // beside the table, clear of the pendant lamp
+  const R_KITCH = V(-2.15, FY, -12.25), TABLE = V(-2.51, FY + 0.76, -11.87);          // paper lies ON the table (0.25 m from its centre, r 0.52), within his reach
   const R_COUCH = AP.couchSeat.clone().setY(FY), BUD_COUCH = AP.couchSeat.clone().setY(FY).add(V(-0.75, 0, 0));   // on the seat (sit lowers the body)
   const doorIn1 = B1.door.clone(), doorIn2 = B2.door.clone();
   const R_B1 = B1.counterSpot.clone(), R_B2 = B2.counterSpot.clone();
@@ -63,6 +63,8 @@ export function makeDirection(W) {
   const CELL = PO.cellInside.clone();
   const P_DESK = OF.deskChair.clone(), P_BOARD = OF.boardSpot.clone();
   const head = (p, h = 1.42) => p.clone().add(V(0, h, 0));
+  const HD = head(R_KITCH), PAPER = TABLE.clone().add(V(0, 0.006, 0)), LROW = V(-2.73, FY + 0.8, -11.55);
+  const PHOTO = R_KITCH.clone().add(V(-0.25, 1.0, 0.3));
   const FRONT = V(Math.sin(PO.yaw.cellInside), 0, Math.cos(PO.yaw.cellInside));
   const BOOK_OF = OF.deskTop.clone().add(V(0.25, 0.01, 0.05));
   const FRONTP = V(Math.sin(OF.facing.deskChair), 0, Math.cos(OF.facing.deskChair));
@@ -92,18 +94,28 @@ export function makeDirection(W) {
     // 3 REWIND: rocket backwards out of the bank, across the street, up and in through his window
     K(S.youSee + 0.15, doorIn1.clone().add(V(0, 1.8, 0.9)), head(R_B1, 1.3), 60),
     K(S.youSee + 0.35, C.bank1Sidewalk.clone().add(V(0, 2.5, -2.5)), C.apartmentWindowOutside, 62),
-    K(S.youSee + 0.6, C.apartmentWindowOutside.clone().add(V(0, 0.2, 1.4)), C.apartmentWindowInside, 64),
-    K(S.youSee + 0.8, AP.windowInside.clone().add(V(-0.3, 0.1, -0.1)), TABLE, 66),
+    K(S.youSee + 0.55, V(0, 4.5, -6.3), V(0, 4.5, -10.5), 64),                       // lined up with the open lower sash (y 4.0-4.98)
+    K(S.youSee + 0.7, V(0, 4.5, -8.75), V(-0.6, 4.5, -11.5), 66),                     // through the opening, never through the glass
+    K(S.youSee + 0.85, V(-0.2, 4.6, -9.9), TABLE, 66),
     // 3-8 KITCHEN: writing, figuring, six lemons, polaroid, burning eyes (a new framing every ~1.5-2 s, always moving)
-    F(S.write - 0.2, R_KITCH, yK, 0.45, 3.0, 1.35, 62),
-    F(S.write + 1.1, R_KITCH, yK, 0.25, 2.5, 1.55, 58),
-    F(S.figured, R_KITCH, yK, 0.55, 2.9, 1.3, 62),
-    F(S.figured + 1.6, R_KITCH, yK, 0.35, 2.6, 1.35, 60),
-    F(S.tested, R_KITCH, yK, 0.6, 2.8, 1.45, 62),
-    F(S.tested + 1.4, R_KITCH, yK, 0.4, 2.45, 1.4, 58),
-    F(S.grabs, R_KITCH, yK, 0.5, 2.7, 1.3, 60),
-    F(S.grabs + 1.3, R_KITCH, yK, 0.3, 2.4, 1.32, 56),
-    F(S.burning, R_KITCH, yK, 0.45, 2.5, 1.35, 56),
+    // kitchen: a new framing every ~0.7-1 s: macro inserts on the paper / lemons / photo, push-ins on his face, pull-outs, orbits
+    K(5.7, PAPER.clone().add(V(0.35, 0.45, 0.55)), PAPER, 50),                          // "invisible ink": onto the paper + lemon
+    K(6.6, PAPER.clone().add(V(0.1, 0.35, 0.25)), PAPER, 42),                           // "Write with it": macro, juice going on
+    K(7.4, PAPER.clone().add(V(0.25, 0.5, 0.45)), PAPER.clone().add(V(0, 0.1, 0)), 48),  // "paper stays blank": rising out
+    K(7.95, HD.clone().add(V(0.55, -0.1, 1.6)), HD.clone().add(V(0, -0.35, 0)), 55),     // he holds the blank sheet up
+    K(8.6, HD.clone().add(V(0.3, 0.05, 1.4)), HD, 50),                                  // "figured": push to the face + bulb
+    K(9.6, HD.clone().add(V(-0.55, 0.0, 1.5)), HD, 52),                                  // "coat your face": orbit to the other side
+    K(10.5, HD.clone().add(V(0.2, -0.6, 2.3)), HD.clone().add(V(0, -0.2, 0)), 60),       // "cameras can't see you": quick pull-out
+    K(11.5, HD.clone().add(V(0.9, -0.75, 1.9)), HD, 58),                                 // "tested it": low angle
+    K(12.5, LROW.clone().add(V(0.35, 0.3, 0.45)), LROW, 46),                             // "six lemons": macro on the row
+    K(13.1, HD.clone().add(V(0.3, 0.25, 1.3)), HD.clone().add(V(0, 0.25, 0)), 52),       // tilt up to the squeeze over his head
+    K(13.9, HD.clone().add(V(-0.3, 0.1, 1.5)), HD, 54),
+    K(14.5, HD.clone().add(V(0.6, -0.3, 1.4)), HD.clone().add(V(0, -0.3, 0)), 54),       // "grabs a Polaroid"
+    K(15.2, HD.clone().add(V(0.3, -0.05, 1.45)), HD, 52),                                // "snaps a selfie": flash
+    K(16.0, PHOTO.clone().add(V(0.1, 0.15, 0.55)), PHOTO, 44),                           // "comes out blank": close on the photo
+    K(16.9, HD.clone().add(V(0.4, -0.2, 1.7)), HD.clone().add(V(0, -0.2, 0)), 56),
+    K(17.5, HD.clone().add(V(0.15, 0, 1.35)), HD, 48),                                  // "eyes are burning": push in
+    K(18.4, HD.clone().add(V(0.6, -0.4, 2.2)), HD.clone().add(V(0, -0.3, 0)), 58),       // "the plan works": pull out, thumbs up
     F(S.buddy - 0.3, R_KITCH, yK, 0.7, 2.9, 1.4, 60),
     // 9 BUDDY on the couch (pan across the room)
     K(S.buddy + 0.5, AP.views.couchFromTv.pos.clone().add(V(-0.6, 0, 0)), head(BUD_COUCH, 0.95), 60),
@@ -207,7 +219,7 @@ export function makeDirection(W) {
     } else if (t < S.doesnt + 0.35) {                                              // apartment (morning)
       R.pos = R_KITCH.clone(); R.rot = yK;
       wet = sm(S.tested + 0.3, S.grabs - 0.2, t);
-      const paper = TABLE.clone().add(V(0.05, 0.01, -0.05));
+      const paper = TABLE.clone().add(V(0, 0.006, 0));
       R.s = {
         expression: step([[0, "neutral"], [S.write, "smug"], [T(31), "proud"], [S.figured, "skeptical"], [T(36), "happy"], [S.tested, "smug"],
           [T(53), "laugh"], [S.grabs, "neutral"], [T(65) + 0.1, "shock"], [T(68), "proud"], [S.burning, "sleepy"], [T(75), "happy"]], t),
