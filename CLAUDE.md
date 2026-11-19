@@ -140,6 +140,9 @@ sending; never hand over a video with a known problem as if it were finished.
   right after the hook). In the first 15 s: the camera never rests (no `stop: true` keys, no slow holds), a new picture or
   strong action at least every ~1.5–2 s, no raw cuts, no voice pauses, a sound accent on every beat. Check the opening's
   motion/energy curve on the low-res render before anything else.
+- **Face library (user, 2026-11-19):** never give everyone the same face. Cast faces per video from
+  `production/visual_library/FACES.md` (21 face sets, preview `faces_sheet.png`); no two main characters share a face set; add new
+  identities with `kit/tools/face_library.py` + `kit/tools/face_index.py`.
 - **Characters on screens and prints (user, 2026-11-19):** TV/CCTV/photo/newspaper/book images of people are real renders of our
   locked characters into the texture (render target → screen), never placeholder drawings.
 - **3D depth and texture (user, 2026-11-17):** the world behind the characters must read as fully 3D and highly textured, not flat

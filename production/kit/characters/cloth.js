@@ -48,6 +48,13 @@ function painter(type, col, accent, seed) {
       g.lineWidth = 0.0007; g.strokeStyle = C ? "rgba(0,0,0,0.07)" : "rgba(0,0,0,0.25)"; g.beginPath();   // jersey weave
       for (let x = 0; x < Wm; x += 0.003) { g.moveTo(x, 0); g.lineTo(x, Hm); }
       g.stroke();
+    } else if (type === "jersey") {                                      // tracksuit / sweat cloth: fine ribs + soft nap (2026-11-19b)
+      const P = 0.0055;
+      for (let x = 0; x < Wm; x += P) {
+        g.fillStyle = C ? css(col, 0.9) : grey(0.32); g.fillRect(x, 0, P * 0.28, Hm);
+        g.fillStyle = C ? css(col, 1.04) : grey(0.66); g.fillRect(x + P * 0.4, 0, P * 0.35, Hm);
+      }
+      for (let k = 0; k < Wm * Hm * 30000; k++) { const x = r() * Wm, y = r() * Hm; g.fillStyle = C ? css(col, 0.86 + r() * 0.2) : grey(0.3 + r() * 0.4); g.fillRect(x, y, 0.0015, 0.004); }
     } else if (type === "oilskin") {                                      // waxed cloth: soft creases
       for (let k = 0; k < Wm * Hm * 400; k++) {
         const x = r() * Wm, y = r() * Hm; g.lineWidth = 0.002 + r() * 0.003;

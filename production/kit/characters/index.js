@@ -60,9 +60,14 @@ function faceMat() {
     uniforms: {
       hc: { value: new THREE.Vector3() }, X: { value: new THREE.Vector3(1, 0, 0) }, Y: { value: new THREE.Vector3(0, 1, 0) }, Z: { value: new THREE.Vector3(0, 0, 1) },
       R: { value: R }, drop: { value: 0 }, ls: { value: 1 }, face: { value: null }, hasFace: { value: 0 }, k: { value: 0.95 }, GW: { value: 0.45 }, SHK: { value: 0.6 },
-      lit: { value: 0 }, skin: { value: new THREE.Vector3(...SKIN) }, ink: { value: new THREE.Vector3(0.11, 0.075, 0.06) } },
+      lit: { value: 0 }, skin: { value: new THREE.Vector3(...SKIN) }, ink: { value: new THREE.Vector3(0.11, 0.075, 0.06) },
+      wet: { value: 0 }, time: { value: 0 } },
     vertexShader: `varying vec3 wp; void main(){ vec4 w = modelMatrix*vec4(position,1.0); wp = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }`,
-    fragmentShader: `uniform vec3 hc,X,Y,Z,skin,ink; uniform float R,drop,ls,k,GW,lit,hasFace,SHK; uniform sampler2D face; varying vec3 wp;
+    // 2026-11-19b "lemon juice" look (wet 0..1): 3 thin ink drips drawn in the face drawing's 2D frame, like the drawing itself
+    // (no gloss, no highlight; coordinator: faces stay flat white drawings). The lemon-slice decal was removed (read as a monocle);
+    // state.lemonSlice is ignored. Edges anti-aliased with fwidth. With wet = 0 the output is unchanged.
+    fragmentShader: `uniform vec3 hc,X,Y,Z,skin,ink; uniform float R,drop,ls,k,GW,lit,hasFace,SHK,wet,time; uniform sampler2D face; varying vec3 wp;
+      float aa(float d, float fw){ return 1.0 - smoothstep(-fw, fw, d); }
       void main(){ vec3 d = wp-hc; float x = dot(d,X), y = dot(d,Y), z = dot(d,Z); float FS = 2.15*R;
         vec2 uv = vec2(x/FS+0.5, y/FS+0.5+drop/FS);
         vec4 f = (hasFace<0.5||uv.x<0.||uv.x>1.||uv.y<0.||uv.y>1.) ? vec4(0.) : texture2D(face, uv);
@@ -72,9 +77,36 @@ function faceMat() {
         f.rgb = mix(f.rgb, ink*0.45, smoothstep(0.04, 0.12, f.r-max(f.g,f.b)));             // red mouth inside -> black
         float sh = smoothstep(-0.25, 1.0, -ls*x/R); vec3 c = mix(skin, vec3(0.48,0.48,0.60), sh*abs(ls)*SHK);   // cool far-side fade
         float gl = smoothstep(-0.50, 1.0, ls*x/R)*0.85*GW*abs(ls); c = mix(c, vec3(1.0,0.68,0.30), gl);   // warm lamp side
+        float gain = 1.0;
+        if (wet > 0.001) {                                         // 2026-11-19b: juice drawn like the face drawing (ink drips)
+          vec2 q = vec2(x, y + drop) / R; float fw = max(1e-4, fwidth(q.x) + fwidth(q.y)) * 0.75;
+          float front = smoothstep(0.0, 0.2*R, z);
+          // 3 drips: thin warm-brown ink trail + outlined teardrop, deterministic loops in time (x0, top y, period s, offset s);
+          // each fades in at the top and out past the chin before it restarts -> never pops
+          for (int i = 0; i < 3; i++) {
+            float fi = float(i);
+            vec4 P = i == 0 ? vec4(-0.56, 0.40, 2.8, 0.0) : i == 1 ? vec4(0.60, 0.26, 3.3, 1.4) : vec4(-0.40, -0.40, 2.4, 0.8);
+            float ph = fract((time + P.w) / P.z);
+            float A = smoothstep(0.0, 0.10, ph) * (1.0 - smoothstep(0.70, 0.95, ph)) * smoothstep(0.1, 0.5, wet) * front;
+            float yb = P.y - (P.y + 1.05) * pow(ph, 1.25);                                  // drop centre runs down past the chin
+            float bx = P.x + 0.015 * sin(yb * 6.0 + fi * 2.1);
+            float r = 0.050;
+            float tw = 0.0;
+            float cx = P.x + 0.015 * sin(q.y * 6.0 + fi * 2.1);
+            float top = min(P.y, yb + 1.9 * r + 0.22);                                        // short trail (<= 0.22 R) above the drop
+            tw = 0.011 * (1.0 - smoothstep(top - 0.10, top + 0.01, q.y));                  // tapers to 0 at the top
+            float dT = max(abs(q.x - cx) - tw, max(yb + 1.9 * r - q.y, q.y - top));
+            vec2 dp = q - vec2(bx, yb);
+            float dDrop = dp.y > 1.9 * r ? length(dp - vec2(0.0, 1.9 * r)) : dp.y > 0.0 ? abs(dp.x) - r * (1.0 - dp.y / (1.9 * r)) : length(dp) - r;   // teardrop, closed tip
+            float ring = aa(abs(dDrop) - 0.011, fw);                                          // outline, same weight as the drawing
+            float inside = aa(dDrop, fw);
+            c = mix(c, vec3(1.0, 0.99, 0.95), A * inside);                                    // drop inside = paper white
+            c = mix(c, ink, A * max(ring, aa(dT, fw)));
+          }
+        }
         c = mix(c, f.rgb, f.a);
         c = mix(c, c*vec3(1.0,0.86,0.62), 0.45*lit);
-        gl_FragColor = vec4(pow(c, vec3(2.2))*k*(0.78 + 0.32*lit), 1.0);
+        gl_FragColor = vec4(pow(c, vec3(2.2))*k*(0.78 + 0.32*lit)*gain, 1.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }` });
@@ -286,7 +318,19 @@ export function armAt(keys, t, dur = 0.3) {
 }
 /** all arm poses (body-local, see poseTarget). Poses taking `target` (world Vector3) or `phase` (cycles, from time) are marked. */
 export const ARM_POSES = ["rest", "hip", "wave", "thumbChest", "shrug", "fold", "fingerUp", "present", "point*", "grab*", "poke*", "push*",
-  "pokeChest*", "hold", "crank*", "polish*", "pour", "slapKnee", "fistsUp", "mimic", "handshake", "climb*", "tapHead", "limp"];
+  "pokeChest*", "hold", "crank*", "polish*", "pour", "slapKnee", "fistsUp", "mimic", "handshake", "climb*", "tapHead", "limp",
+  // video 2 (2026-11-19)
+  "squeezeOverHead", "writeWithLemon*", "holdUp", "pointSelf", "selfie", "shakePhoto", "thumbsUp", "sniff", "carryBag", "knock*", "pressPlay*",
+  "facepalm", "readNewspaper", "chalkWrite*", "tapBoard*", "holdBook"];
+/** default head motion that goes with some poses, PER ARM (two-hand poses carry half each), summed over both arms and
+ *  weighted by the armAt blend -> continuous. Added to state.nod / state.tilt. Disable per arm with { headHint: false }. */
+const HEAD_HINT = { sniff: { nod: -0.10, tilt: 0.14 }, facepalm: { nod: 0.22, tilt: 0.05 }, readNewspaper: { nod: 0.03, tilt: 0 }, holdBook: { nod: 0.08, tilt: 0.02 },
+  writeWithLemon: { nod: 0.20, tilt: 0 }, selfie: { nod: -0.04, tilt: 0.10 }, squeezeOverHead: { nod: -0.04, tilt: 0 }, holdUp: { nod: -0.02, tilt: 0 } };
+function headHint(a, out = { nod: 0, tilt: 0 }, w = 1) {
+  if (!a) return out; const m = a.from && (a.mix ?? 1) < 1 ? Math.max(0, Math.min(1, a.mix ?? 1)) : 1;
+  const h = HEAD_HINT[a.pose]; if (h && a.headHint !== false) { out.nod += h.nod * w * m; out.tilt += h.tilt * w * m * (a.side ?? 1); }
+  if (m < 1) headHint(a.from, out, w * (1 - m)); return out;
+}
 
 // ---------------------------------------------------------------- outline ring seeds
 const seedPhases = (seed) => { const r = rng(Math.max(1, (seed | 0) % 2147483646) || 1); r(); return Array.from({ length: 7 }, () => r() * 6.283); };
@@ -367,6 +411,80 @@ function poseTarget(a, s, X) {
     }
     case "limp": {                                             // asleep / slumped: hands dropped beside the hips (on the floor when sitting)
       return { H: v3(s * 0.30, Math.max(X.floorB + 0.045, 0.62), 0.12), pole: v3(s * 0.7, 1.0, -0.1), tip: v3(s * 0.2, -0.3, 0.9).normalize(), curl: 0.6 };
+    }
+    // ---------------- 2026-11-19 (video 2) poses. All pure functions of (a, s, X); hands stay in front of / beside the body.
+    case "squeezeOverHead": {                                  // fist raised beside the top of the head, squeezing (phase = squeeze pulse)
+      const p = 0.5 - 0.5 * Math.cos(ph); const hc = X.hc;
+      const H = v3(hc.x + s * 0.27, Math.max(1.62, hc.y + 0.19) - 0.012 * p, hc.z + 0.02 + 0.01 * p);
+      return { H, pole: v3(s * 0.95, 1.35, -0.15), tip: v3(-s * 0.65, 0.55, 0.25).normalize(), curl: 1.25 + 0.5 * p, lift: 0.06, hookHead: true };
+    }
+    case "writeWithLemon": {                                   // hand writing on a table point (target = surface point), small loops (phase)
+      const C = T ? T.clone() : v3(s * 0.12, 0.80, 0.42);
+      const H = C.add(v3(0.045 * Math.sin(ph), 0.055 + 0.01 * Math.max(0, Math.sin(2 * ph)), 0.015 * Math.sin(2 * ph)));
+      return { H, pole: reachPole(H), tip: v3(-s * 0.25, -0.75, 0.55).normalize(), curl: 1.45 };
+    }
+    case "holdUp": {                                           // both hands hold a sheet up (a.height body-local y, a.spread half width)
+      const H = v3(s * (a.spread ?? 0.17), a.height ?? 1.22, a.dist ?? 0.40);
+      return { H, pole: v3(s * 0.85, 0.85, -0.1), tip: v3(-s * 0.25, 0.92, 0.12).normalize(), curl: 1.0 };
+    }
+    case "pointSelf": {                                        // index pointing at own face (a.at = "face") or chest ("chest")
+      if (a.at === "chest") return { H: v3(s * 0.10, 1.00, 0.27), pole: v3(s * 0.7, 0.85, 0.1), tip: v3(-s * 0.35, 0.15, -0.92).normalize(), curl: 0 };
+      const hc = X.hc; const H = v3(hc.x + s * 0.25, hc.y - 0.14, hc.z + 0.24);
+      return { H, pole: v3(s * 0.8, 0.8, 0.05), tip: v3(hc.x - H.x, hc.y - 0.04 - H.y, hc.z - H.z).normalize(), curl: 0, hookHead: true };
+    }
+    case "selfie": {                                           // arm out front-side at face height holding a camera turned to the face
+      const H = v3(s * 0.43, a.height ?? 1.36, 0.27);           // out to the side so the hand + camera never cover the face
+      return { H, pole: v3(s * 0.9, 0.8, -0.35), tip: v3(-s * 0.35, 0.85, -0.2).normalize(), curl: 1.55 };
+    }
+    case "shakePhoto": {                                       // photo held out, shaken side to side (phase = shakes)
+      const H = v3(s * (0.28 + 0.05 * Math.sin(ph)), 1.10 + 0.015 * Math.sin(2 * ph), 0.30);
+      return { H, pole: v3(s * 0.85, 0.8, -0.15), tip: v3(-s * 0.15, 0.95, 0.25).normalize(), curl: 1.5 };
+    }
+    case "thumbsUp": {                                         // fist forward at chest height, hook straight up (reads as the thumb)
+      const H = v3(s * 0.21, 1.20, 0.36);
+      return { H, pole: v3(s * 0.85, 0.75, -0.1), tip: v3(-s * 0.05, 1, 0.12).normalize(), curl: 0.1 };
+    }
+    case "sniff": {                                            // hand wafting the air toward the nose (phase = waft); pair with head hint
+      const hc = X.hc; const w = Math.sin(ph);
+      const H = v3(hc.x + s * (0.27 + 0.03 * w), hc.y - 0.16, hc.z + 0.24 + 0.03 * w);
+      return { H, pole: v3(s * 0.8, 0.8, 0.0), tip: v3(-s * 0.7, 0.45 + 0.15 * w, 0.2).normalize(), curl: 0.7, hookHead: true };
+    }
+    case "carryBag": {                                         // forearm across the belly, bag held in the crook against the chest
+      return { H: v3(s * 0.02, 0.95, 0.28), pole: v3(s * 0.9, 0.8, -0.2), tip: v3(-s * 0.7, 0.55, 0.3).normalize(), curl: 1.3 };
+    }
+    case "knock": {                                            // fist knocks on a target (door), one knock per phase unit (contact at integers)
+      const C = T ? T.clone() : v3(s * 0.15, 1.15, 0.50); const dir = C.clone().sub(S).normalize();
+      const back = 0.07 * Math.pow(Math.abs(Math.sin(Math.PI * (a.phase || 0))), 0.8);
+      return { H: C.addScaledVector(dir, -(0.035 + back)), pole: reachPole(T || C), tip: dir.clone().add(v3(0, 0.6, 0)).normalize(), curl: 1.8 };
+    }
+    case "pressPlay": {                                        // finger tip onto a button (a.amount 0 = hovering 6 cm back .. 1 = pressed)
+      const C = T ? T.clone() : v3(s * 0.12, 1.0, 0.45); const dir = C.clone().sub(S); dir.y -= 0.15; dir.normalize();
+      const back = 0.06 * (1 - Math.max(0, Math.min(1, a.amount ?? 1)));
+      return { H: C.addScaledVector(dir, -(HOOK + back)), pole: reachPole(C), tip: dir, curl: 0 };
+    }
+    case "facepalm": {                                         // palm/hook across the eyes (use with the head hint: nod forward)
+      const hc = X.hc; const H = v3(hc.x + s * 0.07, hc.y + 0.01, hc.z + R + 0.05);
+      return { H, pole: v3(s * 0.8, 0.9, 0.1), tip: v3(-s * 0.85, 0.45, -0.1).normalize(), curl: 0.6, lift: 0.04, hookHead: true };
+    }
+    case "readNewspaper": {                                    // both hands on the paper's side edges; a.amount 0 = up reading .. 1 = lowered
+      const k = Math.max(0, Math.min(1, a.amount ?? 0));
+      const H = v3(s * (a.spread ?? 0.26), 1.30 - 0.32 * k, 0.40 - 0.04 * k);
+      return { H, pole: v3(s * 0.9, 0.8, -0.15), tip: v3(-s * 0.15, 0.95, 0.15).normalize(), curl: 0.9 };
+    }
+    case "chalkWrite": case "tapBoard": {                      // hand on a vertical board point (target, a.normal = board normal, world)
+      const C = T ? T.clone() : v3(s * 0.15, 1.30, 0.45);
+      const nrm = X.normal ? X.normal.clone().normalize() : v3(S.x - C.x, 0, S.z - C.z).normalize();
+      const u = v3(0, 1, 0).cross(nrm); if (u.lengthSq() < 1e-6) u.set(1, 0, 0); u.normalize();
+      if (pose === "tapBoard") {
+        const back = 0.05 * Math.pow(Math.abs(Math.sin(Math.PI * (a.phase || 0))), 0.8);
+        return { H: C.addScaledVector(nrm, HOOK * 0.8 + back), pole: reachPole(C), tip: nrm.clone().negate(), curl: 0 };
+      }
+      const H = C.addScaledVector(nrm, 0.05).addScaledVector(u, 0.04 * Math.sin(ph)).add(v3(0, 0.025 * Math.sin(2 * ph), 0));
+      return { H, pole: reachPole(H), tip: nrm.clone().negate().add(v3(0, 0.5, 0)).normalize(), curl: 1.5 };
+    }
+    case "holdBook": {                                         // open book held in both hands at chest height (hands under the outer edges)
+      const H = v3(s * (a.spread ?? 0.14), a.height ?? 1.06, 0.33);
+      return { H, pole: v3(s * 0.85, 0.8, -0.15), tip: v3(-s * 0.55, 0.45, 0.4).normalize(), curl: 1.0 };
     }
     case "rest": default: { const H = v3(s * 0.265, 0.72, 0.06); return { H, pole: v3(s * 0.45, 0.95, -0.45), tip: inward(H), curl: 1 }; }
   }
@@ -455,6 +573,37 @@ function buildHat(type, spec, seed, headG) {
       add(new THREE.SphereGeometry(R * 0.07, 12, 8), new THREE.MeshStandardMaterial({ color: hc.clone().multiplyScalar(0.8), roughness: 0.7 }), 0.005, [0, R * 1.13, 0]);
       return { topCut: 0.38 * R, taper: false };
     }
+    case "backcap": {                                           // baseball cap worn BACKWARDS (2026-11-19b): crown, small strap opening
+      const c = fab("plain", hc, hc, seed + 13, 2, 0.4, 900, 1.2);   // low over the brow, long peak hanging down over the neck
+      add(capGeometry(R * 1.04, R * 1.10, R * 1.03, R * 0.40, -0.06), c);
+      const dark = new THREE.MeshStandardMaterial({ color: hc.clone().multiplyScalar(0.72), roughness: 0.7 });
+      const peak = add(new THREE.CylinderGeometry(R * 1.0, R * 1.0, R * 0.05, 40, 1, false, Math.PI / 2, Math.PI), dark, 0.010, [0, R * 0.50, -R * 0.30], [-0.55, 0, 0]);
+      peak.scale.set(1.04, 1, 1.25);
+      add(new THREE.SphereGeometry(R * 0.07, 12, 8), dark, 0.005, [0, R * 1.11, 0]);
+      // strap opening: small dark half-moon just above the cap edge + the thin strap across its bottom
+      const hole = add(new THREE.CylinderGeometry(R * 0.13, R * 0.13, R * 0.02, 24, 1, false, -Math.PI / 2, Math.PI),
+        new THREE.MeshStandardMaterial({ color: toColor(spec.openingColor ?? "#2e2119"), roughness: 0.9 }), 0.004, [0, R * 0.42, R * 0.94], [-Math.PI / 2, 0, 0]);
+      hole.scale.set(1, 1, 1);
+      add(new THREE.BoxGeometry(R * 0.34, R * 0.045, R * 0.03), dark, 0.004, [0, R * 0.435, R * 0.955], [-0.42, 0, 0]);
+      return { topCut: 0.40 * R, taper: false };
+    }
+    case "police": {                                            // police peaked cap: navy crown, black band + peak, silver shield badge
+      const crown = fab("plain", hc, hc, seed + 14, 2, 0.4, 900, 1);
+      add(bandGeometry(R * 1.02, R * 0.36, R * 1.07, R * 0.64, R * 0.06), fab("plain", toColor(spec.bandColor ?? "#121418"), null, seed + 15, 2, 0.3, 900, 1));
+      const top = add(new THREE.CylinderGeometry(R * 1.18, R * 1.08, R * 0.20, 64, 1), crown, 0.012, [0, R * 0.76, -R * 0.03], [-0.12, 0, 0]);
+      top.scale.set(1, 1, 0.98);
+      const peakMat = new THREE.MeshStandardMaterial({ color: toColor(spec.peakColor ?? "#1a1512"), roughness: 0.55, metalness: 0 });
+      const peak = add(new THREE.CylinderGeometry(R * 1.02, R * 1.02, R * 0.04, 40, 1, false, -Math.PI / 2, Math.PI), peakMat, 0.010, [0, R * 0.40, R * 0.10], [0.32, 0, 0]);
+      peak.scale.set(0.96, 1, 1.15);
+      const metal = new THREE.MeshStandardMaterial({ color: toColor(spec.badgeColor ?? "#cfd4dc"), roughness: 0.5, metalness: 0.4 });
+      const sh = new THREE.Shape(); const B = R * 0.16;                                     // shield
+      sh.moveTo(0, B); sh.quadraticCurveTo(B * 0.5, B * 1.05, B * 0.85, B * 0.8); sh.lineTo(B * 0.8, 0); sh.quadraticCurveTo(B * 0.6, -B * 0.75, 0, -B * 1.1);
+      sh.quadraticCurveTo(-B * 0.6, -B * 0.75, -B * 0.8, 0); sh.lineTo(-B * 0.85, B * 0.8); sh.quadraticCurveTo(-B * 0.5, B * 1.05, 0, B);
+      const bg = new THREE.ExtrudeGeometry(sh, { depth: R * 0.03, bevelEnabled: true, bevelThickness: R * 0.012, bevelSize: R * 0.012, bevelSegments: 2, curveSegments: 8 });
+      add(bg, metal, 0.005, [0, R * 0.60, R * 1.02], [-0.18, 0, 0]);
+      add(new THREE.TorusGeometry(R * 1.055, R * 0.020, 6, 72, Math.PI * 0.9), metal, 0, [0, R * 0.42, 0], [Math.PI / 2 + 0.06, 0, Math.PI * 0.05]);
+      return { topCut: 0.40 * R, taper: false };
+    }
     default: return null;
   }
 }
@@ -487,7 +636,22 @@ export async function createCharacter(spec = {}) {
     g.beginPath(); Lp.forEach((p, i) => (i ? g.lineTo(...p) : g.moveTo(...p))); for (let i = Rp.length - 1; i >= 0; i--) g.lineTo(...Rp[i]); g.closePath();
     return [Lp, Rp];
   };
-  const overlay = (panel || apron) ? (g, Wm, Hm, mode) => {
+  const stripes = coat.sideStripes ? toColor(coat.sideStripes) : null, hem = coat.hem ? toColor(coat.hem) : null;
+  const overlay = (panel || apron || stripes || hem) ? (g, Wm, Hm, mode) => {
+    if (hem) {                                              // ribbed hem band at the bottom of the torso (same v convention as the apron)
+      const cc = hem.clone().convertLinearToSRGB(), dk = hem.clone().multiplyScalar(0.72).convertLinearToSRGB(), H0 = 0.055;
+      for (const y0 of [0, Hm - H0]) {                       // both ends: hem band + ribbed collar band (the texture's v runs bottom->top)
+        g.fillStyle = mode === "col" ? `rgb(${cc.r * 255 | 0},${cc.g * 255 | 0},${cc.b * 255 | 0})` : "#9a9a9a"; g.fillRect(0, y0, Wm, H0);
+        g.fillStyle = mode === "col" ? `rgb(${dk.r * 255 | 0},${dk.g * 255 | 0},${dk.b * 255 | 0})` : "#3a3a3a";
+        for (let x = 0; x < Wm; x += 0.009) g.fillRect(x, y0, 0.003, H0);
+        g.fillRect(0, y0 === 0 ? H0 - 0.003 : y0, Wm, 0.003);
+      }
+    }
+    if (stripes) {                                          // tracksuit: two stripes down each side seam (u = 0 and 0.5 = the sides)
+      const cc = stripes.clone().convertLinearToSRGB();
+      g.fillStyle = mode === "col" ? `rgb(${cc.r * 255 | 0},${cc.g * 255 | 0},${cc.b * 255 | 0})` : "#a8a8a8";
+      for (const c0 of [0, 0.5 * Wm, Wm]) for (const o of [-0.016, 0.004]) g.fillRect(c0 + o, 0, 0.012, Hm);
+    }
     if (panel) {
       g.save(); frontShape(g, Wm, Hm, (t) => 0.06 + 0.03 * Math.max(0, t)); g.clip();
       const S = 0.013, c1 = panel, c2 = panel.clone().multiplyScalar(coat.panelPlain ? 0.94 : 0.72);
@@ -508,16 +672,22 @@ export async function createCharacter(spec = {}) {
     }
   } : null;
   const ctype = coat.type || "plain";
-  const tex = fabricTextures(["knit", "check", "tweed", "stripes", "plain"].includes(ctype) ? ctype : "plain",
+  const tex = fabricTextures(["knit", "check", "tweed", "stripes", "plain", "jersey"].includes(ctype) ? ctype : "plain",
     coatCol, ctype === "stripes" ? accent : accent.clone().lerp(coatCol, ctype === "check" ? 0.25 : 0.5), seed * 13 + 1, T.per, T.Lv, 1700, overlay);
   const coatMat = new THREE.MeshStandardMaterial({ map: tex.map, bumpMap: tex.bumpMap, bumpScale: ctype === "knit" ? 1.3 : 1.2, roughness: 0.88, metalness: 0 });
   const torso = new THREE.Mesh(T.geo, coatMat); torso.castShadow = true; torso.receiveShadow = true; body.add(torso); addHull(torso, 0.012);
 
-  const accMat = new THREE.MeshStandardMaterial({ color: accent, roughness: 0.8 });
+  const accMat = new THREE.MeshStandardMaterial({ color: accent, roughness: coat.accentRough ?? 0.8 });
   if (coat.placket !== false) { const placket = new THREE.Mesh(surfaceBox(0, TZ - 0.01, 0.032, 0.46, 0.014), accMat); placket.castShadow = true; body.add(placket); addHull(placket, 0.004); }
+  if (coat.zip) {                                          // dark zip line along the placket (tracksuit)
+    const zm = new THREE.MeshStandardMaterial({ color: toColor(coat.zip), roughness: 0.6 });
+    const z = new THREE.Mesh(surfaceBox(0, TZ - 0.01, 0.007, 0.45, 0.003, 0.002 + 0.014), zm); body.add(z);
+    const pull = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.026, 0.006), zm); const py = TOP - 0.13; pull.position.set(0, py, frontZ(0, py) + 0.022); body.add(pull);
+  }
   if (coat.buttons !== null) {
     const metal = !!coat.buttonMetal;
-    const btnMat = new THREE.MeshStandardMaterial({ color: toColor(coat.buttons ?? "#2a1a10"), roughness: metal ? 0.3 : 0.45, metalness: metal ? 0.8 : 0 });
+    const brass = coat.buttonMetal === "matte";              // 2026-11-19b: matte brass (no glints that read as lights)
+    const btnMat = new THREE.MeshStandardMaterial({ color: toColor(coat.buttons ?? "#2a1a10"), roughness: brass ? 0.62 : metal ? 0.3 : 0.45, metalness: brass ? 0.35 : metal ? 0.8 : 0 });
     const btnGeo = new THREE.SphereGeometry(1, 14, 10);
     const xs = coat.double ? [-0.055, 0.055] : [0];
     for (const bx of xs) for (let k = 0; k < 3; k++) {
@@ -527,6 +697,31 @@ export async function createCharacter(spec = {}) {
   }
   if (coat.pockets !== false) for (const s of [-1, 1]) {
     const pk = new THREE.Mesh(surfaceBox(s * 0.105, TZ - 0.10, 0.085, 0.04, 0.012), accMat); pk.castShadow = true; body.add(pk); addHull(pk, 0.004);
+  }
+  // 2026-11-19 (video 2): tie, bow tie, chest badge, zip (all 3D, on the torso front, never in front of the chin)
+  if (coat.tie) {                                          // long tie: knot just under the chin + blade following the coat front
+    const tm = new THREE.MeshStandardMaterial({ color: toColor(coat.tie), roughness: 0.55 });
+    const y0 = TOP - 0.115, y1 = TZ - 0.13, pts = [];
+    for (let i = 0; i <= 12; i++) { const t = i / 12, y = y0 + (y1 - y0) * t, w = 0.016 + 0.020 * Math.min(1, t * 1.6); pts.push([w, y]); }
+    const sh = new THREE.Shape(); sh.moveTo(-pts[0][0], pts[0][1]); for (const [w, y] of pts) sh.lineTo(-w, y); sh.lineTo(0, y1 - 0.035); for (let i = pts.length - 1; i >= 0; i--) sh.lineTo(pts[i][0], pts[i][1]); sh.closePath();
+    const g = new THREE.ExtrudeGeometry(sh, { depth: 0.008, bevelEnabled: false, curveSegments: 4 }); const p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i); p.setZ(i, frontZ(x, y) + 0.004 + p.getZ(i)); }
+    g.computeVertexNormals(); const tie = new THREE.Mesh(g, tm); tie.castShadow = true; body.add(tie); addHull(tie, 0.004);
+    const knot = new THREE.Mesh(new THREE.SphereGeometry(0.024, 16, 10), tm); knot.scale.set(1.1, 1.0, 0.6); knot.position.set(0, y0 + 0.012, frontZ(0, y0 + 0.012) + 0.010);
+    knot.castShadow = true; body.add(knot); addHull(knot, 0.004);
+  }
+  if (coat.bowtie) {                                       // bow tie: two wings + knot, just under the chin line
+    const bm = new THREE.MeshStandardMaterial({ color: toColor(coat.bowtie), roughness: 0.55 }); const y = TOP - 0.115, z = frontZ(0, y) + 0.012;
+    for (const s of [-1, 1]) { const w = new THREE.Mesh(new THREE.ConeGeometry(0.030, 0.055, 4, 1), bm); w.rotation.set(0, Math.PI / 4, s * Math.PI / 2); w.scale.set(1, 1, 0.45);
+      w.position.set(s * 0.030, y, z); w.castShadow = true; body.add(w); addHull(w, 0.004); }
+    const k = new THREE.Mesh(new THREE.SphereGeometry(0.014, 12, 8), bm); k.position.set(0, y, z + 0.004); k.scale.set(1, 1, 0.7); body.add(k); addHull(k, 0.003);
+  }
+  if (coat.badge) {                                        // metal shield badge on the left chest
+    const mm = new THREE.MeshStandardMaterial({ color: toColor(coat.badge), roughness: 0.5, metalness: 0.4 }); const B = 0.026;
+    const sh = new THREE.Shape(); sh.moveTo(0, B); sh.quadraticCurveTo(B * 0.5, B * 1.05, B * 0.85, B * 0.8); sh.lineTo(B * 0.8, 0); sh.quadraticCurveTo(B * 0.6, -B * 0.75, 0, -B * 1.1);
+    sh.quadraticCurveTo(-B * 0.6, -B * 0.75, -B * 0.8, 0); sh.lineTo(-B * 0.85, B * 0.8); sh.quadraticCurveTo(-B * 0.5, B * 1.05, 0, B);
+    const bx = 0.105, by = TZ + 0.13; const bd = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.004, bevelEnabled: true, bevelThickness: 0.002, bevelSize: 0.002, bevelSegments: 2, curveSegments: 8 }), mm);
+    bd.position.set(bx, by, frontZ(bx, by) + 0.004); bd.rotation.y = Math.atan2(bx / (TW * TW), frontZ(bx, by) / (TD * TD)) * 0.9; bd.castShadow = true; body.add(bd); addHull(bd, 0.003);
   }
   if (coat.collar) {                                       // sailor collar flap (square, on the back/shoulders, readable from the side)
     const cm = new THREE.MeshStandardMaterial({ color: toColor(coat.collar), roughness: 0.8 });
@@ -538,14 +733,32 @@ export async function createCharacter(spec = {}) {
   const headMat = faceMat();
   const head = new THREE.Mesh(new THREE.SphereGeometry(R, 64, 48), headMat); head.scale.set(1, 0.99, 0.96); head.castShadow = true;
   headG.add(head); addHull(head, 0.006);
-  let topCut = null, taper = false;
+  let topCut = null, taper = false, hairMat = null, hairRough = 0.75;
   const nHead = headG.children.length;
   const hatInfo = hatType ? buildHat(hatType === "bowler" ? "beanie" : hatType, spec, seed, headG) : null;
   if (hatInfo) { topCut = hatInfo.topCut; taper = hatInfo.taper; }
   else if (hair) {
     const hcol = toColor(hair.color ?? "#7a5232"); const ht = fabricTextures("strands", hcol, hcol, seed * 5 + 2, 1.9, 0.5, 900);
-    const hm = new THREE.MeshStandardMaterial({ map: ht.map, bumpMap: ht.bumpMap, bumpScale: 2, roughness: 0.75 });
-    const h = new THREE.Mesh(capGeometry(R * 1.05, R * 1.04, R * 1.0, R * 0.30, 0.55), hm); h.castShadow = true; headG.add(h); addHull(h, 0.012);
+    const style = hair.style || "bowl";
+    const hm = new THREE.MeshStandardMaterial({ map: ht.map, bumpMap: ht.bumpMap, bumpScale: 2, roughness: style === "slick" ? 0.58 : 0.75, metalness: 0 });
+    hairMat = hm; hairRough = hm.roughness;
+    const addH = (geo, pos = null, rot = null, scl = null) => { const h = new THREE.Mesh(geo, hm); h.castShadow = true; h.receiveShadow = true;
+      if (pos) h.position.set(...pos); if (rot) h.rotation.set(...rot); if (scl) h.scale.set(...scl); headG.add(h); addHull(h, 0.012); return h; };
+    if (style === "bowl") addH(capGeometry(R * 1.05, R * 1.04, R * 1.0, R * 0.30, 0.55));     // video 1 (engineer): unchanged
+    else if (style === "short") addH(capGeometry(R * 1.035, R * 1.06, R * 1.02, R * 0.36, 0.48));   // short crop, hairline higher
+    else if (style === "slick") {                                                          // slicked back, glossy, a low quiff at the front
+      addH(capGeometry(R * 1.04, R * 1.10, R * 1.03, R * 0.34, 0.50));
+      addH(new THREE.SphereGeometry(R * 0.42, 32, 16), [R * 0.10, R * 0.98, R * 0.30], [0.5, 0.2, 0], [1.25, 0.42, 0.9]);
+    } else if (style === "bun") {                                                          // neat bun: smooth cap + round bun high at the back
+      addH(capGeometry(R * 1.045, R * 1.07, R * 1.03, R * 0.30, 0.52));
+      addH(new THREE.SphereGeometry(R * 0.36, 32, 20), [0, R * 1.02, -R * 0.62]);
+    } else if (style === "professor") {                                                    // receding: thin top, puffy tufts over the ears
+      addH(capGeometry(R * 1.03, R * 1.05, R * 1.02, R * 0.42, 0.62));
+      for (const s of [-1, 1]) addH(new THREE.SphereGeometry(R * 0.30, 24, 16), [s * R * 0.86, R * 0.42, -R * 0.20], [0, 0, s * 0.4], [0.7, 1.0, 1.15]).userData.noDrop = true;
+    } else if (style === "bob") {                                                          // chin-length bob: cap + side panels framing the face
+      addH(capGeometry(R * 1.06, R * 1.07, R * 1.04, R * 0.28, 0.52));
+      for (const s of [-1, 1]) addH(new THREE.SphereGeometry(R * 0.5, 24, 20), [s * R * 0.82, R * 0.12, -R * 0.32], [0, 0, 0], [0.40, 1.2, 0.70]).userData.noDrop = true;
+    }
     topCut = 0.44 * R; taper = true;
   }
   // front hat / hair vertices (headG-local): each frame the face drawing drops just enough that brows + eyes stay below the lowest
@@ -553,7 +766,7 @@ export async function createCharacter(spec = {}) {
   // fully readable under every hat; hair fringe over the engineer's eye from a high 3/4 camera)
   const hatPts = [];
   for (const m of headG.children.slice(nHead)) {
-    if (!m.geometry) continue; m.updateMatrix(); const P = m.geometry.attributes.position, v = new THREE.Vector3();
+    if (!m.geometry || m.userData.noDrop) continue; m.updateMatrix(); const P = m.geometry.attributes.position, v = new THREE.Vector3();
     const step = Math.max(1, Math.floor(P.count / 500));
     for (let i = 0; i < P.count; i += step) { v.fromBufferAttribute(P, i).applyMatrix4(m.matrix); if (v.z > (hatInfo ? 0.2 : -0.4) * R && v.y > -0.3 * R) hatPts.push(v.x, v.y, v.z); }
   }
@@ -604,7 +817,7 @@ export async function createCharacter(spec = {}) {
     const P = poseTarget(a, s, Xc); const lift = P.lift || 0; S.y += lift;
     clampTorso(P.H, 0.035); clampHead(P.H, hcBody, 0.03);
     const E = new THREE.Vector3(), Hc = new THREE.Vector3(); ik(S, P.H, P.pole, E, Hc);
-    return { S, H: Hc, E, tip: P.tip, curl: P.curl ?? 1, lift };
+    return { S, H: Hc, E, tip: P.tip, curl: P.curl ?? 1, lift, hookHead: !!P.hookHead };
   }
   function solveArm(s, a) {
     const A = arms[s]; let q = solveOne(s, a);
@@ -613,7 +826,7 @@ export async function createCharacter(spec = {}) {
       const S = p.S.clone().lerp(q.S, w), H = p.H.clone().lerp(q.H, w), Eb = p.E.clone().lerp(q.E, w);
       const E = new THREE.Vector3(), Hc = new THREE.Vector3(); ik(S, H, Eb, E, Hc);
       const tip = p.tip.clone().lerp(q.tip, w); if (tip.lengthSq() < 1e-6) tip.copy(q.tip); tip.normalize();
-      q = { S, H: Hc, E, tip, curl: p.curl + (q.curl - p.curl) * w };
+      q = { S, H: Hc, E, tip, curl: p.curl + (q.curl - p.curl) * w, hookHead: p.hookHead || q.hookHead };
     }
     const { S, E } = q; let Hc = q.H;
     clampTorso(E, 0.03); clampHead(E, hcBody, 0.03); clampTorso(Hc, 0.035); clampHead(Hc, hcBody, 0.03);
@@ -632,7 +845,7 @@ export async function createCharacter(spec = {}) {
     for (let i = 0; i < NH; i++) {
       const u = i / (NH - 1);
       hookPts[i].copy(Hn).addScaledVector(td, HOOK * u * (1 - 0.22 * c * u)).addScaledVector(back, HOOK * 0.42 * c * u * u).addScaledVector(upb, 0.006 * Math.min(1, c) * Math.sin(Math.PI * u));
-      if (i > 0) clampTorso(hookPts[i], 0.033);
+      if (i > 0) { clampTorso(hookPts[i], 0.033); if (q.hookHead) clampHead(hookPts[i], hcBody, 0.022); }
     }
     A.tip.copy(hookPts[NH - 1]); A.mid.copy(hookPts[(NH - 1) >> 1]);
     // hand frame: x = finger direction, y = back toward the wrist (orthogonal), with a tiny up bias so it never degenerates
@@ -673,7 +886,9 @@ export async function createCharacter(spec = {}) {
       const hipY = HIP + (seat + 0.025 - HIP) * k;
       hip.position.set(0, hipY + (state.bob || 0) / SC, 0);
       hip.rotation.set(state.lean || 0, state.turn || 0, -(state.side || 0));
-      neck.rotation.set(state.nod || 0, 0, -(state.tilt || 0));
+      const hh = headHint(state.armL, headHint(state.armR, { nod: 0, tilt: 0 }), 1);
+      const nodT = (state.nod || 0) + hh.nod, tiltT = (state.tilt || 0) + hh.tilt;
+      neck.rotation.set(nodT, 0, -tiltT);
       floorB = HIP - hipY - (state.bob || 0) / SC;
       headG.position.copy(HEAD_BASE); root.updateWorldMatrix(true, true);
       if (cam) {
@@ -701,7 +916,10 @@ export async function createCharacter(spec = {}) {
         }
         if (yb < 1e8) drop = Math.min(0.30 * R, Math.max(drop, 0.335 * R - yb / SC));   // brow top sits at +0.30 R in the drawing
       }
-      u.drop.value = (drop + (state.nod || 0) * 0.10 * R * (hatArr.length ? 0 : 1)) * SC;
+      u.drop.value = (drop + nodT * 0.10 * R * (hatArr.length ? 0 : 1)) * SC;
+      // lemon-juice look (pure function of state + time): wet 0..1 = ink drips
+      const wet = Math.max(0, Math.min(1, state.wet ?? spec.wet ?? 0)); u.wet.value = wet; u.time.value = opts.time ?? state.time ?? 0;
+      if (hairMat) hairMat.roughness = hairRough + (0.5 - hairRough) * wet;           // slightly damp hair (no gloss)
       u.ls.value = key ? Math.max(-1, Math.min(1, tmp.subVectors(key, hcW).normalize().dot(X) * 2.5)) : 0.6;
       u.lit.value = opts.faceLit ?? 0; u.k.value = opts.faceGain ?? 0.95; u.GW.value = opts.faceGlow ?? 0.45; u.SHK.value = opts.faceShade ?? 0.6;
       const fname = faceName(faceSet, state.expression || "neutral", state.mouth || "", state.gaze || "");
@@ -754,6 +972,17 @@ export async function createCharacter(spec = {}) {
       const z = new THREE.Vector3().crossVectors(x, y);
       const quaternion = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
       return { position: body.localToWorld(A.mid.clone()), grip: body.localToWorld(A.H.clone()), tip: body.localToWorld(A.tip.clone()), quaternion, scale: SC };
+    },
+    /** frame between both hands for two-hand props (newspaper, book, sheet): position = midpoint of the two hook middles,
+     *  quaternion: local +X = from the right hand to the left hand, +Y = body up (orthogonalised), +Z = X × Y (out of the chest).
+     *  width = distance between the hooks (scale a prop to it), left/right = each handFrame position. */
+    bothHandsFrame() {
+      const L = ch.handFrame("L"), Rr = ch.handFrame("R");
+      const x = L.position.clone().sub(Rr.position); const width = x.length(); if (width < 1e-6) x.set(1, 0, 0); x.normalize();
+      const y = new THREE.Vector3(0, 1, 0).transformDirection(body.matrixWorld); y.addScaledVector(x, -y.dot(x)); if (y.lengthSq() < 1e-8) y.set(0, 1, 0); y.normalize();
+      const z = new THREE.Vector3().crossVectors(x, y);
+      const quaternion = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
+      return { position: L.position.clone().add(Rr.position).multiplyScalar(0.5), quaternion, width, left: L.position, right: Rr.position, scale: SC };
     },
     /** which hand ("L"/"R") is on the target's side (rule: point with the near hand) */
     nearHand(targetWorld) { root.updateWorldMatrix(true, true); return body.worldToLocal(targetWorld.clone()).x >= 0 ? "L" : "R"; },

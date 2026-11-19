@@ -1,7 +1,12 @@
 // Ready character specs (v12 look). Colours are sRGB hex. Each has ONE signature item readable across the room.
 // coat: { type: knit|check|tweed|stripes|plain, color, accent, shirtPanel?, panelPlain?, apron?, buttons? (null = none),
 //         buttonMetal?, double?, placket? (false = none), pockets? (false = none), collar? (sailor collar colour) }
-// hat: beanie|captain|sailor|beret|oilskin|toque|bonnet|cap (+ hatColor, hatTop, peakColor, badgeColor, pomColor, bandColor, flowerColors)
+//         2026-11-19: sideStripes (tracksuit stripe colour), tie (colour), bowtie (colour), badge (metal shield colour, left chest)
+// hat: beanie|captain|sailor|beret|oilskin|toque|bonnet|cap|backcap|police (+ hatColor, hatTop, peakColor, badgeColor, pomColor, bandColor,
+//      flowerColors, strapColor)
+// hair: { color, style: bowl (default, video 1) | short | slick (glossy + quiff) | bun | professor (receding, ear tufts) | bob }
+// wet: default "lemon juice" amount 0..1 (state.wet overrides per frame) = thin ink drips on the face drawing (lemonSlice removed 2026-11-19b)
+// coat 2026-11-19b: type jersey, zip (zip line colour), hem (ribbed hem band colour), buttonMetal: "matte" (matte brass)
 // scale: whole-body scale (kid 0.75). faceSmooth: px blur used to round the face drawing's joins (default 4).
 export const KEEPER = {
   id: "keeper", faceSet: "keeper", seed: 11, faceSmooth: 8,                            // 8 px: rounds the zig-zag beard edge
@@ -54,4 +59,55 @@ export const KID = {                                                            
   hat: "cap", hatColor: "#d6322a",
 };
 
-export const SPECS = { keeper: KEEPER, engineer: ENGINEER, captain: CAPTAIN, sailorA: SAILOR_A, sailorB: SAILOR_B, fisher: FISHER, baker: BAKER, lady: LADY, kid: KID };
+// ---- video 2 (lemon-juice robber, Pittsburgh 1995). Sets: street brick red/orange, kitchen teal/mint, living room deep blue,
+//      bank cream marble + deep green + brass, police grey-blue, office dark wood + green chalkboard.
+export const ROBBER = {                                                                 // lemon-yellow 1990s tracksuit, white side stripes, short dark hair
+  id: "robber", faceSet: "lib_youngman_b", seed: 131,
+  // 2026-11-19b (coordinator style fixes): jersey cloth (fine ribs + bump), true lemon yellow kept below bloom, matte off-white
+  // placket with a dark zip line, matte off-white side stripes, ribbed hem band
+  coat: { type: "jersey", color: "#e2c216", accent: "#d9d3c2", sideStripes: "#ddd7c6", zip: "#3a2a1c", hem: "#b8980e", buttons: null, pockets: false },
+  hat: null, hair: { color: "#2a1d16", style: "short" },
+};
+export const BUDDY = {                                                                  // green flannel shirt, red baseball cap worn backwards
+  id: "buddy", faceSet: "folkm", seed: 137,
+  coat: { type: "check", color: "#2f6b3a", accent: "#173a22", buttons: "#3a2410", pockets: true },
+  hat: "backcap", hatColor: "#cf2a26", strapColor: "#efe9dc",
+};
+export const TELLER_1 = {                                                               // coral cardigan over a white blouse, glasses, neat bun
+  id: "teller1", faceSet: "lib_woman_glasses", seed: 149,
+  coat: { type: "knit", color: "#e2735e", accent: "#a84a3a", shirtPanel: "#e2dccd", panelPlain: true, buttons: "#3a2410", placket: false },
+  hat: null, hair: { color: "#6b3a22", style: "bun" },
+};
+export const TELLER_2 = {                                                               // royal-blue blazer, cream blouse, gold chain-ish buttons, black bob
+  id: "teller2", faceSet: "lib_woman_a", seed: 157,
+  coat: { type: "tweed", color: "#2c4fa8", accent: "#1d3676", shirtPanel: "#e2d8bf", panelPlain: true, buttons: "#8a6a2c", buttonMetal: "matte", placket: false },
+  hat: null, hair: { color: "#1c1512", style: "bob" },
+};
+export const COP = {                                                                    // navy uniform, gold badge + metal buttons, police cap, moustache face (folkm, no beard)
+  id: "cop", faceSet: "lib_toughguy", seed: 163,
+  coat: { type: "jersey", color: "#1f2b4a", accent: "#151d33", badge: "#b8923a", buttons: "#8a6a2c", buttonMetal: "matte", pockets: true },
+  hat: "police", hatColor: "#1c2642", badgeColor: "#b8923a",
+};
+export const COP_2 = {                                                                  // light-blue shirt, navy tie, silver badge, police cap (clean face)
+  id: "cop2", faceSet: "lib_pencil", seed: 173,
+  coat: { type: "jersey", color: "#8fb2d8", accent: "#5f82aa", tie: "#1a2238", badge: "#a9adb4", placket: false, buttons: null, pockets: true },
+  hat: "police", hatColor: "#1c2642", badgeColor: "#a9adb4",
+};
+export const NEWS_ANCHOR = {                                                            // charcoal suit, white shirt, red tie, slick glossy hair
+  id: "anchor", faceSet: "lib_youngman_a", seed: 181,
+  coat: { type: "tweed", color: "#34384a", accent: "#24273a", shirtPanel: "#e0dcd2", panelPlain: true, tie: "#c3262c", placket: false, buttons: null, pockets: false },
+  hat: null, hair: { color: "#2a1c14", style: "slick" },
+};
+export const WEATHERMAN = {                                                             // loud orange/teal check jacket, yellow tie, short sandy hair
+  id: "weatherman", faceSet: "lib_goatee", seed: 191,
+  coat: { type: "check", color: "#e88a2a", accent: "#2a8a8a", shirtPanel: "#e0dcd2", panelPlain: true, tie: "#e2bf22", placket: false, buttons: null, pockets: false },
+  hat: null, hair: { color: "#b0864a", style: "short" },
+};
+export const PROFESSOR = {                                                              // brown tweed jacket, red bow tie, glasses, grey receding hair
+  id: "professor", faceSet: "lib_oldman_handlebar", seed: 197,
+  coat: { type: "tweed", color: "#8a6440", accent: "#4e3420", shirtPanel: "#ddd6c6", panelPlain: true, bowtie: "#b3262a", placket: false, buttons: "#3a2414", pockets: true },
+  hat: null, hair: { color: "#c9c7c2", style: "professor" },
+};
+
+export const SPECS = { keeper: KEEPER, engineer: ENGINEER, captain: CAPTAIN, sailorA: SAILOR_A, sailorB: SAILOR_B, fisher: FISHER, baker: BAKER, lady: LADY, kid: KID,
+  robber: ROBBER, buddy: BUDDY, teller1: TELLER_1, teller2: TELLER_2, cop: COP, cop2: COP_2, anchor: NEWS_ANCHOR, weatherman: WEATHERMAN, professor: PROFESSOR };
