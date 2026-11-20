@@ -260,7 +260,7 @@ export async function buildCity(opts = {}) {
     if (floor) piece("wood", roundedBox(W, 0.06, d, 0.01), [x, floor, zBack + d / 2], 0, { color: "#6a4a34", F });
   };
   /** Window: real hole + painted frame + sashes + glass + stone sill + lintel + room behind. kind "card" | "fly" (no room, glass in its own mesh) | "open" */
-  const windowAt = (F, holes, x, y0, w, h, { kind = "card", frameCol = "#efe6d4", lintel = "soldier", arch = false, sill = true, T = 0.42, lit = null, cell = null } = {}) => {
+  const windowAt = (F, holes, x, y0, w, h, { kind = "card", frameCol = "#efe6d4", lintel = "soldier", arch = false, sill = true, T = 0.42, lit = null, cell = null, roomD = 0.55 } = {}) => {
     holes.push(arch ? archHole(x - w / 2, y0, x + w / 2, y0 + h - w / 2) : rectHole(x - w / 2, y0, x + w / 2, y0 + h));
     const fz = -0.13, fd = 0.1, ft = 0.075;
     const fr = (ww, hh, px, py, pz = fz, d = fd) => piece("paint", roundedBox(ww, hh, d, 0.012), [px, py, pz], 0, { uv: "box", tile: 1, color: frameCol, F });
@@ -274,7 +274,7 @@ export async function buildCity(opts = {}) {
       const g = arch ? new THREE.ShapeGeometry(archShape(x - w / 2, y0, x + w / 2, y0 + hh), 16) : new THREE.PlaneGeometry(w, h);
       if (!arch) g.translate(x, y0 + h / 2, fz - 0.02); else { boxUV(g, 1); g.translate(0, 0, fz - 0.02); }
       g.applyMatrix4(F); tint(g, C(0xffffff)); B.glass.push(g);
-      const isLit = lit ?? r() < 0.55; roomBox(F, x, y0, w, h, -T - 0.55, cell ?? Math.floor(r() * (isLit ? 3 : 4)), isLit ? "winLit" : "winDark");
+      const isLit = lit ?? r() < 0.55; roomBox(F, x, y0, w, h, -T - roomD, cell ?? Math.floor(r() * (isLit ? 3 : 4)), isLit ? "winLit" : "winDark");
     }
     if (sill) { piece("stone", roundedBox(w + 0.26, 0.09, T * 0.55 + 0.1, 0.02), [x, y0 - 0.045, -T * 0.55 / 2 + 0.08], 0, { tile: 1.2, color: "#d8cfc0", jitter: 0.08, F }); streak(F, x, y0 - 0.1, w * 0.8, 1.1 + r() * 0.6); }
     if (lintel === "soldier" && !arch) { const n = Math.round((w + 0.3) / 0.09);
@@ -396,7 +396,7 @@ export async function buildCity(opts = {}) {
     holes.push(rectHole(-3.45, 0.62, -2.15, 3.35));
     for (const x of [-5.6, 0, 2.8, 5.6]) windowAt(F, holes, x, 1.2, 1.15, 1.7, { lintel: "stone", frameCol: fc, T });
     // 2nd floor (his floor, room behind is interiors agent A): only his window is a real open hole, the others are cards
-    for (const x of [-5.6, -2.8, 2.8, 5.6]) windowAt(F, holes, x, 4.3, 1.15, 1.7, { lintel: "soldier", frameCol: fc, T });
+    for (const x of [-5.6, -2.8, 2.8, 5.6]) windowAt(F, holes, x, 4.3, 1.15, 1.7, { lintel: "soldier", frameCol: fc, T, roomD: Math.abs(x) < 5.2 ? -0.1 : 0.55 });   // never poke into his apartment (interior wall face z -9.0)
     holes.push(rectHole(-0.75, 4.0, 0.75, 6.0));
     for (const x of [-5.6, -2.8, 0, 2.8, 5.6]) windowAt(F, holes, x, 7.6, 1.15, 1.75, { lintel: "soldier", frameCol: fc, T });
     wall(F, "brick", w, 0, h, holes, { T, color: "#ffd6bc" });

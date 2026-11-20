@@ -564,3 +564,41 @@ Every video follows these rules.
   a character watching a TV/object looks at it — by moving only the PUPILS (features stay centred). Every acting state sets
   `lookAt` (world point; the character code picks the _L/_R pupils automatically). Looking into the camera only when the beat
   is aimed at the viewer (e.g. smiling/waving at the security camera). Gaze drawings shift the pupils ~0.12 R so it reads.
+
+---
+## 2026-11-19 — Lessons from video 2 (lemon juice robber): do NOT repeat
+User notes collected while making video 2. Each one cost a re-render; check them BEFORE the first full render.
+**Cast (faces, bodies, clothes)**
+- Faces come from the face library (`visual_library/FACES.md`, 21+ sets). No two main characters share a face set; new identities
+  go into the library (`kit/tools/face_library.py` + `face_index.py`). No beards on new casts unless the story needs one (moustache set `folkm`).
+- Bodies and clothes are built FOR EACH VIDEO (coat type/colour/pattern, hat, hair, accessory, scale). Never reuse a previous
+  video's character as-is: same style rules, new person.
+- Everyone must look like our locked style (white face disc, ink ring, slim capsule body, hook hands, L feet). TV/news/photo
+  people are real renders of real specs, never simplified drawings.
+- Eye-lines: `lookAt` on every character in every beat (talking partners look at each other). Pupils must read clearly at render size.
+**Props and hands**
+- A prop never pops between a surface and a hand. The hand reaches it first, then the prop eases from its resting pose into
+  the hand (`blendFrom` in v02 Video.jsx `attach`), and back the same way when put down. Keep the prop in frame while it is picked up.
+- Props rest ON their surface (contact checked in a still); nothing floats, nothing sinks.
+- The device a character uses (camera, phone) is in frame when the action happens (show it from behind/over the shoulder).
+**Camera and transitions**
+- A scene with one character for a long time must keep switching: a new framing every ~0.7–1.5 s (macro insert on the prop,
+  push-in on the face, quick pull-out, over-the-shoulder, low angle, orbit). Never one long static shot.
+- Push-ins and pull-outs are smooth splines; a push into a small object (photo, screen, page) arcs over anything in the way
+  (never through a body), rolls so the object ends upright, and lands square-on and filling the frame.
+- Flights through windows go through the OPEN part (sash), never through glass. Long jumps between far places use a designed
+  swap (dive into a page/screen that fills the frame, rewind, whip), never a flight through empty void.
+**Story pictures**
+- The video's key idea must read in ONE glance in its picture (video 2: the selfie face is pure glowing white, no features).
+  Check that still on purpose before rendering.
+- Gag overlays (idea bulb etc.) float clearly ABOVE the head with space, big, glowing.
+**Seated characters**
+- Seated people are framed 3/4 (not straight-on behind a table) so bent knees and feet on the floor read; straight-on, the shins
+  overlap the seat front and look sunk into the couch. Check with a side view (`--props='{"dbgCam":{...}}'` in v02 Video.jsx).
+**Process**
+- Heads 18–25% of frame even in "close" coverage; check contact sheets at full-video level for this.
+- Library first for SFX/music/visuals; every new SFX/music goes into `asset_library` with an INDEX row the same day; every new
+  builder goes into `visual_library/INDEX.md` before the video is delivered.
+- Two surfaces from different builders must never share a plane (video 2: the street facade's back face and the apartment's
+  window wall both at z -9.0 flickered once the camera saw that wall at an angle). When an interior sits inside an exterior
+  shell, offset one face by ≥2–3 cm and make sure facade "room cards" behind windows never poke into the real interior.

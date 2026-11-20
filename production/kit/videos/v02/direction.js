@@ -55,7 +55,7 @@ export function makeDirection(W) {
   const FY = 3.6;
   // ---- spots
   const R_KITCH = V(-2.15, FY, -12.25), TABLE = V(-2.51, FY + 0.76, -11.87);          // paper lies ON the table (0.25 m from its centre, r 0.52), within his reach
-  const R_COUCH = AP.couchSeat.clone().setY(FY), BUD_COUCH = AP.couchSeat.clone().setY(FY).add(V(-0.75, 0, 0));   // on the seat (sit lowers the body)
+  const R_COUCH = AP.couchSeat.clone().setY(FY).add(V(0, 0, -0.24)), BUD_COUCH = AP.couchSeat.clone().setY(FY).add(V(-0.75, 0, -0.24));   // hips on the front of the seat, feet on the floor in front   // on the seat (sit lowers the body)
   const doorIn1 = B1.door.clone(), doorIn2 = B2.door.clone();
   const R_B1 = B1.counterSpot.clone(), R_B2 = B2.counterSpot.clone();
   const R_SEAT = PO.interrogationChairRobber.clone(), COP_SEAT = PO.interrogationChairCop.clone();
@@ -65,6 +65,7 @@ export function makeDirection(W) {
   const head = (p, h = 1.42) => p.clone().add(V(0, h, 0));
   const HD = head(R_KITCH), PAPER = TABLE.clone().add(V(0, 0.006, 0)), LROW = V(-2.73, FY + 0.8, -11.55);
   const PHOTO = R_KITCH.clone().add(V(-0.25, 1.0, 0.3));
+  const LH = TABLE.clone().add(V(0.17, 0.008, -0.13)), POL = TABLE.clone().add(V(-0.25, 0.006, -0.2));   // lemon half + Polaroid resting on the table
   const FRONT = V(Math.sin(PO.yaw.cellInside), 0, Math.cos(PO.yaw.cellInside));
   const BOOK_OF = OF.deskTop.clone().add(V(0.25, 0.01, 0.05));
   const FRONTP = V(Math.sin(OF.facing.deskChair), 0, Math.cos(OF.facing.deskChair));
@@ -101,7 +102,7 @@ export function makeDirection(W) {
     // kitchen: a new framing every ~0.7-1 s: macro inserts on the paper / lemons / photo, push-ins on his face, pull-outs, orbits
     K(5.7, PAPER.clone().add(V(0.35, 0.45, 0.55)), PAPER, 50),                          // "invisible ink": onto the paper + lemon
     K(6.6, PAPER.clone().add(V(0.1, 0.35, 0.25)), PAPER, 42),                           // "Write with it": macro, juice going on
-    K(7.4, PAPER.clone().add(V(0.25, 0.5, 0.45)), PAPER.clone().add(V(0, 0.1, 0)), 48),  // "paper stays blank": rising out
+    K(7.4, PAPER.clone().add(V(0.3, 0.6, 0.8)), PAPER.clone().add(V(0, 0.22, 0.12)), 50),   // follows the sheet as it lifts  // "paper stays blank": rising out
     K(7.95, HD.clone().add(V(0.55, -0.1, 1.6)), HD.clone().add(V(0, -0.35, 0)), 55),     // he holds the blank sheet up
     K(8.6, HD.clone().add(V(0.3, 0.05, 1.4)), HD, 50),                                  // "figured": push to the face + bulb
     K(9.6, HD.clone().add(V(-0.55, 0.0, 1.5)), HD, 52),                                  // "coat your face": orbit to the other side
@@ -110,16 +111,17 @@ export function makeDirection(W) {
     K(12.5, LROW.clone().add(V(0.35, 0.3, 0.45)), LROW, 46),                             // "six lemons": macro on the row
     K(13.1, HD.clone().add(V(0.3, 0.25, 1.3)), HD.clone().add(V(0, 0.25, 0)), 52),       // tilt up to the squeeze over his head
     K(13.9, HD.clone().add(V(-0.3, 0.1, 1.5)), HD, 54),
-    K(14.5, HD.clone().add(V(0.6, -0.3, 1.4)), HD.clone().add(V(0, -0.3, 0)), 54),       // "grabs a Polaroid"
-    K(15.2, HD.clone().add(V(0.3, -0.05, 1.45)), HD, 52),                                // "snaps a selfie": flash
-    K(16.0, PHOTO.clone().add(V(0.1, 0.15, 0.55)), PHOTO, 44),                           // "comes out blank": close on the photo
+    K(14.4, HD.clone().add(V(0.3, -0.35, 2.4)), HD.clone().add(V(-0.1, -0.4, 0)), 58),   // "grabs a Polaroid" off the table (wide enough)
+    K(15.0, HD.clone().add(V(-0.75, 0.3, -1.05)), HD.clone().add(V(-0.25, -0.1, 0.35)), 60),  // over his right shoulder: camera + flash
+    K(15.5, HD.clone().add(V(-0.7, 0.25, -0.85)), HD.clone().add(V(-0.3, -0.1, 0.4)), 56),   // (then the live push into the selfie, Video.jsx)
     K(16.9, HD.clone().add(V(0.4, -0.2, 1.7)), HD.clone().add(V(0, -0.2, 0)), 56),
     K(17.5, HD.clone().add(V(0.15, 0, 1.35)), HD, 48),                                  // "eyes are burning": push in
     K(18.4, HD.clone().add(V(0.6, -0.4, 2.2)), HD.clone().add(V(0, -0.3, 0)), 58),       // "the plan works": pull out, thumbs up
     F(S.buddy - 0.3, R_KITCH, yK, 0.7, 2.9, 1.4, 60),
     // 9 BUDDY on the couch (pan across the room)
-    K(S.buddy + 0.5, AP.views.couchFromTv.pos.clone().add(V(-0.6, 0, 0)), head(BUD_COUCH, 0.95), 60),
-    K(S.doesnt - 0.2, AP.views.couchFromTv.pos.clone().add(V(-0.75, 0.05, 0.35)), head(BUD_COUCH, 0.95), 56),
+    // 3/4 from his left, past the coffee table: bent knees and both feet on the floor in front of the couch stay readable
+    K(S.buddy + 0.5, BUD_COUCH.clone().add(V(-1.6, 1.15, -2.95)), BUD_COUCH.clone().add(V(0.1, 0.6, 0)), 58),
+    K(S.doesnt - 0.2, BUD_COUCH.clone().add(V(-1.4, 1.1, -2.6)), BUD_COUCH.clone().add(V(0.1, 0.62, 0)), 54),
     // 10 FLIGHT: out of the window, down the street, through bank 1's doors, into the CCTV view
     K(S.doesnt + 0.25, AP.windowInside.clone().add(V(0, 0.15, -0.6)), C.apartmentWindowOutside, 64),
     K(S.doesnt + 0.5, C.apartmentWindowOutside.clone().add(V(0, 0.2, 1.5)), C.bank1Door, 62),
@@ -145,8 +147,8 @@ export function makeDirection(W) {
     K(T(127), AP.views.tvClose.pos.clone().add(V(0, 0.1, 0.5)), AP.tvScreen, 46),
     K(T(133), AP.views.tvClose.pos, AP.tvScreen, 42),
     // 14 the weather + the knock: swing past his face to the door
-    K(S.police - 0.3, AP.views.couchFromTv.pos.clone().add(V(0.3, 0.05, 0.4)), head(R_COUCH, 0.95), 56),
-    K(T(140), AP.views.couchFromTv.pos.clone().add(V(0.6, 0.1, 0.7)), head(R_COUCH, 0.95), 54),
+    K(S.police - 0.3, R_COUCH.clone().add(V(1.6, 1.2, -3.0)), R_COUCH.clone().add(V(-0.1, 0.6, 0)), 62),     // 3/4 from his right: feet on the floor
+    K(T(140), R_COUCH.clone().add(V(1.45, 1.15, -2.7)), R_COUCH.clone().add(V(-0.1, 0.62, 0)), 58),
     K(T(144), AP.views.doorClose.pos, AP.views.doorClose.target, 52),
     K(S.tape - 0.2, AP.views.doorClose.pos.clone().add(V(0.15, 0.05, 0.4)), AP.views.doorClose.target, 48),
     // 15 FLIGHT to the police station, into the interrogation room
@@ -208,6 +210,7 @@ export function makeDirection(W) {
       sm(S.waves + 0.05, S.waves + 0.3, t) * (1 - sm(S.night - 0.05, S.night + 0.2, t)));
     fx.rewind = sm(S.youSee - 0.25, S.youSee, t) * (1 - sm(S.youSee + 0.65, S.youSee + 0.95, t));
     fx.whip = sm(S.cell - 0.12, S.cell + 0.02, t) * (1 - sm(S.cell + 0.1, S.cell + 0.32, t));
+    fx.whip = Math.max(fx.whip, sm(16.78, 16.88, t) * (1 - sm(16.92, 17.1, t)));   // whip out of the selfie insert
 
     const z = zoneAt(t);
     // ================= ROBBER =================
@@ -225,23 +228,31 @@ export function makeDirection(W) {
           [T(53), "laugh"], [S.grabs, "neutral"], [T(65) + 0.1, "shock"], [T(68), "proud"], [S.burning, "sleepy"], [T(75), "happy"]], t),
         mouth: t >= S.burning && t < T(75) ? "_blink" : blink([7.0, 9.4, 12.2]),
         lookAt: t < S.figured ? paper : t < T(38) ? head(R_KITCH, 1.25).add(V(0, 0, 1)) : t < S.tested ? cam : t < S.grabs ? head(R_KITCH, 1.9) : t < T(65) ? live.handPos("robber", "R") : cam,
-        armR: armAt([[0, { pose: "rest" }], [S.write - 0.2, { pose: "writeWithLemon", target: paper, phase: t * 2.4 }],
-          [T(30), { pose: "holdUp", height: 1.0 }], [S.figured, { pose: "pointSelf", at: "face" }], [T(41), { pose: "point", target: cam }],
-          [S.tested, { pose: "squeezeOverHead", phase: t * 2.2 }], [S.grabs, { pose: "selfie", height: 1.0 }], [T(65) + 0.2, { pose: "shakePhoto", phase: t * 3 }],
-          [S.burning, { pose: "fistsUp", phase: t * 2.4 }], [T(76), { pose: "thumbsUp" }], [S.buddy + 0.6, { pose: "hip" }]], t, 0.42),
-        armL: armAt([[0, { pose: "rest" }], [T(30), { pose: "holdUp", height: 1.0 }], [S.figured, { pose: "rest" }],
+        // every object is picked up and put down by a hand (no prop appears or vanishes)
+        armR: armAt([[0, { pose: "rest" }], [S.write - 0.55, { pose: "grab", target: LH.clone().add(V(0, 0.03, 0)) }],
+          [S.write - 0.15, { pose: "writeWithLemon", target: paper, phase: t * 2.4 }], [T(30) - 0.6, { pose: "grab", target: LH.clone().add(V(0, 0.03, 0)) }],
+          [T(30) - 0.28, { pose: "grab", target: paper.clone().add(V(-0.1, 0.01, 0.12)) }], [T(30) + 0.05, { pose: "holdUp", height: 1.0 }],
+          [S.figured - 0.4, { pose: "grab", target: paper.clone().add(V(-0.1, 0.01, 0.12)) }], [S.figured - 0.05, { pose: "pointSelf", at: "face" }],
+          [T(41), { pose: "point", target: cam }], [S.tested, { pose: "squeezeOverHead", phase: t * 2.2 }],
+          [S.grabs - 0.35, { pose: "grab", target: POL.clone().add(V(0, 0.07, 0)) }], [S.grabs + 0.05, { pose: "selfie", height: 1.45 }],
+          [S.burning, { pose: "fistsUp", phase: t * 2.4 }], [T(76), { pose: "thumbsUp" }], [S.buddy + 0.6, { pose: "hip" }]], t, 0.32),
+        armL: armAt([[0, { pose: "rest" }], [T(30) - 0.28, { pose: "grab", target: paper.clone().add(V(0.1, 0.01, 0.12)) }], [T(30) + 0.05, { pose: "holdUp", height: 1.0 }],
+          [S.figured - 0.4, { pose: "grab", target: paper.clone().add(V(0.1, 0.01, 0.12)) }], [S.figured - 0.05, { pose: "rest" }],
           [S.tested, { pose: "squeezeOverHead", phase: t * 2.2 + 0.5 }], [S.grabs, { pose: "hip" }], [S.burning, { pose: "fistsUp", phase: t * 2.4 + 0.4 }],
-          [T(76), { pose: "hip" }]], t, 0.42),
+          [T(76), { pose: "hip" }]], t, 0.32),
         lean: t >= S.write && t < T(30) ? 0.14 : 0, nod: t >= S.write && t < T(30) ? 0.12 : 0,
       };
-      if (t >= S.write - 0.2 && t < T(30)) props.lemonHalf = { holder: "robber", side: "R" };
-      if (t >= T(30) && t < S.figured) props.inkPaper = { twoHands: "robber" }; else props.inkPaper = { place: paper, rot: 0.1 };
+      props.lemonHalf = t >= S.write - 0.2 && t < T(30) - 0.42 ? { holder: "robber", side: "R" } : { place: LH, rot: 0.4 };
+      // both hooks reach the near edge (T(30)-0.28), then the sheet eases off the table into the hands (no jump), and back down the same way
+      { const up = sm(T(30) - 0.3, T(30) + 0.05, t) * (1 - sm(S.figured - 0.45, S.figured - 0.1, t));
+        props.inkPaper = up > 0.001 ? { twoHands: "robber", blendFrom: { place: paper, rot: 0.1 }, k: up } : { place: paper, rot: 0.1 }; }
       if (t >= S.tested && t < S.grabs) { props.lemonA = { holder: "robber", side: "R" }; props.lemonB = { holder: "robber", side: "L" }; }
-      if (t >= S.grabs && t < T(65) + 0.2) props.polaroid = { holder: "robber", side: "R" };
-      if (t >= T(64) && t < S.burning + 0.2) props.photo = { holder: "robber", side: "R", eject: t < T(65) + 0.2 };
+      props.polaroid = t >= S.grabs - 0.1 && t < S.burning ? { holder: "robber", side: "R" } : t < S.grabs ? { place: POL, rot: 2.6 } : { place: POL, rot: 2.6 };
+      props.polaroidEject = sm(T(63), T(64) + 0.3, t);                        // the selfie slides out of the camera's front slot
+      props.selfieDevelop = sm(T(64) + 0.2, T(69), t);
       fx.flash = sm(T(62) - 0.02, T(62) + 0.03, t) * (1 - sm(T(62) + 0.05, T(62) + 0.3, t));
       if (t >= S.tested && t < S.grabs) props.squirt = { at: head(R_KITCH, 1.95), k: ((t - S.tested) * 1.4) % 1 };
-      if (t >= S.figured && t < T(38)) overlays.push({ kind: "bulb", at: head(R_KITCH, 1.85), t0: S.figured });
+      if (t >= S.figured && t < T(38)) overlays.push({ kind: "bulb", at: head(R_KITCH, 1.98), t0: S.figured });
       if (t >= S.burning && t < T(75)) overlays.push({ kind: "tears", at: head(R_KITCH, 1.42), t0: S.burning });
     } else if (t < S.bank2 + 0.2) {                                               // bank 1: walks in, smiles at the camera
       const k = sm(T(96) - 0.1, T(99) + 0.2, t); R.pos = doorIn1.clone().lerp(R_B1, k); R.rot = k < 0.97 ? faceTo(doorIn1, R_B1) : yB1;

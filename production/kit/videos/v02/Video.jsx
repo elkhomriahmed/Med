@@ -1,7 +1,7 @@
 // Video 2 composition: one connected Pittsburgh block (street, apartment, 2 banks, police station) + the professor's office,
 // the cast, props in hands, real-character renders on the TV/CCTV/newspaper/textbook, designed transitions, captions, sound.
 import React, { useEffect, useRef, useState } from "react";
-import { AbsoluteFill, Audio, continueRender, delayRender, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Audio, continueRender, delayRender, getInputProps, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import * as THREE from "three";
 import { createLook } from "../../world/look.js";
 import { buildCity } from "../../world/city/index.js";
@@ -55,9 +55,15 @@ async function build(canvas, W, H) {
   // props
   const P = {
     lemonHalf: PV.createLemonHalf({ seed: 3 }), lemonA: PV.createLemon({ seed: 4 }), lemonB: PV.createLemon({ seed: 5 }), lemonHand: PV.createLemon({ seed: 6 }),
-    polaroid: PV.createPolaroidCamera(), photo: PV.createPolaroidPhoto(), inkPaper: PV.createInkPaper({ text: "MONEY" }), lemonBag: PV.createLemonBag({ lemons: 5 }),
+    polaroid: null, photo: PV.createPolaroidPhoto(), inkPaper: PV.createInkPaper({ text: "MONEY" }), lemonBag: PV.createLemonBag({ lemons: 5 }),
     squirt: PV.createJuiceSquirt({ seed: 7 }), newspaperCell: null, newspaperOffice: null, textbookCell: null, textbookOffice: null,
   };
+  // the selfie: a real render from the Polaroid's lens of that moment (flash blows out his face)
+  const SELF = 384, selfieCanvas = Object.assign(document.createElement("canvas"), { width: SELF, height: SELF });
+  const selfieTex = new THREE.CanvasTexture(selfieCanvas); selfieTex.colorSpace = THREE.SRGBColorSpace;
+  const selfieRT = new THREE.WebGLRenderTarget(SELF, SELF, { colorSpace: THREE.SRGBColorSpace }), selfieCam = new THREE.PerspectiveCamera(44, 1, 0.03, 60);
+  const selfieBuf = new Uint8Array(SELF * SELF * 4);
+  P.polaroid = PV.createPolaroidCamera({ photoImage: selfieTex });
   const lemonRow = PV.createLemonRow(6); lemonRow.position.set(-2.95, 3.6 + 0.76, -11.55); scene.add(lemonRow);
   const mini = await buildMini();
   const suspectTex = new THREE.CanvasTexture(mini.suspect.out); suspectTex.colorSpace = THREE.SRGBColorSpace;
@@ -89,14 +95,21 @@ async function build(canvas, W, H) {
     if (a.place) { o.position.copy(a.place); o.rotation.set(a.flat ? -Math.PI / 2 : 0, a.rot ?? 0, 0); }
     else if (a.twoHands) { const f = chars[a.twoHands].bothHandsFrame(); o.quaternion.copy(f.quaternion); o.position.copy(f.position); }
     else if (a.holder) { const f = chars[a.holder].handFrame(a.side); o.quaternion.copy(f.quaternion); const g = (o.userData.grip || V(0, 0, 0)).clone().multiply(o.scale).applyQuaternion(o.quaternion); o.position.copy(f.position).sub(g); }
+    if (a.blendFrom && a.k < 1) {                                   // ease between the resting pose and the held pose (pick up / put down)
+      const hp = o.position.clone(), hq = o.quaternion.clone(); const f = a.blendFrom;
+      o.position.copy(f.place); o.rotation.set(f.flat ? -Math.PI / 2 : 0, f.rot ?? 0, 0);
+      const w = a.k * a.k * (3 - 2 * a.k); o.position.lerp(hp, w); o.quaternion.slerp(hq, w);
+    }
     if (a.open != null) (o.userData.setOpen?.(a.open));
   };
   const state = { last: null };
   return {
-    camera, dir, state,
+    camera, dir, state, selfieCanvas,
     async renderFrame(frame) {
       const t = frame / FPS;
-      const c = dir.camAt(t); camera.position.copy(c.pos); camera.fov = c.fov; camera.lookAt(c.target);
+      const c = dir.camAt(t); const dbg = getInputProps().dbgCam;                 // check-only camera override (never set in real renders)
+      if (dbg) { c.pos = new THREE.Vector3(...dbg.pos); c.target = new THREE.Vector3(...dbg.target); c.fov = dbg.fov ?? 50; }
+      camera.position.copy(c.pos); camera.fov = c.fov; camera.lookAt(c.target);
       const z = dir.zoneAt(t), tm = dir.timeAt(t);
       camera.near = z === "flight" ? 0.12 : 0.05; camera.far = 3000; camera.updateProjectionMatrix(); camera.updateMatrixWorld();
       city.setTime(tm.city); apt.setTime(tm.apt);
@@ -115,8 +128,61 @@ async function build(canvas, W, H) {
         ch.update(s.s || {}, { camera, keyLightPos: key, time: t }); }
       // props
       for (const [k, o] of Object.entries(P)) if (k !== "squirt") attach(o, a.props[k]);
-      if (a.props.photo) { P.photo.userData.setDevelop?.(Math.min(1, (t - 15.3) / 1.0)); }
-      P.polaroid.userData.setFlash?.(a.fx.flash); P.polaroid.userData.setEject?.(a.props.photo?.eject ? 1 : 0);
+      P.polaroid.userData.setFlash?.(a.fx.flash); P.polaroid.userData.setEject?.(a.props.polaroidEject ?? 0);
+      P.polaroid.userData.photo?.userData.setDevelop?.(a.props.selfieDevelop ?? 0);
+      // live push into the selfie (15.5-16.9 s): camera ends just in front of the ejected photo's picture side
+      const ph = P.polaroid.userData.photo;
+      if (ph && t > 15.5 && t < 16.95) {
+        P.polaroid.updateMatrixWorld(true);
+        const pp = (ph.getObjectByName("photoImage") || ph).getWorldPosition(new THREE.Vector3()), nrm = new THREE.Vector3(0, 0, 1).applyQuaternion(ph.getWorldQuaternion(new THREE.Quaternion()));
+        const k = (x) => x * x * (3 - 2 * x), kin = t < 16.5 ? k(Math.min(1, Math.max(0, (t - 15.5) / 0.6))) : 0;   // after 16.2 the picture covers the frame (insert below), camera resets unseen
+        camera.position.lerp(pp.clone().addScaledVector(nrm, 0.13), kin).addScaledVector(nrm, 0.22 * Math.sin(Math.PI * kin))
+          .addScaledVector(new THREE.Vector3(0, -1, 0).applyQuaternion(ph.getWorldQuaternion(new THREE.Quaternion())), 0.3 * Math.sin(Math.PI * kin));   // come in from the photo's free edge, away from the camera body   // arc over the camera body, never through it
+        const phq = ph.getWorldQuaternion(new THREE.Quaternion()), phUp = new THREE.Vector3(0, 1, 0).applyQuaternion(phq);
+        camera.up.set(0, 1, 0).lerp(phUp, kin).normalize();                                               // roll with the photo: it ends upright, square to the lens
+        const tg = c.target.clone().lerp(pp, kin); camera.fov = c.fov + (40 - c.fov) * kin; camera.lookAt(tg); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+        camera.up.set(0, 1, 0);
+        for (const k2 in chars) { const s2 = a.cast[k2]; if (s2 && s2.visible) chars[k2].update(s2.s || {}, { camera, keyLightPos: key, time: t }); }
+      }
+      // selfie insert: the picture grows from its exact spot on screen to fill the frame (16.0-16.2), holds, then whips out (16.8-16.95)
+      state.selfie = null;
+      if (ph && t > 16.1 && t < 16.97) {
+        let rect = null;
+        if (t < 16.5) { const im = ph.getObjectByName("photoImage") || ph; im.updateMatrixWorld(true); const h = 0.079 / 2; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+          for (const [cx, cy] of [[-h, -h], [h, -h], [h, h], [-h, h]]) { const q = new THREE.Vector3(cx, cy, 0).applyMatrix4(im.matrixWorld).project(camera);
+            x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); y0 = Math.min(y0, -q.y); y1 = Math.max(y1, -q.y); }
+          rect = { x: (x0 * 0.5 + 0.5) * W, y: (y0 * 0.5 + 0.5) * H, w: (x1 - x0) * 0.5 * W, h: (y1 - y0) * 0.5 * H }; }
+        const sk = (e0, e1) => { const x = Math.min(1, Math.max(0, (t - e0) / (e1 - e0))); return x * x * (3 - 2 * x); };
+        state.selfie = { rect, g: sk(16.12, 16.32), out: sk(16.8, 16.95), dev: a.props.selfieDevelop ?? 1 };
+      }
+      // render the selfie from the lens while it is visible
+      if (t > 14.8 && t < 17.4 && ph) {
+        P.polaroid.updateMatrixWorld(true);
+        // arm's-length selfie view of that moment: in front of his face, slightly to his right, the kitchen behind him
+        const hd = chars.robber.headCenter(), fr = new THREE.Vector3(Math.sin(a.cast.robber.rot), 0, Math.cos(a.cast.robber.rot)), rt = new THREE.Vector3(-fr.z, 0, fr.x);
+        selfieCam.position.copy(hd).addScaledVector(fr, 1.75).addScaledVector(rt, -0.35).add(new THREE.Vector3(0, 0.3, 0));
+        selfieCam.lookAt(hd.x, hd.y - 0.12, hd.z);              // whole head + shoulders in the picture, nothing cropped selfieCam.updateMatrixWorld();
+        const robberFaceCam = { camera: selfieCam, keyLightPos: key, time: t };
+        chars.robber.update(a.cast.robber.s || {}, robberFaceCam);                                   // his face drawn toward the selfie lens
+        await chars.robber.ready?.();
+        const vis = P.polaroid.visible; P.polaroid.visible = false;
+        renderer.setRenderTarget(selfieRT); renderer.render(scene, selfieCam); renderer.readRenderTargetPixels(selfieRT, 0, 0, SELF, SELF, selfieBuf); renderer.setRenderTarget(null);
+        P.polaroid.visible = vis;
+        chars.robber.update(a.cast.robber.s || {}, { camera, keyLightPos: key, time: t });          // back to the main camera
+        const g = selfieCanvas.getContext("2d"), img = g.createImageData(SELF, SELF);
+        for (let y = 0; y < SELF; y++) img.data.set(selfieBuf.subarray((SELF - 1 - y) * SELF * 4, (SELF - y) * SELF * 4), y * SELF * 4);
+        g.putImageData(img, 0, 0);
+        const hp = hd.clone().project(selfieCam), hx = (hp.x * 0.5 + 0.5) * SELF, hy = (-hp.y * 0.5 + 0.5) * SELF;
+        // flash blow-out: the whole face is solid white light (no features at all), with a soft glow around it
+        const hr = hd.clone().addScaledVector(rt, chars.robber.R * 1.0).project(selfieCam), rpx = Math.abs((hr.x - hp.x) * 0.5 * SELF);
+        const halo = g.createRadialGradient(hx, hy, 0, hx, hy, rpx * 2.8);
+        halo.addColorStop(0, "rgba(255,255,248,0.9)"); halo.addColorStop(0.5, "rgba(255,252,235,0.45)"); halo.addColorStop(1, "rgba(255,250,230,0)");
+        g.fillStyle = halo; g.fillRect(0, 0, SELF, SELF);
+        const core = g.createRadialGradient(hx, hy, 0, hx, hy, rpx * 1.35);
+        core.addColorStop(0, "rgba(255,255,253,1)"); core.addColorStop(0.8, "rgba(255,255,252,1)"); core.addColorStop(1, "rgba(255,255,250,0)");
+        g.fillStyle = core; g.fillRect(0, 0, SELF, SELF); g.fillStyle = "rgba(255,255,255,0.12)"; g.fillRect(0, 0, SELF, SELF);
+        selfieTex.needsUpdate = true;
+      }
       if (a.props.squirt) { P.squirt.visible = true; P.squirt.position.copy(a.props.squirt.at); P.squirt.userData.set?.(a.props.squirt.k); } else P.squirt.visible = false;
       lemonRow.visible = z === "apt" && t < 14.1;
       // screens
@@ -137,12 +203,19 @@ async function build(canvas, W, H) {
   };
 }
 
-function FxLayer({ a, t, W, H }) {
+function FxLayer({ a, t, W, H, sel }) {
   const ref = useRef(null);
   useEffect(() => {
     const cv = ref.current; if (!cv || !a) return; const g = cv.getContext("2d"); g.clearRect(0, 0, W, H);
     if (a.fx.cctv > 0.001) { g.save(); g.globalAlpha = a.fx.cctv; PV.drawCCTVOverlay(g, W, H, t, { stamp: a.zone === "bank2" ? "04-19-95 14:51:12" : "04-19-95 14:32:07", cam: a.zone === "bank2" ? "CAM 01" : "CAM 02" }); g.restore(); }
     if (a.fx.rewind > 0.001) PV.drawRewind(g, W, H, a.fx.rewind, t);
+    const sf = sel?.selfie;
+    if (sf && sf.canvas && (sf.rect || sf.g >= 1)) {                       // the selfie insert (same picture as the photo, never a dissolve)
+      const S0 = H, cover = { x: (W - S0) / 2, y: 0, w: S0, h: S0 }, r0 = sf.rect || cover, e = sf.g;
+      const R = { x: r0.x + (cover.x - r0.x) * e, y: r0.y + (cover.y - r0.y) * e, w: r0.w + (cover.w - r0.w) * e, h: r0.h + (cover.h - r0.h) * e };
+      R.x -= sf.out * W * 1.3;                                                // whip-pan out to the left
+      if (e > 0.001 || sf.rect) { g.fillStyle = "#26262c"; g.fillRect(R.x, R.y, R.w, R.h); g.globalAlpha = Math.min(1, sf.dev); g.drawImage(sf.canvas, R.x, R.y, R.w, R.h); g.globalAlpha = 1; }
+    }
     if (a.fx.flash > 0.001) { g.fillStyle = `rgba(255,255,250,${0.85 * a.fx.flash})`; g.fillRect(0, 0, W, H); }
   });
   return <canvas ref={ref} width={W} height={H} style={{ position: "absolute", left: 0, top: 0, width: W, height: H }} />;
@@ -151,9 +224,16 @@ function FxLayer({ a, t, W, H }) {
 function Overlay({ o, cam, W, H, t }) {
   const p = o.at.clone().project(cam); if (p.z > 1) return null;
   const x = (p.x * 0.5 + 0.5) * W, y = (-p.y * 0.5 + 0.5) * H, s = W / 1080, age = Math.max(0, t - o.t0);
-  if (o.kind === "bulb") { const k = Math.min(1, age / 0.15); return <div style={{ position: "absolute", left: x, top: y, transform: `translate(-50%,-50%) scale(${0.5 + 0.5 * k})` }}>
-    <div style={{ width: 90 * s, height: 90 * s, borderRadius: "50%", background: "radial-gradient(#fff9c8,#ffd84a 60%,#e8a400)", border: `${7 * s}px solid #2a1b12`, boxShadow: `0 0 ${40 * s}px #ffe680` }} />
-    <div style={{ width: 40 * s, height: 26 * s, margin: "-4px auto 0", background: "#8a8f98", border: `${6 * s}px solid #2a1b12`, borderRadius: 4 * s }} /></div>; }
+  if (o.kind === "bulb") { const k = Math.min(1, age / 0.18), pulse = 1 + 0.06 * Math.sin(age * 9), bob = 6 * s * Math.sin(age * 3);
+    return <div style={{ position: "absolute", left: x, top: y + bob, transform: `translate(-50%,-50%) scale(${(0.4 + 0.6 * k) * pulse})` }}>
+    <div style={{ position: "absolute", left: "50%", top: 90 * s, width: 520 * s, height: 520 * s, transform: "translate(-50%,-50%)", borderRadius: "50%",
+      background: "radial-gradient(rgba(255,236,120,0.75), rgba(255,220,80,0.35) 35%, rgba(255,210,60,0) 70%)" }} />
+    {[...Array(10)].map((_, i) => <div key={i} style={{ position: "absolute", left: "50%", top: 90 * s, width: 12 * s, height: 60 * s, background: "#ffe45c",
+      border: `${4 * s}px solid #2a1b12`, borderRadius: 8 * s, transform: `translate(-50%,-50%) rotate(${i * 36}deg) translateY(${-150 * s}px)` }} />)}
+    <div style={{ position: "relative", width: 170 * s, height: 170 * s, borderRadius: "50%", background: "radial-gradient(circle at 40% 35%, #fffef0, #ffef7a 45%, #ffcf1f 80%)",
+      border: `${9 * s}px solid #2a1b12`, boxShadow: `0 0 ${90 * s}px ${30 * s}px rgba(255,225,80,0.9)` }} />
+    <div style={{ position: "relative", width: 76 * s, height: 46 * s, margin: `${-10 * s}px auto 0`, background: "repeating-linear-gradient(#9aa0a8 0 9px, #6f747c 9px 14px)",
+      border: `${8 * s}px solid #2a1b12`, borderRadius: 8 * s }} /></div>; }
   if (o.kind === "tears") return <>{[-1, 1].map((sd) => { const f = (age * 1.4 + (sd > 0 ? 0.5 : 0)) % 1;
     return <div key={sd} style={{ position: "absolute", left: x + sd * 70 * s, top: y + f * 90 * s, width: 22 * s, height: 30 * s, background: "#8fd3ff",
       borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%", border: `${5 * s}px solid #2a1b12`, opacity: 1 - f * 0.7, transform: "translate(-50%,-50%)" }} />; })}</>;
@@ -179,7 +259,7 @@ export const Video = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       <canvas ref={canvas} width={width} height={height} style={{ width, height, filter }} />
-      {a && <FxLayer a={a} t={t} W={width} H={height} />}
+      {a && <FxLayer a={a} t={t} W={width} H={height} sel={c?.state.selfie ? { selfie: { ...c.state.selfie, canvas: c.selfieCanvas } } : null} />}
       {c && a && a.overlays.map((o, i) => <Overlay key={i} o={o} cam={c.camera} W={width} H={height} t={t} />)}
       <Captions words={WORDS.map(([s, e, w]) => [s, e, w.replace(/["]/g, "")])} />
       <Audio src={staticFile("audio/vo_v02.wav")} />

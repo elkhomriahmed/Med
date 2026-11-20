@@ -38,7 +38,7 @@ INK = F.INK; P = F.P; W = F.W; stroke = F.stroke; blob = F.blob; arc_pts = F.arc
 def eye(d, x, kind, s, L):
     """Expression eye `kind` drawn in the identity's eye style L['eyes']."""
     st = L["eyes"]; g = F.GAZE * 0.065; EY = F.EY
-    sz = {"dot": 1.0, "bean": 1.0, "beady": 0.65, "round": 1.25, "tired": 0.95, "lash": 1.0, "lash_round": 1.25, "lash_small": 0.8}[st]
+    sz = {"dot": 1.0, "bean": 1.0, "beady": 0.8, "round": 1.25, "tired": 0.95, "lash": 1.0, "lash_round": 1.25, "lash_small": 0.8}[st]
     if kind == "open":
         if st in ("round", "lash_round"):
             d.ellipse([*P(x - 0.11 * sz, EY + 0.11 * sz), *P(x + 0.11 * sz, EY - 0.11 * sz)], fill=F.WHITE, outline=INK, width=W(0.04))
@@ -48,10 +48,10 @@ def eye(d, x, kind, s, L):
             d.ellipse([*P(x + g - 0.06, EY + 0.13), *P(x + g + 0.06, EY - 0.11)], fill=INK)
         else:
             d.ellipse([*P(x + g - 0.075 * sz, EY + 0.1 * sz), *P(x + g + 0.075 * sz, EY - 0.1 * sz)], fill=INK)
-    elif kind == "lidded":
-        r = 0.085 * sz
-        d.pieslice([*P(x + g - r, EY + 0.07 * sz), *P(x + g + r, EY - 0.11 * sz)], 0, 180, fill=INK)
-        stroke(d, [(x - 0.15 * sz, EY), (x + 0.13 * sz, EY + 0.0)], 0.06, 0.05, 0.075)
+    elif kind == "lidded":                                    # heavy lid over a half pupil; pupil clearly shifted toward the target
+        r = 0.095 * max(sz, 0.9); gl = max(-0.075, min(0.075, g))
+        d.pieslice([*P(x + gl - r, EY + 0.075), *P(x + gl + r, EY - 0.115)], 0, 180, fill=INK)
+        stroke(d, [(x + gl * 0.35 - 0.15, EY), (x + gl * 0.35 + 0.14, EY)], 0.06, 0.05, 0.075)
     elif kind == "wide":
         k = 1.15 if st in ("round", "lash_round") else 1.0
         d.ellipse([*P(x - 0.13 * k, EY + 0.15 * k), *P(x + 0.13 * k, EY - 0.15 * k)], fill=F.WHITE, outline=INK, width=W(0.045))

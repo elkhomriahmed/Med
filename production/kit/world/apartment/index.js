@@ -87,10 +87,12 @@ export async function buildApartment(opts = {}) {
   W(XL, FY - 0.2, ZB - 0.2, DOOR.x0, CY + 0.2, ZB);                              // back, left of the door
   W(DOOR.x1, FY - 0.2, ZB - 0.2, XR, CY + 0.2, ZB);                              // back, right of the door
   W(DOOR.x0, DOOR.y1, ZB - 0.2, DOOR.x1, CY + 0.2, ZB);                          // over the door
-  W(XL, FY - 0.2, ZW, WIN.x0, CY + 0.2, ZW + 0.4);                               // window wall (z -9.0..-8.6)
-  W(WIN.x1, FY - 0.2, ZW, XR, CY + 0.2, ZW + 0.4);
-  W(WIN.x0, FY - 0.2, ZW, WIN.x1, WIN.y0, ZW + 0.4);
-  W(WIN.x0, WIN.y1, ZW, WIN.x1, CY + 0.2, ZW + 0.4);
+  // window wall: its inner face sits 3 cm behind the street facade's brick back face (z -9.0) so the exposed brick shows cleanly (no z-fight)
+  const ZWi = ZW + 0.03;
+  W(XL, FY - 0.2, ZWi, WIN.x0, CY + 0.2, ZW + 0.4);                              // window wall (z -8.97..-8.6)
+  W(WIN.x1, FY - 0.2, ZWi, XR, CY + 0.2, ZW + 0.4);
+  W(WIN.x0, FY - 0.2, ZWi, WIN.x1, WIN.y0, ZW + 0.4);
+  W(WIN.x0, WIN.y1, ZWi, WIN.x1, CY + 0.2, ZW + 0.4);
   B.add("ceil", boxMM(XL - 0.2, CY, ZB - 0.2, XR + 0.2, CY + 0.2, ZW + 0.4, { tile: 1.8 }));
   B.add("grout", boxMM(XL, FY - 0.2, ZB, 0.0, FY - 0.0115, ZW, { tone: 0x9a948a }));      // tile bed (grout shows in the gaps)
   B.add("grout", boxMM(0, FY - 0.2, ZB, XR, FY - 0.04, ZW, { tone: 0x3a2a20 }));  // under the boards
