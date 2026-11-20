@@ -227,14 +227,14 @@
    "db": -13
   },
   {
-   "src": "book_slam",
-   "at": 59.5,
-   "db": -10
+   "src": "whoosh",
+   "at": 59.72,
+   "db": -12
   },
   {
-   "src": "flight_whoosh",
-   "at": 59.75,
-   "db": -13
+   "src": "handcuffs_click",
+   "at": 60.02,
+   "db": -10
   },
   {
    "src": "coins_drop",
@@ -242,14 +242,29 @@
    "db": -16
   },
   {
-   "src": "page_turn",
-   "at": 61.3,
-   "db": -13
+   "src": "polaroid_flash_eject",
+   "at": 60.92,
+   "db": -9
   },
   {
-   "src": "sparkle_twinkle",
+   "src": "newspaper_snap",
+   "at": 61.38,
+   "db": -10
+  },
+  {
+   "src": "plaque_ding",
    "at": 62.14,
-   "db": -11
+   "db": -12
+  },
+  {
+   "src": "whoosh",
+   "at": 18.38,
+   "db": -16
+  },
+  {
+   "src": "jump_back",
+   "at": 17.65,
+   "db": -17
   }
  ],
  "beds": [

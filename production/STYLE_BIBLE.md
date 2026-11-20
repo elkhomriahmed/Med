@@ -602,3 +602,8 @@ User notes collected while making video 2. Each one cost a re-render; check them
 - Two surfaces from different builders must never share a plane (video 2: the street facade's back face and the apartment's
   window wall both at z -9.0 flickered once the camera saw that wall at an angle). When an interior sits inside an exterior
   shell, offset one face by ≥2–3 cm and make sure facade "room cards" behind windows never poke into the real interior.
+- Held papers/books stay clear of the face (≥10 cm in front): a sheet lowered through the head shows the face drawing through it
+  (video 2 professor). `readNewspaper` has `reach` for this.
+- The ending picture must match the story's outcome (video 2: a smug robber reading his textbook read as a happy ending; the user
+  wanted him caught: cuffed, sad, mugshot flash, the frozen frame revealed as the newspaper front page). Short "punchline" beats
+  (e.g. "his eyes are burning, but the plan works") still need a new framing every ~0.4–0.5 s and an action on each half.

@@ -24,6 +24,8 @@ export const S = {
   doesnt: T(92), bank2: T(108), waves: T(119), night: T(123), police: T(136), tape: T(147), juice: T(158), cell: T(163),
   prof: T(171), skills: T(186), less: T(208), named: T(218), never: T(224), textbooks: T(231), end: END,
 };
+/** ending: the mugshot flash on "But" (frame frozen, then revealed as the newspaper front-page photo) */
+export const FLASH = T(231);
 
 /** Times of day per system: { city, apt } */
 export function timeAt(t) {
@@ -70,9 +72,12 @@ export function makeDirection(W) {
   const BOOK_OF = OF.deskTop.clone().add(V(0.25, 0.01, 0.05));
   const FRONTP = V(Math.sin(OF.facing.deskChair), 0, Math.cos(OF.facing.deskChair));
   const NEWS_CELL = CELL.clone().add(V(0.42, 0.06, 0.05));
-  const NEWS_OF = OF.deskChair.clone().addScaledVector(FRONTP, 0.32).add(V(0, 1.18, 0));
+  const NEWS_OF = OF.deskChair.clone().addScaledVector(FRONTP, 0.44).add(V(0, 1.18, 0));
   const BOOK_CELL = CELL.clone().addScaledVector(FRONT, 0.28).add(V(0, 0.26, 0));
   const SW1 = S.prof + 0.12, SW2 = S.never + 0.32;
+  // ending: standing cuffed at the interrogation table (door side), facing the door (+Z world), the camera between him and the door
+  const R_CUFF = PO.interrogationChairRobber.clone().setY(0).lerp(PO.interrogationChairCop.clone().setY(0), 0.5).add(V(0.25, 0, 1.35));
+  const CUFF_HD = R_CUFF.clone().add(V(0.08, 1.36, 0));   // framing centre: face + cuffed hands both inside the middle band (= the newspaper photo)
 
   // camera helper: frame a subject from its front at azimuth `az` (rad, relative to the subject's facing yaw), distance, height
   const F = (t, subj, yaw, az, dist, h, fov = 62, stop = false) => {
@@ -115,8 +120,12 @@ export function makeDirection(W) {
     K(15.0, HD.clone().add(V(-0.75, 0.3, -1.05)), HD.clone().add(V(-0.25, -0.1, 0.35)), 60),  // over his right shoulder: camera + flash
     K(15.5, HD.clone().add(V(-0.7, 0.25, -0.85)), HD.clone().add(V(-0.3, -0.1, 0.4)), 56),   // (then the live push into the selfie, Video.jsx)
     K(16.9, HD.clone().add(V(0.4, -0.2, 1.7)), HD.clone().add(V(0, -0.2, 0)), 56),
-    K(17.5, HD.clone().add(V(0.15, 0, 1.35)), HD, 48),                                  // "eyes are burning": push in
-    K(18.4, HD.clone().add(V(0.6, -0.4, 2.2)), HD.clone().add(V(0, -0.3, 0)), 58),       // "the plan works": pull out, thumbs up
+    // "His eyes are burning, but the plan works": a new framing every ~0.4-0.5 s, never resting
+    K(17.3, HD.clone().add(V(0.35, -0.25, 1.9)), HD.clone().add(V(0, -0.2, 0)), 56),     // whip lands: he squints, hops
+    K(17.8, HD.clone().add(V(-0.1, 0.0, 1.4)), HD, 48),                                  // fast push into the burning eyes
+    K(18.25, HD.clone().add(V(-0.65, 0.1, 1.45)), HD, 50),                               // quick orbit round his face
+    K(18.6, HD.clone().add(V(0.5, -0.65, 2.15)), HD.clone().add(V(0.05, -0.2, 0)), 58),  // "but the plan works": snap pull-out, low angle, photo up + thumbs up
+    K(19.1, HD.clone().add(V(0.35, -0.5, 1.8)), HD.clone().add(V(0.05, -0.1, 0)), 54),
     F(S.buddy - 0.3, R_KITCH, yK, 0.7, 2.9, 1.4, 60),
     // 9 BUDDY on the couch (pan across the room)
     // 3/4 from his left, past the coffee table: bent knees and both feet on the floor in front of the couch stay readable
@@ -183,14 +192,14 @@ export function makeDirection(W) {
     K(S.named - 0.1, OF.views.boardClose.pos.clone().add(V(0, 0.1, 1.1)), OF.views.boardClose.target, OF.views.boardClose.fov + 6),
     K(S.never - 0.4, OF.views.boardWide.pos, OF.views.boardWide.target, OF.views.boardWide.fov),
     // 22 DIVE: into the textbook on the desk ... (swap to path C) ... out of the same book in his hands in the cell
-    K(S.never + 0.05, BOOK_OF.clone().add(V(0, 0.4, 0.15)), BOOK_OF, 50),
-    K(SW2, BOOK_OF.clone().add(V(0, 0.12, 0.02)), BOOK_OF, 50),
+    // 22 WHIP-PAN off the board ... (swap to path C mid-whip) ... landing on him in handcuffs at the police station
+    K(SW2, OF.views.boardWide.pos, OF.views.boardWide.target.clone().add(V(2.6, 0, 1.2)), OF.views.boardWide.fov),
   ]);
   const pathC = cameraPath([
-    K(SW2, BOOK_CELL.clone().addScaledVector(FRONT, 0.14).add(V(0, 0.08, 0)), BOOK_CELL, 50),
-    K(S.never + 1.0, BOOK_CELL.clone().addScaledVector(FRONT, 0.7).add(V(0, 0.35, 0)), BOOK_CELL.clone().add(V(0, 0.2, 0)), 54),
-    K(S.textbooks, CELL.clone().addScaledVector(FRONT, 1.5).add(V(0.15, 0.7, 0)), CELL.clone().add(V(0, 0.5, 0)), 56),
-    K(S.end, CELL.clone().addScaledVector(FRONT, 2.0).add(V(0.3, 0.9, 0)), CELL.clone().add(V(0, 0.75, 0)), 54, true),
+    K(SW2, CUFF_HD.clone().add(V(0.6, 0.1, 2.25)), CUFF_HD.clone().add(V(-2.4, 0, 1.0)), 62),          // whip lands from the side
+    K(SW2 + 0.28, CUFF_HD.clone().add(V(0.7, -0.02, 2.25)), CUFF_HD, 62),                           // "never got away with the money": cuffed, head down
+    K(FLASH, CUFF_HD.clone().add(V(0.62, -0.06, 2.12)), CUFF_HD, 62),                               // slow push to the mugshot framing (then Video.jsx takes over)
+    K(S.end, CUFF_HD.clone().add(V(0.62, -0.06, 2.1)), CUFF_HD, 62),
   ]);
 
   // ---- per-frame story state
@@ -211,6 +220,8 @@ export function makeDirection(W) {
     fx.rewind = sm(S.youSee - 0.25, S.youSee, t) * (1 - sm(S.youSee + 0.65, S.youSee + 0.95, t));
     fx.whip = sm(S.cell - 0.12, S.cell + 0.02, t) * (1 - sm(S.cell + 0.1, S.cell + 0.32, t));
     fx.whip = Math.max(fx.whip, sm(16.78, 16.88, t) * (1 - sm(16.92, 17.1, t)));   // whip out of the selfie insert
+    fx.whip = Math.max(fx.whip, sm(SW2 - 0.2, SW2 - 0.02, t) * (1 - sm(SW2 + 0.04, SW2 + 0.26, t)));   // whip-pan board -> handcuffs
+    fx.flash = Math.max(fx.flash, t >= FLASH ? Math.exp(-(t - FLASH) / 0.09) : 0);                   // the mugshot flash
 
     const z = zoneAt(t);
     // ================= ROBBER =================
@@ -235,25 +246,28 @@ export function makeDirection(W) {
           [S.figured - 0.4, { pose: "grab", target: paper.clone().add(V(-0.1, 0.01, 0.12)) }], [S.figured - 0.05, { pose: "pointSelf", at: "face" }],
           [T(41), { pose: "point", target: cam }], [S.tested, { pose: "squeezeOverHead", phase: t * 2.2 }],
           [S.grabs - 0.35, { pose: "grab", target: POL.clone().add(V(0, 0.07, 0)) }], [S.grabs + 0.05, { pose: "selfie", height: 1.45 }],
-          [S.burning, { pose: "fistsUp", phase: t * 2.4 }], [T(76), { pose: "thumbsUp" }], [S.buddy + 0.6, { pose: "hip" }]], t, 0.32),
+          [S.burning, { pose: "hold" }], [T(75) + 0.05, { pose: "holdUp", height: 1.38 }], [S.buddy + 0.6, { pose: "hold" }]], t, 0.28),
         armL: armAt([[0, { pose: "rest" }], [T(30) - 0.28, { pose: "grab", target: paper.clone().add(V(0.1, 0.01, 0.12)) }], [T(30) + 0.05, { pose: "holdUp", height: 1.0 }],
           [S.figured - 0.4, { pose: "grab", target: paper.clone().add(V(0.1, 0.01, 0.12)) }], [S.figured - 0.05, { pose: "rest" }],
-          [S.tested, { pose: "squeezeOverHead", phase: t * 2.2 + 0.5 }], [S.grabs, { pose: "hip" }], [S.burning, { pose: "fistsUp", phase: t * 2.4 + 0.4 }],
-          [T(76), { pose: "hip" }]], t, 0.32),
+          [S.tested, { pose: "squeezeOverHead", phase: t * 2.2 + 0.5 }], [S.grabs, { pose: "hip" }], [S.burning, { pose: "fistsUp", phase: t * 3.2 + 0.4 }],
+          [T(75), { pose: "thumbsUp" }], [S.buddy + 0.6, { pose: "hip" }]], t, 0.28),
         lean: t >= S.write && t < T(30) ? 0.14 : 0, nod: t >= S.write && t < T(30) ? 0.12 : 0,
+        // burning eyes: little pained hops + head shakes (stops on "but")
+        bob: t >= S.burning && t < T(75) ? 0.035 * Math.abs(Math.sin((t - S.burning) * Math.PI * 4.4)) * sm(S.burning, S.burning + 0.1, t) * (1 - sm(T(75) - 0.12, T(75), t)) : 0,
+        turn: t >= S.burning && t < T(75) ? 0.09 * Math.sin((t - S.burning) * 15) * (1 - sm(T(75) - 0.15, T(75), t)) : 0,
       };
       props.lemonHalf = t >= S.write - 0.2 && t < T(30) - 0.42 ? { holder: "robber", side: "R" } : { place: LH, rot: 0.4 };
       // both hooks reach the near edge (T(30)-0.28), then the sheet eases off the table into the hands (no jump), and back down the same way
       { const up = sm(T(30) - 0.3, T(30) + 0.05, t) * (1 - sm(S.figured - 0.45, S.figured - 0.1, t));
         props.inkPaper = up > 0.001 ? { twoHands: "robber", blendFrom: { place: paper, rot: 0.1 }, k: up } : { place: paper, rot: 0.1 }; }
       if (t >= S.tested && t < S.grabs) { props.lemonA = { holder: "robber", side: "R" }; props.lemonB = { holder: "robber", side: "L" }; }
-      props.polaroid = t >= S.grabs - 0.1 && t < S.burning ? { holder: "robber", side: "R" } : t < S.grabs ? { place: POL, rot: 2.6 } : { place: POL, rot: 2.6 };
+      props.polaroid = t >= S.grabs - 0.1 ? { holder: "robber", side: "R" } : { place: POL, rot: 2.6 };   // kept in hand to the end of the apartment scene (never pops back to the table)
       props.polaroidEject = sm(T(63), T(64) + 0.3, t);                        // the selfie slides out of the camera's front slot
       props.selfieDevelop = sm(T(64) + 0.2, T(69), t);
       fx.flash = sm(T(62) - 0.02, T(62) + 0.03, t) * (1 - sm(T(62) + 0.05, T(62) + 0.3, t));
       if (t >= S.tested && t < S.grabs) props.squirt = { at: head(R_KITCH, 1.95), k: ((t - S.tested) * 1.4) % 1 };
       if (t >= S.figured && t < T(38)) overlays.push({ kind: "bulb", at: head(R_KITCH, 1.98), t0: S.figured });
-      if (t >= S.burning && t < T(75)) overlays.push({ kind: "tears", at: head(R_KITCH, 1.42), t0: S.burning });
+      if (t >= S.burning && t < T(75) + 0.1) overlays.push({ kind: "tears", at: head(R_KITCH, 1.42), t0: S.burning });
     } else if (t < S.bank2 + 0.2) {                                               // bank 1: walks in, smiles at the camera
       const k = sm(T(96) - 0.1, T(99) + 0.2, t); R.pos = doorIn1.clone().lerp(R_B1, k); R.rot = k < 0.97 ? faceTo(doorIn1, R_B1) : yB1;
       wet = 1;
@@ -275,9 +289,18 @@ export function makeDirection(W) {
       R.s = { expression: step([[0, "neutral"], [T(152), "skeptical"], [S.juice - 0.1, "worried"]], t), sit: 1, seat: PO.seatHeight,
         lookAt: t < S.juice - 0.15 ? PO.tvScreenCenter : head(COP_TV, 1.42), mouth: t >= S.juice && t < E(162) ? visemeAt(WORDS, t) : blink([40.2]),
         armL: { pose: "rest" }, armR: armAt([[0, { pose: "rest" }], [S.juice, { pose: "shrug" }]], t, 0.3), tilt: t > T(153) ? 0.12 : 0 };
-    } else if (t < S.prof + 0.12 || t >= S.never + 0.32) {                           // cell (holding a lemon / reading the textbook)
+    } else if (t >= SW2) {                                                         // ending: cuffed, sad, the mugshot flash, then gone (newspaper)
+      R.visible = t < FLASH + 0.12;
+      R.pos = R_CUFF.clone(); R.rot = 0;
+      const cuffAt = (sd) => R_CUFF.clone().add(V(sd * 0.04, 1.08, 0.3));
+      R.s = { expression: "worried", mouth: blink([60.3]), lookAt: t < FLASH - 0.35 ? cuffAt(0).add(V(0, -0.1, 0.1)) : cam,
+        nod: 0.2 * (1 - sm(FLASH - 0.4, FLASH - 0.1, t)) + 0.04, lean: 0.05,
+        armL: { pose: "grab", target: cuffAt(1) }, armR: { pose: "grab", target: cuffAt(-1) } };
+      props.cuffs = R.visible ? { twoHands: "robber" } : undefined;
+      if (t >= FLASH) props.newspaperEnd = { place: NEWS_END, rot: 0, open: 0, flat: true };
+    } else if (t < S.prof + 0.12) {                                                // cell (holding a lemon)
       R.pos = CELL.clone().setY(0); R.rot = PO.yaw.cellInside;
-      const reading = t >= S.never + 0.32;
+      const reading = false;
       R.s = { expression: reading ? step([[0, "neutral"], [S.textbooks + 0.3, "proud"]], t) : "skeptical", sit: 1, seat: CELL.y,
         lookAt: reading ? (t > S.textbooks + 0.3 ? cam : live.bookPos()) : live.handPos("robber", "R"),
         armL: reading ? { pose: "holdBook", height: 0.9 } : { pose: "rest" }, armR: reading ? { pose: "holdBook", height: 0.9 } : { pose: "hold" },
@@ -317,7 +340,7 @@ export function makeDirection(W) {
     cast.professor = { visible: z === "office", pos: pPos, rot: toBoard < 0.05 ? OF.facing.deskChair : toBoard < 0.95 ? faceTo(P_DESK, P_BOARD) : OF.facing.boardSpot,
       s: toBoard < 0.05 ? { expression: step([[0, "neutral"], [T(176), "skeptical"], [T(181), "shock"]], t), sit: 1, seat: 0.48,
         lookAt: t < T(176) ? live.newsPos() : cam,
-        armL: t < T(178) ? { pose: "readNewspaper", amount: sm(T(175), T(177), t) } : { pose: "rest" }, armR: t < T(178) ? { pose: "readNewspaper", amount: sm(T(175), T(177), t) } : { pose: "rest" }, tilt: t > T(178) ? 0.14 : 0 }
+        armL: t < T(178) ? { pose: "readNewspaper", amount: sm(T(175), T(177), t), reach: 0.52 } : { pose: "rest" }, armR: t < T(178) ? { pose: "readNewspaper", amount: sm(T(175), T(177), t), reach: 0.52 } : { pose: "rest" }, tilt: t > T(178) ? 0.14 : 0 }
         : { expression: step([[0, "neutral"], [S.less, "smug"], [S.named, "proud"]], t), bob: walkBob(toBoard),
           lookAt: t < S.named ? OF.board : cam,
           armR: toBoard < 0.95 ? { pose: "rest" } : armAt([[0, { pose: "chalkWrite", target: live.chalkPos(t), phase: t * 3 }], [S.named + 0.4, { pose: "tapBoard", target: OF.boardTap, phase: (t - S.named) * 2 }],
@@ -347,7 +370,10 @@ export function makeDirection(W) {
     const z = zoneAt(t);
     if (z === "apt") return times.apt === "night" ? 1.55 : 1.35;
     if (z === "flight") return W.city.hint[times.city].exposure;
+    if (t > FLASH + 0.2) return 1.4 - 0.55 * sm(FLASH + 0.2, FLASH + 0.6, t);            // newspaper under the lamp: no blow-out
     return 1.4;
   }
-  return { camAt: (t) => (t < SW1 ? pathA(t) : t < SW2 ? pathB(t) : pathC(t)), SW1, SW2, act, exposureAt, timeAt, zoneAt };
+  // the newspaper the mugshot ends up in: folded front page up on the interrogation table, top edge away from the door
+  const NEWS_END = PO.interrogationChairRobber.clone().setY(0).lerp(PO.interrogationChairCop.clone().setY(0), 0.5).add(V(-0.36, 0.773, -0.04));   // clear of the folder, the cuff ring and the polaroid card
+  return { camAt: (t) => (t < SW1 ? pathA(t) : t < SW2 ? pathB(t) : pathC(t)), SW1, SW2, FLASH, NEWS_END, act, exposureAt, timeAt, zoneAt };
 }

@@ -468,7 +468,7 @@ function poseTarget(a, s, X) {
     }
     case "readNewspaper": {                                    // both hands on the paper's side edges; a.amount 0 = up reading .. 1 = lowered
       const k = Math.max(0, Math.min(1, a.amount ?? 0));
-      const H = v3(s * (a.spread ?? 0.26), 1.30 - 0.32 * k, 0.40 - 0.04 * k);
+      const H = v3(s * (a.spread ?? 0.26), 1.30 - 0.32 * k, (a.reach ?? 0.40) - 0.04 * k);   // reach: how far in front of the body (keep the paper clear of the face)
       return { H, pole: v3(s * 0.9, 0.8, -0.15), tip: v3(-s * 0.15, 0.95, 0.15).normalize(), curl: 0.9 };
     }
     case "chalkWrite": case "tapBoard": {                      // hand on a vertical board point (target, a.normal = board normal, world)

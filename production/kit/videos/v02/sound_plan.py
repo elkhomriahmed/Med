@@ -23,8 +23,9 @@ S = [  # (file, time, gain dB)
  ("cell_door_clang", T(169) - 0.25, -10),
  ("flight_whoosh", T(171) - 0.15, -12), ("newspaper_snap", T(173), -11), ("clock_ticking", T(178), -22),
  ("chalk_writing", T(189), -14), ("chalk_writing", T(198), -14), ("chalk_writing", T(209), -14),
- ("bell_ding", T(222), -13), ("book_slam", T(224) - 0.1, -10), ("flight_whoosh", T(224) + 0.15, -13),
- ("coins_drop", T(230) - 0.1, -16), ("page_turn", T(234), -13), ("sparkle_twinkle", T(238), -11),
+ ("bell_ding", T(222), -13), ("whoosh", T(224) + 0.12, -12), ("handcuffs_click", T(224) + 0.42, -10),
+ ("coins_drop", T(230) - 0.1, -16), ("polaroid_flash_eject", T(231) - 0.04, -9), ("newspaper_snap", T(231) + 0.42, -10),
+ ("plaque_ding", T(238), -12), ("whoosh", T(75), -16), ("jump_back", T(73) + 0.05, -17),
 ]
 B = [  # ambience beds: (file, from, to, gain dB)
  ("bank_lobby_loop", 0.0, T(18), -24), ("city_day_loop", T(18), T(92), -30), ("city_day_loop", T(92), T(123), -24),

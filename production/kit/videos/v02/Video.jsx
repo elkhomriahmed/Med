@@ -69,6 +69,19 @@ async function build(canvas, W, H) {
   const suspectTex = new THREE.CanvasTexture(mini.suspect.out); suspectTex.colorSpace = THREE.SRGBColorSpace;
   P.newspaperCell = PV.createNewspaper({ photo: suspectTex }); P.newspaperOffice = PV.createNewspaper({ photo: suspectTex });
   P.textbookCell = PV.createTextbook({ pagePhoto: suspectTex }); P.textbookOffice = PV.createTextbook({ pagePhoto: suspectTex });
+  // ending: handcuffs (two steel rings + short chain, between his hooks) and the newspaper his mugshot ends up in
+  { const cuffs = new THREE.Group(), steel = new THREE.MeshStandardMaterial({ color: 0xb8bcc2, metalness: 0.9, roughness: 0.28 });
+    for (const sd of [-1, 1]) { const ring = new THREE.Mesh(new THREE.TorusGeometry(0.034, 0.0065, 10, 28), steel); ring.position.x = sd * 0.05; ring.rotation.y = Math.PI / 2; ring.castShadow = true; cuffs.add(ring);
+      const lock = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.03, 0.022), steel); lock.position.set(sd * 0.05, -0.034, 0); cuffs.add(lock); }
+    for (let i = 0; i < 3; i++) { const l = new THREE.Mesh(new THREE.TorusGeometry(0.008, 0.0024, 6, 12), steel); l.position.x = -0.016 + i * 0.016; l.rotation.y = i % 2 ? Math.PI / 2 : 0; cuffs.add(l); }
+    P.cuffs = cuffs; }
+  P.newspaperEnd = PV.createNewspaper({ headline: "LEMON JUICE BANDIT CAUGHT", sub: "Robber thought lemon juice made his face invisible to cameras",
+    caption: ["The suspect at the precinct, in handcuffs. Police say he truly believed", "the juice would hide his face from every camera."] });
+  // the mugshot: the frame at the flash is captured (full res), its middle band becomes the newspaper photo
+  const capCanvas = Object.assign(document.createElement("canvas"), { width: W, height: H });
+  const NEWS_PW = 0.38 * 0.58, NEWS_PH = 0.58 * 0.255, bandH = W * NEWS_PH / NEWS_PW, bandY = (H - bandH) / 2;
+  const newsCanvas = Object.assign(document.createElement("canvas"), { width: 720, height: Math.round(720 * NEWS_PH / NEWS_PW) });
+  const newsTex = new THREE.CanvasTexture(newsCanvas); newsTex.colorSpace = THREE.SRGBColorSpace;
   for (const o of Object.values(P)) { o.visible = false; scene.add(o); }
   // screens
   const aptScreen = PV.createScreen(640, 480); apt.setTvTexture(aptScreen.texture);
@@ -95,6 +108,7 @@ async function build(canvas, W, H) {
     if (a.place) { o.position.copy(a.place); o.rotation.set(a.flat ? -Math.PI / 2 : 0, a.rot ?? 0, 0); }
     else if (a.twoHands) { const f = chars[a.twoHands].bothHandsFrame(); o.quaternion.copy(f.quaternion); o.position.copy(f.position); }
     else if (a.holder) { const f = chars[a.holder].handFrame(a.side); o.quaternion.copy(f.quaternion); const g = (o.userData.grip || V(0, 0, 0)).clone().multiply(o.scale).applyQuaternion(o.quaternion); o.position.copy(f.position).sub(g); }
+    if (a.offset) o.position.add(a.offset);
     if (a.blendFrom && a.k < 1) {                                   // ease between the resting pose and the held pose (pick up / put down)
       const hp = o.position.clone(), hq = o.quaternion.clone(); const f = a.blendFrom;
       o.position.copy(f.place); o.rotation.set(f.flat ? -Math.PI / 2 : 0, f.rot ?? 0, 0);
@@ -103,9 +117,14 @@ async function build(canvas, W, H) {
     if (a.open != null) (o.userData.setOpen?.(a.open));
   };
   const state = { last: null };
-  return {
-    camera, dir, state, selfieCanvas,
+  const FLASH_F = Math.ceil(dir.FLASH * FPS); let capDone = false;
+  const ret = {
+    camera, dir, state, selfieCanvas, capCanvas,
     async renderFrame(frame) {
+      if (frame > FLASH_F && !capDone) await ret.renderCore(FLASH_F);              // any worker: make the mugshot capture first (deterministic)
+      await ret.renderCore(frame);
+    },
+    async renderCore(frame) {
       const t = frame / FPS;
       const c = dir.camAt(t); const dbg = getInputProps().dbgCam;                 // check-only camera override (never set in real renders)
       if (dbg) { c.pos = new THREE.Vector3(...dbg.pos); c.target = new THREE.Vector3(...dbg.target); c.fov = dbg.fov ?? 50; }
@@ -121,7 +140,7 @@ async function build(canvas, W, H) {
       apt.set(a.ctrl.apt); police.set(a.ctrl.police); office.board.set(a.ctrl.board);
       // cast
       const key = z === "apt" ? apt.anchors.keyLightPos : z === "bank1" ? bank1.anchors.keyLightPos : z === "bank2" ? bank2.anchors.keyLightPos
-        : z === "police" ? (t >= 43.0 ? police.anchors.keyLights.cells : police.anchors.keyLights.interrogation) : z === "office" ? office.anchors.keyLightPos : city.keyLightPos;
+        : z === "police" ? (t >= 43.0 && t < dir.SW2 ? police.anchors.keyLights.cells : police.anchors.keyLights.interrogation) : z === "office" ? office.anchors.keyLightPos : city.keyLightPos;
       for (const k in chars) { const s = a.cast[k]; const ch = chars[k];
         if (!s || !s.visible) { ch.root.visible = false; continue; }
         ch.root.visible = true; ch.root.position.copy(s.pos); ch.root.rotation.set(0, s.rot ?? 0, 0);
@@ -183,6 +202,26 @@ async function build(canvas, W, H) {
         g.fillStyle = core; g.fillRect(0, 0, SELF, SELF); g.fillStyle = "rgba(255,255,255,0.12)"; g.fillRect(0, 0, SELF, SELF);
         selfieTex.needsUpdate = true;
       }
+      // ending: frozen mugshot -> it is the newspaper photo; camera over the page, then a pull-back to the table under the lamp
+      state.ending = null;
+      if (t > dir.FLASH + 0.5 / FPS && capDone) {
+        const F0 = dir.FLASH, ph2 = P.newspaperEnd.getObjectByName("newsPhoto"); P.newspaperEnd.updateMatrixWorld(true);
+        const pc = ph2.getWorldPosition(new THREE.Vector3()), pq = ph2.getWorldQuaternion(new THREE.Quaternion());
+        const nrm = new THREE.Vector3(0, 0, 1).applyQuaternion(pq), pup = new THREE.Vector3(0, 1, 0).applyQuaternion(pq);
+        const sk = (e0, e1) => { const x = Math.min(1, Math.max(0, (t - e0) / (e1 - e0))); return x * x * (3 - 2 * x); };
+        const fov0 = 40, d0 = NEWS_PW / (2 * Math.tan(THREE.MathUtils.degToRad(fov0 / 2)) * (W / H));
+        const k = sk(F0 + 0.7, F0 + 1.95), toDoor = new THREE.Vector3(0, 0, 1);
+        const viewDir = nrm.clone().lerp(nrm.clone().multiplyScalar(0.9).addScaledVector(toDoor, 0.42), k).normalize();
+        const tgt = pc.clone().lerp(dir.NEWS_END.clone().add(new THREE.Vector3(0, 0, -0.2)), k);
+        camera.position.copy(tgt).addScaledVector(viewDir, d0 * (1 + 1.25 * Math.pow(k, 1.2)));
+        camera.up.copy(pup).lerp(new THREE.Vector3(0, 1, 0), k * k).normalize(); camera.fov = fov0 + 10 * k; camera.lookAt(tgt);
+        camera.updateProjectionMatrix(); camera.updateMatrixWorld(); camera.up.set(0, 1, 0);
+        const h2w = NEWS_PW / 2, h2h = NEWS_PH / 2; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+        for (const [cx, cy] of [[-h2w, -h2h], [h2w, -h2h], [h2w, h2h], [-h2w, h2h]]) { const q = new THREE.Vector3(cx, cy, 0).applyMatrix4(ph2.matrixWorld).project(camera);
+          x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); y0 = Math.min(y0, -q.y); y1 = Math.max(y1, -q.y); }
+        state.ending = { rect: { x: (x0 * 0.5 + 0.5) * W, y: (y0 * 0.5 + 0.5) * H, w: (x1 - x0) * 0.5 * W, h: (y1 - y0) * 0.5 * H },
+          clip: sk(F0 + 0.35, F0 + 0.65), news: sk(F0 + 0.3, F0 + 0.95), alpha: 1 - sk(F0 + 1.05, F0 + 1.45), band: { y: bandY, h: bandH } };
+      }
       if (a.props.squirt) { P.squirt.visible = true; P.squirt.position.copy(a.props.squirt.at); P.squirt.userData.set?.(a.props.squirt.k); } else P.squirt.visible = false;
       lemonRow.visible = z === "apt" && t < 14.1;
       // screens
@@ -197,10 +236,16 @@ async function build(canvas, W, H) {
       for (const s of [city, apt, bank1, bank2, police, office]) s.update?.(t, camera);
       await Promise.all(Object.values(chars).map((c) => c.ready?.()));
       look.render();
+      if (frame === FLASH_F && !capDone) {                                            // grab the mugshot (canvas only: no captions / flash overlay)
+        capCanvas.getContext("2d").drawImage(renderer.domElement, 0, 0, W, H);
+        newsCanvas.getContext("2d").drawImage(capCanvas, 0, bandY, W, bandH, 0, 0, newsCanvas.width, newsCanvas.height);
+        newsTex.needsUpdate = true; P.newspaperEnd.userData.setPhoto(newsTex); capDone = true;
+      }
       state.last = a;
     },
     dispose() { renderer.dispose(); mini.r.dispose(); },
   };
+  return ret;
 }
 
 function FxLayer({ a, t, W, H, sel }) {
@@ -215,6 +260,16 @@ function FxLayer({ a, t, W, H, sel }) {
       const R = { x: r0.x + (cover.x - r0.x) * e, y: r0.y + (cover.y - r0.y) * e, w: r0.w + (cover.w - r0.w) * e, h: r0.h + (cover.h - r0.h) * e };
       R.x -= sf.out * W * 1.3;                                                // whip-pan out to the left
       if (e > 0.001 || sf.rect) { g.fillStyle = "#26262c"; g.fillRect(R.x, R.y, R.w, R.h); g.globalAlpha = Math.min(1, sf.dev); g.drawImage(sf.canvas, R.x, R.y, R.w, R.h); g.globalAlpha = 1; }
+    }
+    const en = sel?.ending;
+    if (en && en.canvas && en.alpha > 0.001) {                                    // the frozen mugshot -> the newspaper photo (same picture, same place)
+      g.save(); g.globalAlpha = en.alpha;
+      g.filter = `grayscale(${en.news}) sepia(${0.18 * en.news}) contrast(${1 + 0.12 * en.news})`;
+      if (en.clip < 1) { const e = en.clip, R1 = en.rect;
+        const R = { x: R1.x * e, y: R1.y * e, w: W + (R1.w - W) * e, h: H + (R1.h - H) * e };
+        g.beginPath(); g.rect(R.x, R.y, R.w, R.h); g.clip(); g.drawImage(en.canvas, 0, 0, W, H); }
+      else g.drawImage(en.canvas, 0, en.band.y * en.canvas.width / W, en.canvas.width, en.band.h * en.canvas.width / W, en.rect.x, en.rect.y, en.rect.w, en.rect.h);
+      g.restore();
     }
     if (a.fx.flash > 0.001) { g.fillStyle = `rgba(255,255,250,${0.85 * a.fx.flash})`; g.fillRect(0, 0, W, H); }
   });
@@ -259,7 +314,7 @@ export const Video = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       <canvas ref={canvas} width={width} height={height} style={{ width, height, filter }} />
-      {a && <FxLayer a={a} t={t} W={width} H={height} sel={c?.state.selfie ? { selfie: { ...c.state.selfie, canvas: c.selfieCanvas } } : null} />}
+      {a && <FxLayer a={a} t={t} W={width} H={height} sel={{ selfie: c?.state.selfie ? { ...c.state.selfie, canvas: c.selfieCanvas } : null, ending: c?.state.ending ? { ...c.state.ending, canvas: c.capCanvas } : null }} />}
       {c && a && a.overlays.map((o, i) => <Overlay key={i} o={o} cam={c.camera} W={width} H={height} t={t} />)}
       <Captions words={WORDS.map(([s, e, w]) => [s, e, w.replace(/["]/g, "")])} />
       <Audio src={staticFile("audio/vo_v02.wav")} />

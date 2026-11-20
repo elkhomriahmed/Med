@@ -379,7 +379,9 @@ export function createVHSTape({ label = "BANK CAM 2 — 04/19/95" } = {}) {
  *  setOpen(k): 0 = folded in half (bottom half folded behind, masthead + headline + photo outside), 1 = opened flat (slight V).
  *  The photo (front page, above the fold) shows `photo` (any texture; printed black-and-white); setPhoto(tex) swaps it.
  *  Lay it on a desk with rotation.x = -PI/2. gripL / gripR = the side edges of the top half; grip = gripR. */
-export function createNewspaper({ headline = "LEMON BANDIT CAUGHT", photo = null, masthead = "The Daily Chronicle" } = {}) {
+export function createNewspaper({ headline = "LEMON BANDIT CAUGHT", photo = null, masthead = "The Daily Chronicle",
+  sub = "Robber thought lemon juice made him invisible to cameras",
+  caption = ["Security camera still from the second bank. Police say the suspect", "waved at the camera before leaving with the money."] } = {}) {
   const W = 0.38, H = 0.58, T = 0.002, root = new THREE.Group(); root.name = "newspaper";
   const CW = 1024, CH = 1563, PH = { x: 0.04, y: 0.205, w: 0.58, h: 0.255 };   // photo rect (fractions of the page, from the top)
   const frontTex = canvasTex(CW, CH, (g, w, h) => {
@@ -390,12 +392,11 @@ export function createNewspaper({ headline = "LEMON BANDIT CAUGHT", photo = null
     g.font = `bold ${h * 0.012}px "Times New Roman", serif`; g.textAlign = "left"; g.fillText("WEDNESDAY, APRIL 19, 1995", m, h * 0.106);
     g.textAlign = "right"; g.fillText("FINAL EDITION · 35¢", w - m, h * 0.106); g.textAlign = "center";
     const hp = fitText(g, headline, w - 2 * m, h * 0.075, (px) => `900 ${px}px "Impact", "Arial Black", sans-serif`); g.fillText(headline, w / 2, h * 0.125 + hp * 0.95);
-    g.font = `italic ${h * 0.017}px "Georgia", serif`; g.fillText("Robber thought lemon juice made him invisible to cameras", w / 2, h * 0.198);
+    g.font = `italic ${h * 0.017}px "Georgia", serif`; g.fillText(sub, w / 2, h * 0.198);
     g.fillStyle = "#cfc9b8"; g.fillRect(w * PH.x, h * PH.y, w * PH.w, h * PH.h);                               // photo bed
     g.strokeStyle = "#1b1916"; g.lineWidth = 2; g.strokeRect(w * PH.x, h * PH.y, w * PH.w, h * PH.h);
     g.fillStyle = "#2b2824"; g.font = `italic ${h * 0.0115}px "Georgia", serif`; g.textAlign = "left";
-    g.fillText("Security camera still from the second bank. Police say the suspect", w * PH.x, h * (PH.y + PH.h + 0.016));
-    g.fillText("waved at the camera before leaving with the money.", w * PH.x, h * (PH.y + PH.h + 0.03));
+    caption.forEach((ln, i) => g.fillText(ln, w * PH.x, h * (PH.y + PH.h + 0.016 + 0.014 * i)));
     const cx = w * (PH.x + PH.w + 0.03), cw = w - m - cx;                                                    // side column
     g.fillStyle = "#1b1916"; g.font = `bold ${h * 0.02}px "Georgia", serif`; g.fillText("Police: 'He", cx, h * 0.225); g.fillText("smiled at us'", cx, h * 0.247);
     greek(g, cx, h * 0.262, cw, h * 0.24, h * 0.0105, 3);

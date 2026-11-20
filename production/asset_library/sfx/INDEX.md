@@ -87,3 +87,4 @@ Check here FIRST. Only generate with ElevenLabs if nothing fits; then save the n
 | ambience (loop) | `city_night_apartment_loop.mp3` | 5.0 | quiet city night from an apartment: distant traffic, far dog bark, faint TV | ElevenLabs (2026-11-19) | video 02 |
 | ambience (loop) | `bank_lobby_loop.mp3` | 5.0 | quiet bank lobby: soft murmur, printer, pen click, AC hum | ElevenLabs (2026-11-19) | video 02 |
 | foley | `newspaper_snap.mp3` | 1.0 | newspaper opened and snapped straight, crisp rustle | ElevenLabs (2026-11-19) | video 02 |
+| metal/prison | `handcuffs_click.mp3` | 1.0 | handcuffs ratcheting shut: two quick clicks + short chain jingle | ElevenLabs (2026-11-20) | video 02 |
