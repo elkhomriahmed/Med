@@ -339,9 +339,10 @@ export async function buildLot(opts = {}) {
     fb("metal", -1.55, F1, -17.45, -1.05, F1 + 1.3, -16.85, { rr: 0.015, color: "#9aa6b2" });
     // blinds pulled up (stack + bottom rail + cord) on the inside, above head height
     fb("paint", COW.x0 + 0.04, 5.74, -14.42, COW.x1 - 0.04, 5.79, -14.34, { rr: 0.008, color: "#e8edf2" });
-    for (let k = 0; k < 6; k++) fb("paint", COW.x0 + 0.06, 5.5 + k * 0.04, -14.41, COW.x1 - 0.06, 5.53 + k * 0.04, -14.36, { rr: 0.004, color: "#eef2f6", jitter: 0.04 });
-    fb("paint", COW.x0 + 0.05, 5.46, -14.42, COW.x1 - 0.05, 5.5, -14.35, { rr: 0.008, color: "#dde4ea" });
-    piece("paint", new THREE.CylinderGeometry(0.004, 0.004, 0.6, 5), [COW.x1 - 0.12, 5.2, -14.37], [0, 0, 0], { color: "#e8edf2" });
+    // (integrator 2026-11-23: stack folded higher so it never covers the heads/hair of people standing at the window)
+    for (let k = 0; k < 3; k++) fb("paint", COW.x0 + 0.06, 5.68 + k * 0.018, -14.41, COW.x1 - 0.06, 5.695 + k * 0.018, -14.36, { rr: 0.004, color: "#eef2f6", jitter: 0.04 });
+    fb("paint", COW.x0 + 0.05, 5.65, -14.42, COW.x1 - 0.05, 5.68, -14.35, { rr: 0.008, color: "#dde4ea" });
+    piece("paint", new THREE.CylinderGeometry(0.004, 0.004, 0.4, 5), [COW.x1 - 0.12, 5.45, -14.37], [0, 0, 0], { color: "#e8edf2" });
     // clear pane
     const g = new THREE.PlaneGeometry(COW.x1 - COW.x0 - 0.04, COW.y1 - COW.y0 - 0.08); g.translate((COW.x0 + COW.x1) / 2, (COW.y0 + COW.y1) / 2, -14.21);
     const cm = new THREE.Mesh(g, clearGlass); cm.name = "lot_coworkerGlass"; cm.renderOrder = 2; extra.push(cm);

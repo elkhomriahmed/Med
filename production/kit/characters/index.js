@@ -61,17 +61,17 @@ function faceMat() {
       hc: { value: new THREE.Vector3() }, X: { value: new THREE.Vector3(1, 0, 0) }, Y: { value: new THREE.Vector3(0, 1, 0) }, Z: { value: new THREE.Vector3(0, 0, 1) },
       R: { value: R }, drop: { value: 0 }, ls: { value: 1 }, face: { value: null }, hasFace: { value: 0 }, k: { value: 0.95 }, GW: { value: 0.45 }, SHK: { value: 0.6 },
       lit: { value: 0 }, skin: { value: new THREE.Vector3(...SKIN) }, ink: { value: new THREE.Vector3(0.11, 0.075, 0.06) },
-      wet: { value: 0 }, time: { value: 0 } },
+      wet: { value: 0 }, time: { value: 0 }, faceA: { value: 1 } },
     vertexShader: `varying vec3 wp; void main(){ vec4 w = modelMatrix*vec4(position,1.0); wp = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }`,
     // 2026-11-19b "lemon juice" look (wet 0..1): 3 thin ink drips drawn in the face drawing's 2D frame, like the drawing itself
     // (no gloss, no highlight; coordinator: faces stay flat white drawings). The lemon-slice decal was removed (read as a monocle);
     // state.lemonSlice is ignored. Edges anti-aliased with fwidth. With wet = 0 the output is unchanged.
-    fragmentShader: `uniform vec3 hc,X,Y,Z,skin,ink; uniform float R,drop,ls,k,GW,lit,hasFace,SHK,wet,time; uniform sampler2D face; varying vec3 wp;
+    fragmentShader: `uniform vec3 hc,X,Y,Z,skin,ink; uniform float R,drop,ls,k,GW,lit,hasFace,SHK,wet,time,faceA; uniform sampler2D face; varying vec3 wp;
       float aa(float d, float fw){ return 1.0 - smoothstep(-fw, fw, d); }
       void main(){ vec3 d = wp-hc; float x = dot(d,X), y = dot(d,Y), z = dot(d,Z); float FS = 2.15*R;
         vec2 uv = vec2(x/FS+0.5, y/FS+0.5+drop/FS);
         vec4 f = (hasFace<0.5||uv.x<0.||uv.x>1.||uv.y<0.||uv.y>1.) ? vec4(0.) : texture2D(face, uv);
-        f.a *= smoothstep(0.05*R, 0.25*R, z);
+        f.a *= smoothstep(0.05*R, 0.25*R, z) * faceA;                                   // back view (2026-11-23): no face on the back of the head
         float lum = dot(f.rgb, vec3(0.3,0.59,0.11));
         f.rgb = mix(f.rgb, ink, smoothstep(0.55, 0.20, lum));                               // navy ink -> warm dark ink
         f.rgb = mix(f.rgb, ink*0.45, smoothstep(0.04, 0.12, f.r-max(f.g,f.b)));             // red mouth inside -> black
@@ -905,6 +905,11 @@ export async function createCharacter(spec = {}) {
       up.set(0, 1, 0).transformDirection(neck.matrixWorld);
       Z.subVectors(camW, hcW).normalize(); Y.copy(up).addScaledVector(Z, -up.dot(Z)).normalize(); X.crossVectors(Y, Z);
       const u = headMat.uniforms; u.hc.value.copy(hcW); u.X.value.copy(X); u.Y.value.copy(Y); u.Z.value.copy(Z); u.R.value = Rw;
+      { // BACK VIEW (user, 2026-11-23): when the camera is behind the body, the face drawing fades out and we see the back of the
+        // head (hair cap + nape). Facing = body +Z in world, horizontal; fully back at ~115 deg, unchanged up to ~95 deg.
+        const bf = tmp.set(0, 0, 1).transformDirection(body.matrixWorld); bf.y = 0; const cz = Z.clone(); cz.y = 0;
+        const d = bf.lengthSq() > 1e-6 && cz.lengthSq() > 1e-6 ? bf.normalize().dot(cz.normalize()) : 1;
+        const e = Math.max(0, Math.min(1, (d + 0.42) / 0.34)); u.faceA.value = state.backView === false ? 1 : e * e * (3 - 2 * e); }
       let drop = topCut !== null && !taper ? 0.10 * R : 0;
       if (hatArr.length) {                                       // lowest hat point in front of the face, in the drawing's 2D frame
         const e = headG.matrixWorld.elements; let yb = 1e9;

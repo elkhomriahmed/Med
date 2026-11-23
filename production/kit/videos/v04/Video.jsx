@@ -24,6 +24,9 @@ async function build(canvas, W, H) {
   const A = lot.anchors;
   const car = await buildHeroCar({}); car.position.copy(A.heroBay.pos || A.heroBay); car.rotation.y = 0; scene.add(car); car.updateMatrixWorld(true);
   const CA = car.anchors;
+  // more parked cars around the hero bay (same toy-car builder, other paints); the driver-door side (-x) stays clear
+  for (const [x, z, yaw, paint] of [[5.15, -4.0, 0, "#2f7f8f"], [7.8, -4.0, 0, "#2c5f9e"], [2.5, 6.0, Math.PI, "#9aa6b2"], [-2.8, 6.0, Math.PI, "#3f86d6"]]) {
+    const pc = await buildHeroCar({ paint }); pc.position.set(x, 0, z); pc.rotation.y = yaw; scene.add(pc); }
   const bottle = createBottle({}); scene.add(bottle);
   const burn = createBurnSpot({ at: CA.seatBurnPoint, normal: CA.seatNormal, bottle }); car.add(burn);
   const haze = createHeatHaze({}); car.add(haze);
@@ -46,7 +49,7 @@ async function build(canvas, W, H) {
   for (const o of [keys, mug, lighter, spray, shades, chestDot]) { o.visible = false; scene.add(o); }
   // cast
   const chars = {};
-  for (const k of ["driver", "coworker", "idahoMan"]) { chars[k] = await createCharacter(SPECS[k]); scene.add(chars[k].root); }
+  for (const k of ["driver", "coworker", "idahoMan", "extraSuit", "extraTeal", "extraBlue"]) { chars[k] = await createCharacter(SPECS[k]); scene.add(chars[k].root); }
   const look = createLook(renderer, scene, camera, W, H, { hdri: false, grade: { exposure: lot.hint.exposure } });
   await look.ready;
   lot.makeEnvironment(renderer, scene);

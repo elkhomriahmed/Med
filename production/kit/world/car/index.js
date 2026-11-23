@@ -1,4 +1,4 @@
-﻿// Video 4 hero car + water bottle (agent B, 2026-11-23).
+// Video 4 hero car + water bottle (agent B, 2026-11-23).
 //   buildHeroCar(opts)  -> THREE.Group: white-silver compact 4-door sedan (~4.3 m), origin = ground centre, nose toward -z,
 //                          driver = left = -x. Full interior seen through clear glass. set({ door 0..1 }) opens the driver door.
 //                          anchors (CAR-LOCAL): driverSeatTop, seatBurnPoint, seatNormal, doorHandle, driverDoorOpenSpot,
@@ -10,7 +10,7 @@
 //                          z of the focused dot) follows the roll. userData.grip = finger-hook point (neck).
 // All set() are pure functions of their inputs. No Math.random (seeded rng only).
 import * as THREE from "three";
-import { roundedBox, place } from "../geometry.js";
+import { roundedBox, place, boxUV } from "../geometry.js";
 import { plain, canvasTex, noiseNormal } from "../materials.js";
 import { rng } from "../../shared/assets.js";
 
@@ -25,11 +25,11 @@ const GLASS_VS = /* glsl */ `
 varying vec3 vW; varying vec3 vN;
 void main(){ vec4 w = modelMatrix*vec4(position,1.0); vW = w.xyz; vN = normalize(mat3(modelMatrix)*normal); gl_Position = projectionMatrix*viewMatrix*w; }`;
 const GLASS_FS = /* glsl */ `
-uniform vec3 tint, skyZ, skyH, ground, sunDir; uniform float baseA, reflK, sunK, streak, rim;
+uniform vec3 tint, skyZ, skyH, ground, sunDir; uniform float baseA, reflK, sunK, streak, rim, fr0;
 varying vec3 vW; varying vec3 vN;
 void main(){
   vec3 V = normalize(cameraPosition - vW); vec3 N = normalize(vN); if (dot(N, V) < 0.0) N = -N;
-  float ndv = clamp(dot(N, V), 0.0, 1.0); float fr = 0.05 + 0.95*pow(1.0 - ndv, 4.0);
+  float ndv = clamp(dot(N, V), 0.0, 1.0); float fr = fr0 + (1.0 - fr0)*pow(1.0 - ndv, 3.0);
   vec3 R = reflect(-V, N);
   vec3 sky = R.y > 0.0 ? mix(skyH, skyZ, pow(clamp(R.y, 0.0, 1.0), 0.6)) : mix(skyH*0.7, ground, clamp(-R.y*4.0, 0.0, 1.0));
   float st = smoothstep(0.6, 0.95, sin((vW.x*0.7 + vW.z*0.9 + vW.y*1.6)*5.0)) * streak;     // soft diagonal glints
@@ -39,12 +39,12 @@ void main(){
   float a = clamp(baseA + fr*reflK*0.55 + st*0.12 + edge*0.5, 0.0, 0.95);
   gl_FragColor = vec4(tint*baseA + refl, a);
 }`;
-export function fakeGlass({ tint = "#cfe3f2", baseA = 0.1, reflK = 0.9, sunK = 6, streak = 0.25, rim = 0, sunDir = [-0.35, 0.85, 0.4] } = {}) {
+export function fakeGlass({ tint = "#cfe3f2", baseA = 0.1, reflK = 0.9, sunK = 6, streak = 0.25, rim = 0, fr0 = 0.1, sunDir = [-0.35, 0.85, 0.4] } = {}) {
   const c = new THREE.Color(tint);
   return new THREE.ShaderMaterial({ transparent: true, premultipliedAlpha: true, depthWrite: false, side: THREE.DoubleSide,
     uniforms: { tint: { value: V(c.r, c.g, c.b) }, skyZ: { value: V(0.13, 0.32, 0.85) }, skyH: { value: V(0.55, 0.72, 0.95) },
       ground: { value: V(0.08, 0.09, 0.1) }, sunDir: { value: V(...sunDir) }, baseA: { value: baseA }, reflK: { value: reflK },
-      sunK: { value: sunK }, streak: { value: streak }, rim: { value: rim } },
+      sunK: { value: sunK }, streak: { value: streak }, rim: { value: rim }, fr0: { value: fr0 } },
     vertexShader: GLASS_VS, fragmentShader: GLASS_FS });
 }
 
@@ -110,6 +110,52 @@ function quad(a, b, c, d) {
   g.setAttribute("uv", new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1], 2)); g.computeVertexNormals(); return g;
 }
 
+// ------------------------------------------------------------------------------------------------ soft-volume helpers
+/** Inset a closed Shape by d (so an extrude with bevelSize d grows it back with round fillets). */
+function insetShape(S, d) {
+  let P = S.getPoints(10); const out = [];
+  P = P.filter((p, i) => i === 0 || p.distanceTo(P[i - 1]) > 1e-4); if (P[0].distanceTo(P[P.length - 1]) < 1e-4) P.pop();
+  let A = 0; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; A += a.x * b.y - b.x * a.y; }
+  const sgn = A > 0 ? 1 : -1, n = P.length;
+  const en = (a, b) => { const e = b.clone().sub(a).normalize(); return new THREE.Vector2(e.y * sgn, -e.x * sgn); };   // outward
+  for (let i = 0; i < n; i++) {
+    const p = P[i], n1 = en(P[(i - 1 + n) % n], p), n2 = en(p, P[(i + 1) % n]), m = n1.clone().add(n2);
+    if (m.lengthSq() < 1e-8) m.copy(n1); m.normalize();
+    out.push(p.clone().addScaledVector(m, -d / Math.max(m.dot(n1), 0.4)));
+  }
+  return new THREE.Shape(out);
+}
+/** Rounded rectangle Shape in the side plane (z, y). */
+function roundRect(z0, y0, z1, y1, r) {
+  const s = new THREE.Shape(); r = Math.min(r, (z1 - z0) / 2, (y1 - y0) / 2);
+  s.moveTo(z0 + r, y0); s.lineTo(z1 - r, y0); s.quadraticCurveTo(z1, y0, z1, y0 + r); s.lineTo(z1, y1 - r); s.quadraticCurveTo(z1, y1, z1 - r, y1);
+  s.lineTo(z0 + r, y1); s.quadraticCurveTo(z0, y1, z0, y1 - r); s.lineTo(z0, y0 + r); s.quadraticCurveTo(z0, y0, z0 + r, y0); return s;
+}
+/** Soft slab in the side plane: outline (Shape or [[z, y]...]) with filleted edges, thickness t (x), fillet b, centred at x. */
+function softSlab(shape, t, b, x = 0) {
+  if (Array.isArray(shape)) { const s = new THREE.Shape(); shape.forEach(([z, y], i) => (i ? s.lineTo(z, y) : s.moveTo(z, y))); shape = s; }
+  const dep = Math.max(t - 2 * b, 0.002);
+  const g = new THREE.ExtrudeGeometry(insetShape(shape, b), { depth: dep, bevelEnabled: true, bevelSize: b, bevelThickness: b, bevelSegments: 4, curveSegments: 8 });
+  g.translate(0, 0, -dep / 2); g.rotateY(-Math.PI / 2); g.translate(x, 0, 0); return boxUV(g, 0.5);   // planar UVs: no degenerate tangents under normal maps
+}
+/** Soft tapered pillar from a to b (radius r0 -> r1, rounded ends, flattened 0.7 across). */
+function softPillar(a, b, r0, r1) {
+  const d = b.clone().sub(a), L = d.length(), pts = [[0, 0], [r0 * 0.75, r0 * 0.15], [r0, r0 * 0.6]];
+  for (let i = 1; i < 6; i++) { const u = i / 6; pts.push([r0 + (r1 - r0) * u, r0 * 0.6 + (L - r0 * 0.6 - r1 * 0.6) * u]); }
+  pts.push([r1, L - r1 * 0.6], [r1 * 0.75, L - r1 * 0.15], [0, L]);
+  const g = new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), 20); g.scale(0.7, 1, 1);
+  g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), d.normalize())); g.translate(a.x, a.y, a.z); return g;
+}
+/** Pillow roof: rounded-rectangle plan (x0..x1, z0..z1, corner r), thickness h with round edges, bottom at y0. */
+function pillowRoof(x0, x1, z0, z1, y0, h, r) {
+  const b = h * 0.42, s = new THREE.Shape(); r = Math.min(r, (x1 - x0) / 2, (z1 - z0) / 2);
+  const Y0 = -z1, Y1 = -z0;
+  s.moveTo(x0 + r, Y0); s.lineTo(x1 - r, Y0); s.quadraticCurveTo(x1, Y0, x1, Y0 + r); s.lineTo(x1, Y1 - r); s.quadraticCurveTo(x1, Y1, x1 - r, Y1);
+  s.lineTo(x0 + r, Y1); s.quadraticCurveTo(x0, Y1, x0, Y1 - r); s.lineTo(x0, Y0 + r); s.quadraticCurveTo(x0, Y0, x0 + r, Y0);
+  const dep = h - 2 * b, g = new THREE.ExtrudeGeometry(insetShape(s, b), { depth: dep, bevelEnabled: true, bevelSize: b, bevelThickness: b, bevelSegments: 5, curveSegments: 10 });
+  g.rotateX(-Math.PI / 2); g.translate(0, y0 + b, 0); return boxUV(g, 0.5);
+}
+
 // ------------------------------------------------------------------------------------------------ dimensions
 export const CAR = {
   length: 4.3, width: 1.74, height: 1.45,
@@ -122,10 +168,10 @@ export const CAR = {
 export async function buildHeroCar({ paint = "#e8edf2", seed = 4, sunDir = [-0.35, 0.85, 0.4], name = "heroCar" } = {}) {
   const root = new THREE.Group(); root.name = name;
   const M = {
-    paint: new THREE.MeshPhysicalMaterial({ color: new THREE.Color(paint), roughness: 0.3, metalness: 0.12, clearcoat: 1, clearcoatRoughness: 0.08, envMapIntensity: 1.0 }),
+    paint: new THREE.MeshPhysicalMaterial({ color: new THREE.Color(paint), roughness: 0.25, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.08, envMapIntensity: 1.25 }),
     chrome: plain("#dfe4ea", { roughness: 0.16, metalness: 1, relief: 0, envMapIntensity: 1.4 }),
     trim: plain("#16181b", { roughness: 0.45, relief: 0.2 }),
-    rubber: plain("#1c1d20", { roughness: 0.88, relief: 0.8 }),
+    rubber: plain("#1c1d20", { roughness: 0.92, relief: 0.6, envMapIntensity: 0.3 }),
     rim: plain("#b9c0c8", { roughness: 0.28, metalness: 0.85, relief: 0, envMapIntensity: 1.2 }),
     plastic: plain("#34373d", { roughness: 0.72, relief: 0.5 }),
     plasticDk: plain("#1f2125", { roughness: 0.6, relief: 0.4 }),
@@ -138,133 +184,139 @@ export async function buildHeroCar({ paint = "#e8edf2", seed = 4, sunDir = [-0.3
     head: new THREE.MeshStandardMaterial({ color: new THREE.Color("#e9f1fa"), roughness: 0.08, metalness: 0.3, emissive: new THREE.Color("#cfe4ff"), emissiveIntensity: 0.12 }),
     plate: plain("#eef0ee", { roughness: 0.5, relief: 0 }),
     screen: new THREE.MeshStandardMaterial({ color: new THREE.Color("#0c1118"), roughness: 0.12, emissive: new THREE.Color("#2a6ab0"), emissiveIntensity: 0.25 }),
-    glass: fakeGlass({ sunDir, tint: "#a9c8e2", baseA: 0.24, reflK: 1.1, streak: 0.5 }), glassWS: fakeGlass({ sunDir, streak: 0.12, baseA: 0.06 }),
+    glass: fakeGlass({ sunDir, tint: "#a9c8e2", baseA: 0.24, reflK: 1.1, streak: 0.5 }), glassWS: fakeGlass({ sunDir, streak: 0.12, baseA: 0.06, fr0: 0.06 }),
   };
   const add = (g, m, parent = root, cast = true) => { const o = mesh(g, m, cast); parent.add(o); return o; };
   const { belt: BELT, roofY: ROOF, floorY: FLOOR } = CAR;
 
-  // ---------------------------------------------------------------- lower body: side profile extruded across, cabin notched out
-  const S = new THREE.Shape(), r0 = 0.37, dy = 0.09, dx = Math.sqrt(r0 * r0 - dy * dy), a0 = Math.asin(dy / r0);
+  // ---------------------------------------------------------------- lower body: SOFT side profile extruded across, cabin notched
+  // The outline is inset by the bevel size, then extruded with a big round bevel: every edge (bonnet, fenders, bumpers, boot,
+  // cabin opening) gets a ~10-12 cm fillet and the outer silhouette comes back to the designed profile.
+  const S = new THREE.Shape(), r0 = 0.41, dy = 0.06, dx = Math.sqrt(r0 * r0 - dy * dy), a0 = Math.asin(dy / r0);
   // shape x = forward (= -z), y = up
-  S.moveTo(-2.0, 0.22);
-  S.lineTo(-1.4 - dx, 0.22); S.absarc(-1.4, 0.31, r0, Math.PI + a0, -a0, true);
-  S.lineTo(1.38 - dx, 0.22); S.absarc(1.38, 0.31, r0, Math.PI + a0, -a0, true);
-  S.lineTo(2.02, 0.22); S.quadraticCurveTo(2.16, 0.24, 2.16, 0.42); S.lineTo(2.15, 0.6); S.quadraticCurveTo(2.13, 0.74, 1.98, 0.77);
-  S.quadraticCurveTo(1.4, 0.87, 0.86, 0.94);
-  S.lineTo(0.84, 0.94); S.lineTo(0.84, FLOOR); S.lineTo(-1.0, FLOOR); S.lineTo(-1.0, 0.975);             // cabin notch
-  S.lineTo(-1.28, 0.985); S.quadraticCurveTo(-1.95, 0.995, -2.1, 0.94); S.quadraticCurveTo(-2.17, 0.88, -2.16, 0.7);
-  S.lineTo(-2.13, 0.42); S.quadraticCurveTo(-2.11, 0.23, -2.0, 0.22);
-  const lb = new THREE.ExtrudeGeometry(S, { depth: 1.64, bevelEnabled: true, bevelSize: 0.045, bevelThickness: 0.05, bevelSegments: 4, curveSegments: 18 });
-  lb.translate(0, 0, -0.82); lb.rotateY(Math.PI / 2); lb.computeVertexNormals();
+  S.moveTo(-1.95, 0.25);
+  S.lineTo(-1.4 - dx, 0.25); S.absarc(-1.4, 0.31, r0, Math.PI + a0, -a0, true);
+  S.lineTo(1.38 - dx, 0.25); S.absarc(1.38, 0.31, r0, Math.PI + a0, -a0, true);
+  S.lineTo(1.95, 0.25); S.bezierCurveTo(2.14, 0.25, 2.2, 0.36, 2.19, 0.5); S.bezierCurveTo(2.18, 0.68, 2.1, 0.79, 1.9, 0.81);
+  S.bezierCurveTo(1.4, 0.86, 1.05, 0.92, 0.86, 0.95);
+  S.lineTo(0.84, 0.95); S.lineTo(0.84, FLOOR); S.lineTo(-1.0, FLOOR); S.lineTo(-1.0, 0.98);             // cabin notch
+  S.lineTo(-1.3, 0.99); S.bezierCurveTo(-1.8, 1.0, -2.05, 0.99, -2.12, 0.9); S.bezierCurveTo(-2.2, 0.78, -2.2, 0.55, -2.17, 0.42);
+  S.bezierCurveTo(-2.14, 0.27, -2.06, 0.25, -1.95, 0.25);
+  const BV = 0.1, BT = 0.13;
+  const lb = new THREE.ExtrudeGeometry(insetShape(S, BV), { depth: CAR.width - 2 * BT, bevelEnabled: true, bevelSize: BV, bevelThickness: BT, bevelSegments: 7, curveSegments: 8 });
+  lb.translate(0, 0, -(CAR.width - 2 * BT) / 2); lb.rotateY(Math.PI / 2);
   add(lb, M.paint);
-  // arch liners + underbody fill (no see-through under the hood / trunk)
+  // bulgy wheel-arch flares (round tubes hugging each arch) + arch liners + underbody fill
   for (const z of [CAR.frontZ, CAR.rearZ]) {
-    for (const sx of [-1, 1]) { const g = new THREE.CylinderGeometry(0.372, 0.372, 0.34, 24, 1, true, -Math.PI / 2 - 1.35, 2.7); g.rotateZ(Math.PI / 2); g.translate(sx * 0.7, 0.31, z);
+    for (const sx of [-1, 1]) {
+      const fl = new THREE.TorusGeometry(r0 + 0.015, 0.055, 12, 30, Math.PI); fl.scale(1, 1, 0.8); fl.rotateY(Math.PI / 2); fl.translate(sx * 0.815, 0.31, z); add(fl, M.paint);
+      const g = new THREE.CylinderGeometry(r0 - 0.01, r0 - 0.01, 0.34, 24, 1, true, -Math.PI / 2 - 1.45, 2.9); g.rotateZ(Math.PI / 2); g.translate(sx * 0.66, 0.31, z);
       const o = add(g, M.trim); o.material = M.trim.clone(); o.material.side = THREE.BackSide; }
-    add(place(new THREE.BoxGeometry(1.0, 0.46, 0.8), [0, 0.47, z]), M.plasticDk);
+    add(place(roundedBox(1.0, 0.42, 0.8, 0.08), [0, 0.48, z]), M.plasticDk);
   }
-  add(place(new THREE.BoxGeometry(1.6, 0.06, 4.0), [0, 0.2, 0]), M.plasticDk, root, false);
+  add(place(roundedBox(1.5, 0.06, 3.9, 0.025), [0, 0.22, 0]), M.plasticDk);
 
-  // ---------------------------------------------------------------- doors (skins + seams), sills, trim
-  const doorSkin = (z0, z1) => roundedBox(0.07, BELT - 0.24, z1 - z0, 0.03);
-  const doorInner = (z0, z1) => roundedBox(0.035, 0.52, z1 - z0 - 0.08, 0.012);
+  // ---------------------------------------------------------------- doors: soft rounded slabs (rounded corners + filleted edges)
   const DZ = [[-0.84, 0.2], [0.22, 0.99]];
+  const doorSkin = (z0, z1) => softSlab(roundRect(z0 + 0.012, 0.27, z1 - 0.012, BELT + 0.005, 0.09), 0.085, 0.035);
+  const doorInner = (z0, z1) => softSlab(roundRect(z0 + 0.05, 0.36, z1 - 0.05, BELT - 0.06, 0.06), 0.03, 0.012);
+  const handle = () => { const g = new THREE.CapsuleGeometry(0.017, 0.12, 6, 12); g.rotateX(Math.PI / 2); return g; };
   // driver door (front-left): own pivot group at the hinge
   const doorPivot = new THREE.Group(); doorPivot.name = "driverDoor"; doorPivot.position.set(CAR.hinge[0], 0, CAR.hinge[1]); root.add(doorPivot);
   const DL = (x, y, z) => [x - CAR.hinge[0], y, z - CAR.hinge[1]];     // car-local -> door-local
   const dz0 = DZ[0][0], dz1 = DZ[0][1], dzm = (dz0 + dz1) / 2;
-  add(place(doorSkin(dz0, dz1), DL(-0.835, 0.61, dzm)), M.paint, doorPivot);
-  add(place(doorInner(dz0, dz1), DL(-0.79, 0.62, dzm)), M.leatherPlain, doorPivot);
-  add(place(roundedBox(0.07, 0.045, 0.5, 0.02), DL(-0.77, 0.7, dzm + 0.08)), M.plastic, doorPivot);              // armrest
-  add(place(roundedBox(0.03, 0.03, 0.12, 0.01), DL(-0.775, 0.84, dz0 + 0.2)), M.chrome, doorPivot);             // inner pull
-  add(place(roundedBox(0.035, 0.3, 0.5, 0.01), DL(-0.79, 0.4, dzm)), M.plasticDk, doorPivot);                   // map pocket
-  add(place(roundedBox(0.03, 0.035, 0.16, 0.012), DL(-0.88, 0.86, 0.06)), M.chrome, doorPivot);                 // outer handle
-  add(place(roundedBox(0.025, 0.06, 0.2, 0.01), DL(-0.872, 0.86, 0.06)), M.trim, doorPivot);
-  add(place(roundedBox(0.03, 0.035, dz1 - dz0 - 0.04, 0.01), DL(-0.84, BELT + 0.012, dzm)), M.trim, doorPivot);  // belt seal
+  add(place(doorSkin(dz0, dz1), DL(-0.83, 0, 0)), M.paint, doorPivot);
+  add(place(doorInner(dz0, dz1), DL(-0.775, 0, 0)), M.leatherPlain, doorPivot);
+  add(place(roundedBox(0.07, 0.05, 0.5, 0.024), DL(-0.76, 0.7, dzm + 0.08)), M.plastic, doorPivot);              // armrest
+  add(place(handle(), DL(-0.765, 0.84, dz0 + 0.2)), M.chrome, doorPivot);                                         // inner pull
+  add(place(roundedBox(0.035, 0.24, 0.5, 0.016), DL(-0.77, 0.47, dzm)), M.plasticDk, doorPivot);                // map pocket
+  add(place(roundedBox(0.03, 0.06, 0.2, 0.028), DL(-0.875, 0.86, 0.06)), M.trim, doorPivot);
+  add(place(handle(), DL(-0.885, 0.86, 0.06)), M.chrome, doorPivot);                                             // outer handle
+  add(place(new THREE.CapsuleGeometry(0.018, dz1 - dz0 - 0.1, 6, 10).rotateX(Math.PI / 2), DL(-0.84, BELT + 0.012, dzm)), M.trim, doorPivot); // belt seal
   const dGlass = sidePoly([[dz0 + 0.03, BELT + 0.02], [dz1 - 0.02, BELT + 0.02], [dz1 - 0.02, ROOF - 0.04], [-0.1, ROOF - 0.04]], -0.825);
   dGlass.translate(-CAR.hinge[0], 0, -CAR.hinge[1]); const dg = add(dGlass, M.glass, doorPivot, false); dg.renderOrder = 2;
-  add(place(roundedBox(0.03, 0.03, 0.02, 0.01), DL(-0.84, ROOF - 0.03, dz1 - 0.01)), M.trim, doorPivot);
-  // mirror on the driver door
-  add(place(roundedBox(0.1, 0.12, 0.17, 0.045), DL(-0.98, 1.04, -0.72)), M.paint, doorPivot);
-  add(place(roundedBox(0.06, 0.05, 0.08, 0.015), DL(-0.9, 1.0, -0.72)), M.trim, doorPivot);
-  add(place(roundedBox(0.012, 0.09, 0.14, 0.01), DL(-0.98, 1.04, -0.64)), M.trim, doorPivot);
+  // mirror on the driver door: soft egg housing on a stalk
+  const mirror = (parent, P, sx) => { const h = new THREE.SphereGeometry(0.1, 20, 14); h.scale(0.62, 0.6, 1.0); add(place(h, [P[0], P[1], P[2]]), M.paint, parent);
+    add(place(new THREE.SphereGeometry(0.07, 14, 10).scale(0.15, 0.55, 0.85), [P[0] - sx * 0.04, P[1], P[2] + 0.06]), M.chrome, parent);
+    add(place(new THREE.CapsuleGeometry(0.02, 0.06, 4, 8).rotateZ(Math.PI / 2), [P[0] + sx * 0.06, P[1] - 0.04, P[2]]), M.trim, parent); };
+  mirror(doorPivot, DL(-0.98, 1.04, -0.72), -1);
   // other doors (static)
   for (const [z0, z1] of DZ) { const zm = (z0 + z1) / 2;
-    add(place(doorSkin(z0, z1), [0.835, 0.61, zm]), M.paint); add(place(doorInner(z0, z1), [0.79, 0.62, zm]), M.leatherPlain);
-    add(place(roundedBox(0.03, 0.035, 0.16, 0.012), [0.88, 0.86, z1 - 0.14]), M.chrome);
-    add(place(roundedBox(0.03, 0.035, z1 - z0 - 0.04, 0.01), [0.84, BELT + 0.012, zm]), M.trim);
+    add(place(doorSkin(z0, z1), [0.83, 0, 0]), M.paint); add(place(doorInner(z0, z1), [0.775, 0, 0]), M.leatherPlain);
+    add(place(roundedBox(0.03, 0.06, 0.2, 0.028), [0.875, 0.86, z1 - 0.14]), M.trim); add(place(handle(), [0.885, 0.86, z1 - 0.14]), M.chrome);
+    add(place(new THREE.CapsuleGeometry(0.018, z1 - z0 - 0.1, 6, 10).rotateX(Math.PI / 2), [0.84, BELT + 0.012, zm]), M.trim);
   }
   { const [z0, z1] = DZ[1], zm = (z0 + z1) / 2;
-    add(place(doorSkin(z0, z1), [-0.835, 0.61, zm]), M.paint); add(place(doorInner(z0, z1), [-0.79, 0.62, zm]), M.leatherPlain);
-    add(place(roundedBox(0.03, 0.035, 0.16, 0.012), [-0.88, 0.86, z1 - 0.14]), M.chrome);
-    add(place(roundedBox(0.03, 0.035, z1 - z0 - 0.04, 0.01), [-0.84, BELT + 0.012, zm]), M.trim); }
-  add(place(roundedBox(0.1, 0.42, 0.16, 0.04), [0.92, 1.0, -0.72]), M.trim).scale.set(1, 1, 1);
-  add(place(roundedBox(0.1, 0.12, 0.17, 0.045), [0.98, 1.04, -0.72]), M.paint);
-  for (const sx of [-1, 1]) {
-    add(place(roundedBox(0.05, 0.08, 1.86, 0.02), [sx * 0.86, 0.25, 0.08]), M.trim);                               // sill
-    add(place(roundedBox(0.012, 0.05, 0.9, 0.006), [sx * 0.872, 0.55, CAR.frontZ - 0.35]), M.trim);                // body side line (fender)
-  }
-  // panel seams (dark grooves): hood, trunk, door gaps
-  add(place(roundedBox(1.5, 0.008, 0.012, 0.003), [0, 0.952, -0.9]), M.trim);
-  add(place(roundedBox(1.5, 0.008, 0.012, 0.003), [0, 0.99, 1.3]), M.trim);
-  for (const sx of [-1, 1]) for (const z of [-0.85, 0.21, 1.0]) add(place(roundedBox(0.01, BELT - 0.27, 0.014, 0.004), [sx * 0.873, 0.61, z]), M.trim);
-  // hood crease lines (relief)
-  for (const sx of [-1, 1]) add(place(roundedBox(0.03, 0.012, 1.05, 0.006), [sx * 0.42, 0.885, -1.5], [-0.12, 0, 0]), M.paint);
+    add(place(doorSkin(z0, z1), [-0.83, 0, 0]), M.paint); add(place(doorInner(z0, z1), [-0.775, 0, 0]), M.leatherPlain);
+    add(place(roundedBox(0.03, 0.06, 0.2, 0.028), [-0.875, 0.86, z1 - 0.14]), M.trim); add(place(handle(), [-0.885, 0.86, z1 - 0.14]), M.chrome);
+    add(place(new THREE.CapsuleGeometry(0.018, z1 - z0 - 0.1, 6, 10).rotateX(Math.PI / 2), [-0.84, BELT + 0.012, zm]), M.trim); }
+  mirror(root, [0.98, 1.04, -0.72], 1);
+  for (const sx of [-1, 1]) add(place(new THREE.CapsuleGeometry(0.045, 1.72, 6, 12).rotateX(Math.PI / 2), [sx * 0.83, 0.27, 0.08]), M.trim);   // soft sill
 
-  // ---------------------------------------------------------------- greenhouse: pillars, roof, glass
+  // ---------------------------------------------------------------- greenhouse: soft tapered pillars, pillow roof, glass
   for (const sx of [-1, 1]) {
-    add(beam(V(sx * 0.795, BELT + 0.01, -0.85), V(sx * 0.745, ROOF, -0.06), 0.05, 0.11), M.paint);                         // A pillar
-    add(place(roundedBox(0.07, ROOF - BELT, 0.09, 0.02), [sx * 0.81, (ROOF + BELT) / 2, 0.21]), M.trim);           // B pillar (black)
-    add(sideSlab([[0.8, ROOF + 0.01], [0.95, ROOF + 0.01], [1.34, BELT], [0.99, BELT]], sx * 0.79, 0.06), M.paint); // C pillar
-    add(beam(V(sx * 0.77, ROOF - 0.01, -0.07), V(sx * 0.77, ROOF - 0.01, 0.86), 0.06, 0.07), M.paint);              // roof rail
+    add(softPillar(V(sx * 0.8, BELT - 0.02, -0.87), V(sx * 0.75, ROOF - 0.01, -0.06), 0.06, 0.04), M.paint);            // A pillar
+    add(place(roundedBox(0.07, ROOF - BELT + 0.02, 0.1, 0.032), [sx * 0.81, (ROOF + BELT) / 2, 0.21]), M.trim);         // B pillar (black)
+    add(softSlab([[0.8, ROOF + 0.0], [0.96, ROOF + 0.0], [1.36, BELT - 0.01], [0.99, BELT - 0.01]], 0.08, 0.03, sx * 0.785), M.paint); // C pillar
   }
-  add(place(roundedBox(1.5, 0.05, 0.96, 0.024), [0, ROOF + 0.005, 0.39]), M.paint);
-  add(place(roundedBox(1.42, 0.02, 0.92, 0.008), [0, ROOF - 0.03, 0.39]), M.liner);                                // headliner
-  for (const sx of [-1, 1]) add(place(roundedBox(0.3, 0.012, 0.16, 0.006), [sx * 0.4, ROOF - 0.05, -0.02], [-0.25, 0, 0]), M.liner); // sun visors
-  add(place(roundedBox(0.1, 0.03, 0.04, 0.01), [0, ROOF - 0.06, -0.06]), M.plasticDk);                              // mirror
-  add(place(roundedBox(0.22, 0.06, 0.012, 0.01), [0, ROOF - 0.09, -0.07]), M.plasticDk);
+  add(pillowRoof(-0.84, 0.84, -0.12, 0.9, ROOF - 0.045, 0.1, 0.24), M.paint);
+  add(place(roundedBox(1.46, 0.02, 0.9, 0.01), [0, ROOF - 0.055, 0.39]), M.liner);                                   // headliner
+  for (const sx of [-1, 1]) add(place(roundedBox(0.3, 0.014, 0.16, 0.007), [sx * 0.4, ROOF - 0.075, -0.02], [-0.25, 0, 0]), M.liner); // sun visors
+  add(place(roundedBox(0.1, 0.03, 0.04, 0.012), [0, ROOF - 0.08, -0.06]), M.plasticDk);                              // mirror
+  add(place(roundedBox(0.22, 0.06, 0.016, 0.008), [0, ROOF - 0.11, -0.07]), M.plasticDk);
   // windshield + rear window + fixed side glass
-  const ws = quad([0.77, BELT - 0.02, -0.86], [-0.77, BELT - 0.02, -0.86], [-0.72, ROOF - 0.01, -0.07], [0.72, ROOF - 0.01, -0.07]);
+  const ws = quad([0.77, BELT - 0.02, -0.86], [-0.77, BELT - 0.02, -0.86], [-0.72, ROOF - 0.02, -0.07], [0.72, ROOF - 0.02, -0.07]);
   add(ws, M.glassWS, root, false).renderOrder = 2;
-  add(quad([-0.74, ROOF - 0.01, 0.86], [0.74, ROOF - 0.01, 0.86], [0.76, BELT + 0.005, 1.3], [-0.76, BELT + 0.005, 1.3]), M.glass, root, false).renderOrder = 2;
+  add(quad([-0.74, ROOF - 0.02, 0.86], [0.74, ROOF - 0.02, 0.86], [0.76, BELT + 0.005, 1.3], [-0.76, BELT + 0.005, 1.3]), M.glass, root, false).renderOrder = 2;
   for (const sx of [-1, 1]) {
     add(sidePoly([[0.25, BELT + 0.02], [0.99, BELT + 0.02], [0.8, ROOF - 0.04], [0.25, ROOF - 0.04]], sx * 0.825), M.glass, root, false).renderOrder = 2;
   }
   add(sidePoly([[-0.81, BELT + 0.02], [0.18, BELT + 0.02], [0.18, ROOF - 0.04], [-0.1, ROOF - 0.04]], 0.825), M.glass, root, false).renderOrder = 2;
-  // windshield + rear window black frit border / wipers
-  add(place(roundedBox(1.5, 0.03, 0.06, 0.01), [0, BELT - 0.005, -0.88]), M.trim);
-  for (const sx of [-0.35, 0.3]) add(beam(V(sx - 0.25, BELT + 0.01, -0.84), V(sx + 0.22, BELT + 0.04, -0.82), 0.015, 0.015), M.trim);
-  add(place(roundedBox(1.46, 0.03, 0.05, 0.01), [0, ROOF - 0.005, -0.08]), M.trim);
+  // windshield cowl + wipers (soft)
+  add(place(new THREE.CapsuleGeometry(0.03, 1.46, 6, 12).rotateZ(Math.PI / 2), [0, BELT - 0.005, -0.89]), M.trim);
+  for (const sx of [-0.35, 0.3]) add(softPillar(V(sx - 0.25, BELT + 0.012, -0.85), V(sx + 0.22, BELT + 0.04, -0.82), 0.012, 0.01), M.trim);
 
-  // ---------------------------------------------------------------- front + rear details
-  add(place(roundedBox(0.95, 0.16, 0.08, 0.04), [0, 0.5, -2.17]), M.trim);                                         // grille
-  for (let i = 0; i < 4; i++) add(place(roundedBox(0.88, 0.012, 0.02, 0.005), [0, 0.44 + i * 0.04, -2.215]), M.plastic);
-  add(place(roundedBox(1.55, 0.09, 0.1, 0.04), [0, 0.3, -2.14]), M.trim);                                          // lower bumper lip
-  add(place(roundedBox(1.55, 0.09, 0.1, 0.04), [0, 0.32, 2.12]), M.trim);
+  // ---------------------------------------------------------------- front + rear: chunky bumpers, soft round lights
+  add(place(roundedBox(1.78, 0.24, 0.3, 0.11, 4), [0, 0.37, -2.05]), M.paint);                                    // front bumper
+  add(place(roundedBox(1.78, 0.24, 0.3, 0.11, 4), [0, 0.39, 2.03]), M.paint);                                     // rear bumper
+  add(place(new THREE.CapsuleGeometry(0.045, 1.4, 6, 14).rotateZ(Math.PI / 2), [0, 0.26, -2.12]), M.trim);        // black lips
+  add(place(new THREE.CapsuleGeometry(0.045, 1.4, 6, 14).rotateZ(Math.PI / 2), [0, 0.28, 2.1]), M.trim);
+  add(place(roundedBox(0.82, 0.17, 0.1, 0.075, 4), [0, 0.56, -2.16]), M.trim);                                    // grille
+  add(place(new THREE.CapsuleGeometry(0.014, 0.68, 4, 10).rotateZ(Math.PI / 2), [0, 0.56, -2.215]), M.chrome);
   for (const sx of [-1, 1]) {
-    add(place(roundedBox(0.36, 0.1, 0.12, 0.04), [sx * 0.6, 0.67, -2.09], [0, sx * 0.12, 0]), M.head);              // headlights
-    add(place(roundedBox(0.38, 0.12, 0.08, 0.03), [sx * 0.6, 0.67, -2.07], [0, sx * 0.12, 0]), M.trim);
-    add(place(roundedBox(0.34, 0.13, 0.08, 0.035), [sx * 0.6, 0.84, 2.13], [0, -sx * 0.1, 0]), M.tail);             // tail lights
-    add(place(roundedBox(0.1, 0.13, 0.08, 0.03), [sx * 0.82, 0.84, 2.08], [0, -sx * 0.4, 0]), M.tailAmber);
-    add(place(roundedBox(0.16, 0.05, 0.05, 0.02), [sx * 0.6, 0.38, -2.15]), M.plasticDk);                            // fog light pods
+    const hl = new THREE.SphereGeometry(0.12, 24, 16); hl.scale(1.25, 0.9, 0.55); add(place(hl, [sx * 0.6, 0.68, -2.12]), M.head);       // headlights
+    const hr = new THREE.TorusGeometry(0.12, 0.018, 8, 28); hr.scale(1.25, 0.9, 1); add(place(hr, [sx * 0.6, 0.68, -2.16]), M.chrome);
+    const tl = new THREE.SphereGeometry(0.11, 22, 14); tl.scale(1.35, 0.85, 0.5); add(place(tl, [sx * 0.6, 0.83, 2.14]), M.tail);         // tail lights
+    const ta = new THREE.SphereGeometry(0.05, 14, 10); ta.scale(1, 1, 0.5); add(place(ta, [sx * 0.86, 0.83, 2.05]), M.tailAmber);
+    add(place(new THREE.SphereGeometry(0.045, 14, 10).scale(1.3, 0.9, 0.5), [sx * 0.6, 0.38, -2.19]), M.head);                           // fog lights
   }
-  add(place(roundedBox(0.52, 0.12, 0.012, 0.005), [0, 0.42, -2.225]), M.plate);
-  add(place(roundedBox(0.52, 0.12, 0.012, 0.005), [0, 0.6, 2.16]), M.plate);
-  add(place(roundedBox(0.56, 0.16, 0.01, 0.005), [0, 0.6, 2.154]), M.trim);
-  add(place(new THREE.CylinderGeometry(0.035, 0.035, 0.12, 14).rotateX(Math.PI / 2), [0.5, 0.25, 2.12]), M.chrome);  // exhaust
-  add(place(roundedBox(0.3, 0.035, 0.03, 0.012), [0, 0.78, 2.17]), M.chrome);                                    // trunk badge bar (no brand)
+  add(place(roundedBox(0.5, 0.12, 0.02, 0.01), [0, 0.4, -2.205]), M.plate);
+  add(place(roundedBox(0.5, 0.12, 0.02, 0.01), [0, 0.62, 2.155]), M.plate);
+  add(place(roundedBox(0.54, 0.16, 0.012, 0.006), [0, 0.62, 2.148]), M.trim);
+  add(place(new THREE.CylinderGeometry(0.035, 0.035, 0.12, 14).rotateX(Math.PI / 2), [0.5, 0.24, 2.12]), M.chrome);  // exhaust
+  add(place(new THREE.CapsuleGeometry(0.014, 0.26, 4, 10).rotateZ(Math.PI / 2), [0, 0.8, 2.17]), M.chrome);       // boot badge bar (no brand)
 
-  // ---------------------------------------------------------------- wheels
+  // ---------------------------------------------------------------- wheels: fat soft tyres, dished rims
   for (const z of [CAR.frontZ, CAR.rearZ]) for (const sx of [-1, 1]) {
     const w = new THREE.Group(); w.position.set(sx * CAR.wheelX, CAR.wheelR, z); root.add(w);
-    const ty = new THREE.TorusGeometry(0.235, 0.088, 14, 36); ty.scale(1, 1, 1.25); ty.rotateY(Math.PI / 2); add(ty, M.rubber, w);
-    for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2; add(place(new THREE.BoxGeometry(0.17, 0.012, 0.035), [0, Math.cos(a) * 0.314, Math.sin(a) * 0.314], [a, 0, 0]), M.rubber, w, false); }
-    const rimG = new THREE.CylinderGeometry(0.19, 0.19, 0.05, 30); rimG.rotateZ(Math.PI / 2); add(place(rimG, [sx * 0.07, 0, 0]), M.rim, w);
-    const lip = new THREE.TorusGeometry(0.19, 0.012, 8, 32); lip.rotateY(Math.PI / 2); add(place(lip, [sx * 0.1, 0, 0]), M.chrome, w);
+    const ty = new THREE.TorusGeometry(0.225, 0.1, 18, 40); ty.scale(1, 1, 1.25); ty.rotateY(Math.PI / 2); add(ty, M.rubber, w);
+    const rimG = new THREE.LatheGeometry([[0.001, 0.0], [0.07, 0.0], [0.17, 0.025], [0.2, 0.06], [0.2, 0.075], [0.185, 0.08], [0.0, 0.03]].map(([r, y]) => new THREE.Vector2(r, y)), 36);
+    rimG.rotateZ(-sx * Math.PI / 2); add(place(rimG, [sx * 0.04, 0, 0]), M.rim, w);
     for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2 + 0.3;
-      add(place(roundedBox(0.03, 0.15, 0.045, 0.012), [sx * 0.1, Math.cos(a) * 0.09, Math.sin(a) * 0.09], [a, 0, 0]), M.rim, w); }
-    const hub = new THREE.CylinderGeometry(0.05, 0.055, 0.03, 18); hub.rotateZ(Math.PI / 2); add(place(hub, [sx * 0.11, 0, 0]), M.chrome, w);
-    add(place(roundedBox(0.02, 0.07, 0.09, 0.01), [sx * 0.05, 0.08, 0.1]), M.plasticDk, w);                         // brake caliper peek
+      const sp = new THREE.CapsuleGeometry(0.022, 0.1, 4, 10); sp.scale(0.7, 1, 1);
+      add(place(sp, [sx * 0.1, Math.cos(a) * 0.1, Math.sin(a) * 0.1], [a, 0, 0]), M.rim, w); }
+    const hub = new THREE.SphereGeometry(0.06, 18, 12); hub.scale(0.5, 1, 1); add(place(hub, [sx * 0.105, 0, 0]), M.chrome, w);
+  }
+
+  // ---------------------------------------------------------------- soft contact shadow (AO) on the ground under the chassis + tyres
+  const blob = (w, d, soft) => canvasTex(128, 256, (g, W, H) => { g.filter = `blur(${soft}px)`; g.fillStyle = "rgba(0,0,0,1)";
+    g.beginPath(); g.roundRect(W * 0.18, H * 0.12, W * 0.64, H * 0.76, W * 0.3); g.fill(); g.filter = "none"; }, { srgb: false });
+  const shadowM = (tex, op) => new THREE.MeshBasicMaterial({ color: 0x000000, alphaMap: tex, transparent: true, opacity: op, depthWrite: false,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  const cs = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 5.4).rotateX(-Math.PI / 2), shadowM(blob(2.6, 5.4, 14), 0.62)); cs.position.y = 0.004; cs.renderOrder = -1; cs.name = "contactShadow"; root.add(cs);
+  const ct = canvasTex(64, 64, (g, W, H) => { const gr = g.createRadialGradient(32, 32, 2, 32, 32, 31); gr.addColorStop(0, "rgba(0,0,0,1)"); gr.addColorStop(0.45, "rgba(0,0,0,0.7)"); gr.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gr; g.fillRect(0, 0, W, H); }, { srgb: false });
+  for (const z of [CAR.frontZ, CAR.rearZ]) for (const sx of [-1, 1]) {
+    const tb = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.75).rotateX(-Math.PI / 2), shadowM(ct, 0.85)); tb.position.set(sx * CAR.wheelX, 0.005, z); tb.renderOrder = -1; tb.name = "contactShadow"; root.add(tb);
   }
 
   // ---------------------------------------------------------------- interior
@@ -312,6 +364,11 @@ export async function buildHeroCar({ paint = "#e8edf2", seed = 4, sunDir = [-0.3
   add(place(roundedBox(1.4, 0.03, 0.3, 0.01), [0, BELT - 0.005, 1.15]), M.plasticDk);                              // parcel shelf
   // inner door sills / B-pillar trims
   for (const sx of [-1, 1]) add(place(roundedBox(0.05, ROOF - BELT, 0.12, 0.02), [sx * 0.77, (ROOF + BELT) / 2, 0.21]), M.liner);
+
+  // every solid car mesh casts + receives shadows (glass and the contact-shadow decals excluded)
+  root.traverse((o) => { if (o.isMesh && !o.material.isShaderMaterial && o.name !== "contactShadow") { o.castShadow = true; o.receiveShadow = true; }
+    const nn = o.isMesh && o.geometry.attributes.normal;            // degenerate (zero-area) bevel faces -> zero normals -> NaN shading: fix
+    if (nn) for (let i = 0; i < nn.count; i++) { const x = nn.getX(i), y = nn.getY(i), z = nn.getZ(i); if (!(x * x + y * y + z * z > 1e-10)) nn.setXYZ(i, 0, 1, 0); } });
 
   // ---------------------------------------------------------------- anchors + views (car-local)
   const handleLocal = V(...DL(-0.9, 0.86, 0.06));

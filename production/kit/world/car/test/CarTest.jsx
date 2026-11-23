@@ -1,4 +1,4 @@
-﻿// Video 4 car + fx_v04 test bench: sunny asphalt + day sky, the hero car, bottle on the driver seat, burn FX, optics stage.
+// Video 4 car + fx_v04 test bench: sunny asphalt + day sky, the hero car, bottle on the driver seat, burn FX, optics stage.
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { AbsoluteFill, continueRender, delayRender, useCurrentFrame, useVideoConfig } from "remotion";
@@ -20,8 +20,8 @@ function world(scene, renderer) {
   scene.add(key, key.target);
   scene.add(new THREE.HemisphereLight(0xa4c4f0, 0x6a5a48, 1.05));
   // day environment for paint/chrome reflections (from the sky dome itself)
-  const es = new THREE.Scene(); es.add(createSky("day", { sunDir: SUN.toArray(), sunCol: [6, 5.6, 5] }));
-  const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(es, 0, 0.1, 500).texture; scene.environmentIntensity = 0.6;
+  const es = new THREE.Scene(); es.add(createSky("day", { sunDir: SUN.toArray(), sunCol: [10, 9.6, 9] }));
+  const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(es, 0, 0.1, 500).texture; scene.environmentIntensity = 0.55;
 }
 function capsule(scene, p, parent = scene) {
   const g = new THREE.Group(); const mat = new THREE.MeshStandardMaterial({ color: 0xc23a2a, roughness: 0.6 });

@@ -207,6 +207,18 @@
    "dur": 1.5
   },
   {
+   "src": "police_knock",
+   "at": 32.97,
+   "db": -15,
+   "dur": 1.1
+  },
+  {
+   "src": "police_knock",
+   "at": 34.98,
+   "db": -16,
+   "dur": 1.0
+  },
+  {
    "src": "whoosh",
    "at": 34.6,
    "db": -9,
@@ -286,6 +298,12 @@
    "db": -8,
    "dur": 1.4,
    "skip": 0.05
+  },
+  {
+   "src": "impact",
+   "at": 53.12,
+   "db": -12,
+   "dur": 0.5
   },
   {
    "src": "flashback_swell",

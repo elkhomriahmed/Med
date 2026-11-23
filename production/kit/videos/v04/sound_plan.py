@@ -24,6 +24,7 @@ S = [  # (file, time, dB, length s[, skip s])
  ("flight_whoosh", T(130) - 0.1, -12, 0.45), ("stairs_run_down", T(130) + 0.05, -10, 1.0),             # down the stairs
  ("flight_whoosh", T(135) - 0.1, -12, 0.45), ("running_asphalt", T(135), -11, 1.4), ("keys_fly_clatter", T(138) + 0.2, -10, 0.9, 0.2),
  ("whoosh", T(144) - 0.1, -13, 0.45), ("scorch_sizzle", T(148), -11, 1.5),                              # the glowing ring
+ ("police_knock", T(150) + 0.05, -15, 1.1), ("police_knock", T(156) + 0.3, -16, 1.0),                   # fists pounding the window (visible in the passenger POV)
  ("whoosh", T(156) - 0.08, -9, 0.45),                                                                  # snap to his face
  ("flight_whoosh", T(166) - 0.1, -9, 0.5), ("sparkle_twinkle", T(177), -14, 0.8),                       # optics: rays
  ("whoosh", T(177) - 0.1, -15, 0.4), ("sparkle_twinkle", T(190) - 0.05, -12, 0.8),                       # one single point
@@ -31,6 +32,7 @@ S = [  # (file, time, dB, length s[, skip s])
  ("flight_whoosh", T(216) - 0.1, -9, 0.45),                                                            # back to the car (oven)
  ("flight_whoosh", T(228) - 0.1, -9, 0.45), ("car_door_yank", T(229) - 0.15, -9, 0.6, 0.15),          # rips the door open
  ("seat_fire_burst", T(237) - 0.02, -8, 1.4, 0.05),                                                     # bursts into flames (shake)
+ ("impact", T(237) + 0.42, -12, 0.5),                                                                    # thrown back, lands on the asphalt
  ("flashback_swell", T(240) - 0.95, -9, 1.2), ("polaroid_flash_eject", T(240) - 0.06, -15, 0.4),        # 2017 flashback
  ("scorch_sizzle", T(251), -15, 1.2),
  ("flight_whoosh", T(262) - 0.1, -12, 0.45), ("sparkle_twinkle", T(270) - 0.05, -11, 0.8),              # the dot on his shirt
