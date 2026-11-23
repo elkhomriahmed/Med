@@ -45,6 +45,7 @@ the improved version REPLACES the old one, and the status here is changed to ✅
 | Poly Haven glTF props | `prop(name)` · world/props.js (`public/models/`) | crates, barrel, lantern, bucket, oil can/tin, books, hammer, metal jug |
 
 ## Characters (templates, not recurring cast)
+**LOCKED LOOK: read `CHARACTER_LOCK.md` + `CHARACTERS_LOCKED_reference.jpg` before any character work.**
 Video 02 specs (robber, buddy, teller1, teller2, cop, cop2, anchor, weatherman, professor) are in `characters/specs.js`; faces come from `visual_library/FACES.md`.
 **Every video builds its OWN cast: new face set per main character, new body/clothes (coat type, colour, pattern, hat, hair) per video.**
 `createCharacter(spec)` · `characters/index.js`; ready specs in `characters/specs.js`: KEEPER (red beanie, yellow knit coat,

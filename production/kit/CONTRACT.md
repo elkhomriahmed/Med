@@ -21,6 +21,7 @@ Versions are pinned: three@0.170.0, postprocessing@6.36.4, n8ao@1.9.4, remotion@
 Scale: 1 unit = 1 m, Y up, floor y = 0. Canvas 1080×1920, 30 fps. Frame budget ≤ 0.5 s on this GPU.
 
 ## API: characters/index.js
+**The look is locked (`../visual_library/CHARACTER_LOCK.md`): never change proportions/outline/face/limbs here; new people = specs.**
 ```js
 const ch = await createCharacter(spec);
 // spec: { id, faceSet: "keeper"|"engineer"|"folk"|"folkb", seed,

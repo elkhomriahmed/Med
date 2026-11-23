@@ -13,3 +13,4 @@ production/kit/videos/*/out/dbg_*.png
 production/kit/videos/*/out/*.mp4
 production/videos/**/*.mp4
 analysis/**/*.mp4
+production/visual_library/characters_ref/

@@ -2,6 +2,10 @@
 
 Read these before any creative or pipeline work. They are the source of truth; this file is only the map.
 
+**Making a video? Follow `production/RUNBOOK.md` top to bottom** (every note in one ordered checklist with 3 approval gates:
+script → look board → low-res check). **Any character work? `production/visual_library/CHARACTER_LOCK.md` +
+`CHARACTERS_LOCKED_reference.jpg`**: the approved look is locked; only specs, face identities and named poses change.
+
 | File | What it rules |
 |---|---|
 | `production/STYLE_BIBLE.md` | THE style rules. Top section = **v12 LOCKED** (wins over everything below it). Older v2–v11 notes are cumulative history; where they conflict with v12, v12 wins |
@@ -15,6 +19,8 @@ Read these before any creative or pipeline work. They are the source of truth; t
 | `production/kit/CONTRACT.md` | **The production pipeline** (three.js + Remotion): folder owners, character/world APIs, pinned versions, how to render |
 | `production/kit/TIMING.md` | Measured frame/render time and predicted time per video with the kit |
 | `final_videos/` | **Approved videos** (one folder each: MP4, script, shot list, contact sheets, NOTES.md with what worked + what went wrong). Read the latest NOTES.md before starting a new video |
+| `production/RUNBOOK.md` | **The ordered production checklist** (gates, agent brief template, tools, usage savers) |
+| `production/visual_library/CHARACTER_LOCK.md` | **Locked character look** (what never changes, what a spec may change, how screens/prints are made) + `CHARACTERS_LOCKED_reference.jpg` |
 | `production/visual_library/INDEX.md` | **Visual templates library** (places, props, characters, FX, tools): reuse + vary, never rebuild from zero |
 | `production/asset_library/{sfx,music}/INDEX.md` | **The audio library: check it first** (59 effects, 5 music beds). Old `production/library/` is merged into it |
 | `analysis/transcripts/`, `analysis/data/` | The 10 competitor Shorts: timed transcripts + per-video measurements |
