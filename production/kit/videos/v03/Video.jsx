@@ -115,6 +115,11 @@ function FxLayer({ a, t, W, H }) {
       const v = g.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, H * 0.75); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(30,18,6,0.55)");
       g.fillStyle = v; g.fillRect(0, 0, W, H);
     }
+    if (a.fx.red > 0.002) {                                                      // red alarm glow: deep red edges + a light red wash
+      const r = a.fx.red, v = g.createRadialGradient(W / 2, H / 2, H * 0.18, W / 2, H / 2, H * 0.72);
+      v.addColorStop(0, `rgba(220,30,24,${0.16 * r})`); v.addColorStop(1, `rgba(170,10,10,${0.62 * r})`);
+      g.fillStyle = v; g.fillRect(0, 0, W, H);
+    }
     if (a.fx.flash > 0.001) { g.fillStyle = `rgba(255,250,235,${0.9 * a.fx.flash})`; g.fillRect(0, 0, W, H); }
   });
   return <canvas ref={ref} width={W} height={H} style={{ position: "absolute", left: 0, top: 0, width: W, height: H }} />;

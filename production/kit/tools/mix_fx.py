@@ -20,7 +20,9 @@ for b in plan["beds"]:
         piece = fade(src.copy(), 0.08, 0.08); k = min(len(piece), L + xf - pos); seg[pos:pos + k] += piece[:k]; pos += len(src) - xf
     seg = fade(seg[:L], 0.3, 0.3) * db(b["db"]); out[a0:a1] += seg
 for s in plan["sfx"]:
-    x = fade(load(SFX + "/" + s["src"] + ".mp3"), 0.005, 0.06) * db(s["db"]); a = int(s["at"] * SR)
+    x = load(SFX + "/" + s["src"] + ".mp3")
+    if s.get("dur"): x = x[:int(s["dur"] * SR)]                     # optional length cap (s) with a 0.35 s fade-out
+    x = fade(x, 0.005, 0.35 if s.get("dur") else 0.06) * db(s["db"]); a = int(s["at"] * SR)
     if a < 0: x = x[-a:]; a = 0
     k = min(len(x), N - a); out[a:a + k] += x[:k]
 pk = np.abs(out).max(); print("fx peak %.2f" % pk)

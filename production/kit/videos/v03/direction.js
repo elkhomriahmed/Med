@@ -63,12 +63,12 @@ export function makeDirection(W) {
       K(S.rule, V(0.8, 1.7, 0.3), V(-3.4, 1.4, 0.3), 54), K(T(17) - 0.15, V(-0.9, 1.65, 0.2), SIGN, 48),
       K(T(19), V(-1.8, 1.62, 0.25), SIGN.clone().lerp(head(FM), 0.4), 44), K(S.nos, V(-1.9, 1.6, 0.35), SIGN.clone().lerp(head(FM), 0.5), 46)])],
     [S.nos, cameraPath([                                                     // 4 three snap-inserts: candle, lamp, match (whips between)
-      K(S.nos, head(CW, 1.15).add(V(0.35, 0.1, -1.25)), head(CW, 1.05), 44), K(T(22) - 0.12, head(CW, 1.15).add(V(0.25, 0.1, -1.05)), head(CW, 1.05), 42),
-      K(T(22) + 0.08, head(FM, 1.2).add(V(1.0, 0.05, -0.9)), head(FM, 1.15), 46), K(T(24) - 0.12, head(FM, 1.2).add(V(0.85, 0.05, -0.75)), head(FM, 1.15), 44),
-      K(T(24) + 0.08, head(NG, 1.15).add(V(1.6, 0.1, 0.55)), head(NG, 1.15), 48), K(S.laugh, head(NG, 1.2).add(V(1.4, 0.1, 0.5)), head(NG, 1.2), 46)])],
+      K(S.nos, head(CW, 1.15).add(V(0.6, 0.1, -2.2)), head(CW, 1.05), 48), K(T(22) - 0.12, head(CW, 1.15).add(V(0.5, 0.1, -1.95)), head(CW, 1.05), 46),
+      K(T(22) + 0.08, head(FM, 1.2).add(V(1.55, 0.1, 0.75)), head(FM, 1.15), 50), K(T(24) - 0.12, head(FM, 1.2).add(V(1.35, 0.1, 0.65)), head(FM, 1.15), 48),
+      K(T(24) + 0.08, head(NG, 1.15).add(V(2.3, 0.1, 0.8)), head(NG, 1.1), 50), K(S.laugh, head(NG, 1.2).add(V(2.1, 0.1, 0.72)), head(NG, 1.1), 48)])],
     [S.laugh, cameraPath([                                                   // 5 he laughs: "pancakes, not bombs!"
-      K(S.laugh, head(NG).add(V(1.95, -0.12, 0.45)), head(NG, 1.25), 56), K(T(37), head(NG).add(V(1.6, -0.08, 0.35)), head(NG, 1.3), 52),
-      K(T(41), head(NG).add(V(1.35, -0.05, 0.25)), head(NG, 1.32), 48), K(S.night, head(NG).add(V(1.2, 0.0, 0.2)), head(NG, 1.35), 46)])],
+      K(S.laugh, head(NG).add(V(3.6, -0.15, 0.7)), head(NG, 0.95), 58), K(T(37), head(NG).add(V(3.3, -0.12, 0.62)), head(NG, 0.98), 58),
+      K(T(41), head(NG).add(V(3.05, -0.1, 0.56)), head(NG, 1.0), 56), K(S.night, head(NG).add(V(2.9, -0.08, 0.52)), head(NG, 1.02), 56)])],
     [S.night, cameraPath([                                                   // 6 night outside: freezing
       K(S.night, V(16, 3.4, 24), V(0, 4.0, 0), 52), K(S.sneak, V(12.5, 3.8, 18.5), V(-1, 4.6, 1), 48)])],
     [S.sneak, cameraPath([                                                   // 7 he sneaks up the stairs with the candle (glides inside the mill)
@@ -123,7 +123,7 @@ export function makeDirection(W) {
 
   // ---- per-frame story state
   function act(t, live) {
-    const cast = {}, props = {}, overlays = [], fx = { whip: 0, flash: 0, sepia: 0 }, ctrl = {};
+    const cast = {}, props = {}, overlays = [], fx = { whip: 0, flash: 0, sepia: 0, red: 0 }, ctrl = {};
     const z = zoneAt(t), cam = live.camPos();
     const blink = (ts) => (ts.some((b) => t >= b && t < b + 0.12) ? "_blink" : "");
     // transitions: whips/flashes at every cut
@@ -230,11 +230,9 @@ export function makeDirection(W) {
     cast.miller2 = C;
 
     // ---- 2D gags (stamped red X on each banned thing, the 1878 title)
-    if (t >= T(21) && t < T(22) + 0.05) overlays.push({ kind: "nope", at: head(CW, 1.2), t0: T(21) });
-    if (t >= T(23) && t < T(24) + 0.05) overlays.push({ kind: "nope", at: head(FM, 1.35), t0: T(23) });
-    if (t >= T(27) && t < S.laugh) overlays.push({ kind: "nope", at: head(NG, 1.15), t0: T(27) });
+    // "No candles. No lamps. Not even a match": a red warning glow washes over the whole frame on each ban (with the buzzer)
+    fx.red = [T(21), T(23), T(27)].reduce((m, w) => Math.max(m, t >= w - 0.04 ? sm(w - 0.04, w + 0.03, t) * Math.exp(-Math.max(0, t - w - 0.03) / 0.28) : 0), 0);
     if (t >= T(253) && t < S.last) overlays.push({ kind: "title", text: "1878", t0: T(253) });
-    if (t >= T(41) && t < T(43) + 0.4) overlays.push({ kind: "flourPuff", at: head(NG, 1.3).add(V(0.25, 0, 0.3)), t0: T(41) });
 
     return { cast, props, overlays, fx, ctrl, zone: z };
   }
