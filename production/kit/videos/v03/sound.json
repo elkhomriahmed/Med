@@ -32,9 +32,10 @@
   },
   {
    "src": "explosion_big",
-   "at": 1.41,
+   "at": 1.44,
    "db": -19,
-   "dur": 1.1
+   "dur": 1.1,
+   "skip": 0.86
   },
   {
    "src": "walls_collapse_debris",
@@ -147,9 +148,10 @@
   },
   {
    "src": "fireball_whump",
-   "at": 20.77,
+   "at": 20.8,
    "db": -10,
-   "dur": 1.4
+   "dur": 1.0,
+   "skip": 0.55
   },
   {
    "src": "laugh_kneeslap",
@@ -229,9 +231,10 @@
   },
   {
    "src": "explosion_big",
-   "at": 46.58,
+   "at": 46.6,
    "db": -17,
-   "dur": 1.5
+   "dur": 1.5,
+   "skip": 0.86
   },
   {
    "src": "walls_collapse_debris",
@@ -264,16 +267,16 @@
    "dur": 1.0
   },
   {
-   "src": "whoosh",
-   "at": 55.22,
-   "db": -10,
-   "dur": 0.6
+   "src": "flashback_swell",
+   "at": 54.35,
+   "db": -9,
+   "dur": 1.2
   },
   {
    "src": "polaroid_flash_eject",
-   "at": 55.2,
-   "db": -12,
-   "dur": 0.45
+   "at": 55.24,
+   "db": -14,
+   "dur": 0.4
   },
   {
    "src": "distant_boom_echo",

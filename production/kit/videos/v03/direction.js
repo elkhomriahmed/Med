@@ -89,7 +89,7 @@ export function makeDirection(W) {
     [S.puff, cameraPath([vw(SCI.puff, 0, 0, S.puff), vw(SCI.puff, 0.18, -4, S.chain - 0.05)])],  // 12b specks wrapped in oxygen
     [S.chain, cameraPath([vw(SCI.chain, 0, 2, S.chain), vw(SCI.chain, -0.35, 8, S.warm - 0.05)])], // 12c the chain reaction
     [S.warm, cameraPath([                                                    // 13 back in the white room: the perfect cloud
-      K(S.warm, CF(2.6, 1.3, 0.5), midFace, 58), K(T(197), CF(2.4, -0.4, 0.6), midFace, 56), K(S.boom - 0.05, CF(1.9, -1.2, 0.4), midFace, 52)])],
+      K(S.warm, CF(1.9, 0.7, 0.3), midFace, 54), K(T(196), CF(2.05, 0.6, 0.45), midFace, 54), K(S.boom - 0.05, CF(2.3, 0.45, 0.65), midFace, 54)])],
     [S.boom, cameraPath([                                                    // 14 BOOM: the roof flies off, the walls fold out
       K(S.boom, V(14, 3.0, 22), V(-1, 4.0, 0), 50), K(T(215), V(17, 6.5, 26), V(0, 7.5, 0), 58), K(S.flies - 0.05, V(19, 7.0, 28), V(-1, 5.0, 0), 56)])],
     [S.flies, cameraPath([                                                   // 15 he flies out the window into the river
@@ -145,8 +145,8 @@ export function makeDirection(W) {
     ctrl.haze = z === "mill" && t < S.tease ? 0.75 : t >= T(58) && t < S.boom && z === "mill" ? 0.55 + 0.3 * sm(T(60), T(66), t) : 0;
     ctrl.sparks = t >= S.strange && t < S.whump + 0.3 ? sm(T(76), T(78), t) * (1 - sm(S.whump, S.whump + 0.3, t)) : 0;
     ctrl.fireball = t >= T(90) - 0.1 && t < S.shook ? fb(t) : -1;
-    ctrl.dust = t >= T(118) && t < S.boom ? sm(T(118) - 0.3, T(126), t) : 0;
-    ctrl.whiteout = t >= T(127) && t < S.boom ? (t < S.how ? 0.75 * sm(T(127), T(131), t) : t < S.warm ? 0.75 : 0.75 + 0.2 * sm(S.warm, T(201), t)) : 0;
+    ctrl.dust = t >= T(118) && t < S.boom ? sm(T(118) - 0.3, T(126), t) * (t >= S.warm ? 0.45 + 0.55 * sm(T(196), T(199), t) : 1) : 0;
+    ctrl.whiteout = t >= T(127) && t < S.boom ? (t < S.how ? 0.75 * sm(T(127), T(131), t) : t < S.warm ? 0.75 : 0.22 + 0.74 * sm(T(196) - 0.1, T(199), t)) : 0;   // warm-up: he is clearly visible, then the cloud swallows him mid-sentence
     ctrl.science = { pile: sm(S.sci + 0.2, T(157), t), puff: sm(S.puff + 0.1, T(170), t), chain: 0.62 * sm(S.chain + 0.1, T(188), t) };
     ctrl.splash = t >= T(234) - 0.05 && t < S.real ? cl((t - T(234) + 0.05) / 1.2, 0, 1) : -1;
     ctrl.glassBroken = t >= S.boom;

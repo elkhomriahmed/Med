@@ -104,3 +104,4 @@ Check here FIRST. Only generate with ElevenLabs if nothing fits; then save the n
 | ambience (loop) | `river_night_loop.mp3` | 5.0 | gentle river at night beside a town, crickets | ElevenLabs (2026-11-23) | video 03 |
 | cartoon | `buzzer_nope.mp3` | 0.6 | short cartoon wrong-answer buzzer | ElevenLabs (2026-11-23) | video 03 |
 | cartoon | `tiptoe_stairs.mp3` | 2.0 | sneaky cartoon tiptoe steps on creaky wooden stairs | ElevenLabs (2026-11-23) | video 03 |
+| transition | `flashback_swell.mp3` | 1.2 | flashback/time-travel transition: reverse cymbal swell into a soft shimmer whoosh (peaks at the end: place it so the peak hits the cut) | ElevenLabs (2026-11-23) | video 03 |

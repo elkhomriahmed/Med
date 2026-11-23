@@ -665,6 +665,11 @@ the wrong way. From now on:
    explanation, a ticking clock with no clock, a page turn on a title, a bell on the last word) is noise and is left out.
    Cuts keep only a short, quiet accent (whoosh/shutter ≤0.5 s). The "≥30 distinct effects" target never justifies filler:
    fewer, meaningful effects beat a full count (video 3 ended at 24).
+2a. **The HIT lands on the frame, not the file start.** Many library files have a build-up before their hit (explosion_big:
+   0.89 s, fireball_whump: peaks at 0.65 s; flashback_swell peaks at 0.99 s). Measure each file's onset/peak and either skip
+   the pre-roll (`(file, time, dB, length, skip)` → mix_fx `skip`) or place a swell so its peak hits the cut. A boom that
+   starts 0.9 s after the blast was the user's note on video 3.
+2c. **Flashbacks/time jumps get a flashback sound** (`flashback_swell`) whose peak lands on the cut.
 2b. **Every effect sits exactly on its picture.** Each sound belongs to something we SEE at that frame (hit, slap, splash,
    flash, cut). No sound for an action that isn't on screen (footsteps with nobody walking, a door creak with no door, a gasp
    with nobody there, a boing with no bounce). Check each effect's time against the direction (what is visible at that time),
@@ -676,3 +681,7 @@ the wrong way. From now on:
    (`"pieces": [[a, b], ...]` in sound.json, crossfaded by mix_fx). The music is audible under the voice from the first frame.
 5. A sound-only fix never needs a re-render: re-mix (`mix_fx.py`), then mux the voice + fx onto the rendered picture
    (`ffmpeg … amix=inputs=2:normalize=0`) and master with `timeline/finish.sh` (trim to exactly −14.0 LUFS).
+
+- **Never fill the whole frame with an effect for a whole beat** (user, 2026-11-23, video 3 "warm-up" white-out): keep the
+  character readable first, then let the cloud/smoke/flash take him in the MIDDLE of the sentence; a full-screen effect lasts
+  ≤ ~1 s. The viewer must always have a face or a clear object to look at.

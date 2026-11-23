@@ -29,6 +29,7 @@ for b in plan["beds"]:
     seg = fade(seg[:L], 0.3, 0.3) * db(b["db"]); out[a0:a1] += seg
 for s in plan["sfx"]:
     x = load(SFX + "/" + s["src"] + ".mp3")
+    if s.get("skip"): x = x[int(s["skip"] * SR):]                  # start from the hit: drop the file's pre-roll (s)
     if s.get("dur"): x = x[:int(s["dur"] * SR)]                     # optional length cap (s) with a 0.35 s fade-out
     x = fade(x, 0.005, 0.35 if s.get("dur") else 0.06) * db(s["db"]); a = int(s["at"] * SR)
     if a < 0: x = x[-a:]; a = 0
