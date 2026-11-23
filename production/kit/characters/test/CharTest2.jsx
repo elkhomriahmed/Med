@@ -3,7 +3,7 @@
 //   npx remotion still characters/test/index.js Poses2 characters/out/poses_v02_<n>.png --gl=angle --frame=N
 //   npx remotion render characters/test/index.js Seq2 characters/out/seq_v02 --sequence --image-format=png --gl=angle
 import React, { useEffect, useRef, useState } from "react";
-import { AbsoluteFill, continueRender, delayRender, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, continueRender, delayRender, useCurrentFrame, useVideoConfig, getInputProps } from "remotion";
 import * as THREE from "three";
 import { createCharacter, armAt, visemeAt } from "../index.js";
 import { SPECS } from "../specs.js";
@@ -62,7 +62,7 @@ export const Cast2 = () => {
   const b = useBench(async (canvas, W, H) => {
     const { renderer, scene, key, lampBall } = baseScene(canvas, W, H); key.position.set(0.5, 3.2, 2.2); lampBall.position.copy(key.position);
     const camera = new THREE.PerspectiveCamera(58, W / H, 0.05, 100);
-    const chars = await Promise.all(CAST2.map((k) => createCharacter(SPECS[k])));
+    const chars = await Promise.all((getInputProps().cast || CAST2).map((k) => createCharacter(SPECS[k])));   // --props='{"cast":[...]}' to check any cast
     chars.forEach((c, i) => { c.root.position.set(-1.6 + (i % 5) * 0.8, i >= 5 ? 0.62 : 0, i < 5 ? 0.5 : -0.6); if (i >= 5) c.root.position.x += 0.4; c.root.rotation.y = 0.25 - 0.12 * (i % 5); scene.add(c.root); });
     return { renderer, scene, camera, chars };
   }, async ({ renderer, scene, camera, chars }, frame) => {

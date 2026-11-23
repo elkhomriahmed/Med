@@ -109,5 +109,23 @@ export const PROFESSOR = {                                                      
   hat: null, hair: { color: "#c9c7c2", style: "professor" },
 };
 
+// ---- video 3 (flour mill, 1870s, night; scheme: cool navy/teal base + hot fire/red accents, flour white)
+export const NEWGUY = {                                                                 // the protagonist: bright red knit jumper (brightest thing in frame), navy flat cap
+  id: "newguy", faceSet: "lib_youngman_a", seed: 211,
+  coat: { type: "knit", color: "#d8322a", accent: "#8e1c18", buttons: null, placket: false, pockets: false, hem: "#a82420" },
+  hat: "cap", hatColor: "#1f2b3a", hair: { color: "#3a2618", style: "short" },
+};
+export const FOREMAN = {                                                                // steel-blue coat + flour-white apron, grey hair, bushy moustache
+  id: "foreman", faceSet: "lib_oldman_moustache", seed: 223,
+  coat: { type: "tweed", color: "#3e5a78", accent: "#2a4058", apron: "#f2efe6", placket: false, buttons: null, pockets: false },
+  hat: null, hair: { color: "#cfcac2", style: "short" },
+};
+export const MILLER2 = {                                                                // co-worker: navy/white stripes, grey beret, tired face
+  id: "miller2", faceSet: "lib_sleepy", seed: 229,
+  coat: { type: "stripes", color: "#e9e6dd", accent: "#22365a", buttons: null, placket: false, pockets: false },
+  hat: "beret", hatColor: "#5a6370", bandColor: "#3a404a", pomColor: "#5a6370",
+};
+
 export const SPECS = { keeper: KEEPER, engineer: ENGINEER, captain: CAPTAIN, sailorA: SAILOR_A, sailorB: SAILOR_B, fisher: FISHER, baker: BAKER, lady: LADY, kid: KID,
-  robber: ROBBER, buddy: BUDDY, teller1: TELLER_1, teller2: TELLER_2, cop: COP, cop2: COP_2, anchor: NEWS_ANCHOR, weatherman: WEATHERMAN, professor: PROFESSOR };
+  robber: ROBBER, buddy: BUDDY, teller1: TELLER_1, teller2: TELLER_2, cop: COP, cop2: COP_2, anchor: NEWS_ANCHOR, weatherman: WEATHERMAN, professor: PROFESSOR,
+  newguy: NEWGUY, foreman: FOREMAN, miller2: MILLER2 };

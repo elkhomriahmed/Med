@@ -9,3 +9,4 @@ Check here FIRST. Only compose with ElevenLabs if nothing fits; then save the ne
 | `cartoon_funny_87s.mp3` | 87.0 | older library (see production/library/music/INDEX.md) | older library | - |
 | `cartoon_funny_quirky_5min.mp3` | 301.5 | older library (see production/library/music/INDEX.md) | older library | video 01 sample |
 | `everything_in_its_right_place.mp3` | 251.4 | check the licence before publishing (title matches a commercial song) | older library | - |
+| `music_bed_v03_comedic_suspense_140.mp3` | 66.0 | fast comedic-suspense underscore, 140 BPM: pizzicato + staccato bassoon, ticking percussion, snappy snare, building string ostinatos, light brass stabs (user disliked the v01 bed) | ElevenLabs (2026-11-23) | video 03 |

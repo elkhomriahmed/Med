@@ -88,3 +88,19 @@ Check here FIRST. Only generate with ElevenLabs if nothing fits; then save the n
 | ambience (loop) | `bank_lobby_loop.mp3` | 5.0 | quiet bank lobby: soft murmur, printer, pen click, AC hum | ElevenLabs (2026-11-19) | video 02 |
 | foley | `newspaper_snap.mp3` | 1.0 | newspaper opened and snapped straight, crisp rustle | ElevenLabs (2026-11-19) | video 02 |
 | metal/prison | `handcuffs_click.mp3` | 1.0 | handcuffs ratcheting shut: two quick clicks + short chain jingle | ElevenLabs (2026-11-20) | video 02 |
+| fire | `match_strike_candle.mp3` | 1.5 | wooden match strike + flare, a candle wick catching (soft whoosh) | ElevenLabs (2026-11-23) | video 03 |
+| cartoon/powder | `flour_poof.mp3` | 1.0 | soft cartoon poof of flour/powder thrown in the air | ElevenLabs (2026-11-23) | video 03 |
+| foley | `sign_slap.mp3` | 0.8 | paper warning sign slapped onto a wooden wall + flutter | ElevenLabs (2026-11-23) | video 03 |
+| fire/magic | `sparks_crackle.mp3` | 2.0 | tiny sparks popping and crackling in the air like a sparkler | ElevenLabs (2026-11-23) | video 03 |
+| fire | `fireball_whump.mp3` | 1.5 | deep soft whump of a fireball igniting and rolling, dies quickly | ElevenLabs (2026-11-23) | video 03 |
+| wood/structure | `beams_rattle_creak.mp3` | 2.0 | old wooden beams shaking and rattling, heavy creaks, dust falling | ElevenLabs (2026-11-23) | video 03 |
+| powder | `dust_pour.mp3` | 2.0 | fine powder/dust pouring down like sand, soft hissing cascade | ElevenLabs (2026-11-23) | video 03 |
+| fire | `chain_reaction_crackle.mp3` | 1.5 | rapid accelerating chain of crackling ignitions + rising whoosh | ElevenLabs (2026-11-23) | video 03 |
+| destruction | `walls_collapse_debris.mp3` | 3.0 | wooden walls collapsing outward, roof timbers cracking, debris rain | ElevenLabs (2026-11-23) | video 03 |
+| glass | `window_smash.mp3` | 1.2 | old window pane smashing (someone flies through), shards tinkling | ElevenLabs (2026-11-23) | video 03 |
+| cartoon | `cartoon_fall_whistle.mp3` | 1.5 | descending slide-whistle fall as a character flies through the air | ElevenLabs (2026-11-23) | video 03 |
+| destruction | `distant_boom_echo.mp3` | 2.5 | distant huge explosion rolling and echoing over a far town | ElevenLabs (2026-11-23) | video 03 |
+| ambience (loop) | `mill_night_loop.mp3` | 5.0 | old flour mill at night: creaking timbers, distant water wheel, soft grinding | ElevenLabs (2026-11-23) | video 03 |
+| ambience (loop) | `river_night_loop.mp3` | 5.0 | gentle river at night beside a town, crickets | ElevenLabs (2026-11-23) | video 03 |
+| cartoon | `buzzer_nope.mp3` | 0.6 | short cartoon wrong-answer buzzer | ElevenLabs (2026-11-23) | video 03 |
+| cartoon | `tiptoe_stairs.mp3` | 2.0 | sneaky cartoon tiptoe steps on creaky wooden stairs | ElevenLabs (2026-11-23) | video 03 |
