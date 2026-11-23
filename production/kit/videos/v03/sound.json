@@ -124,10 +124,10 @@
    "dur": 1.9
   },
   {
-   "src": "match_strike_candle",
-   "at": 13.28,
-   "db": -11,
-   "dur": 1.0
+   "src": "whoosh",
+   "at": 12.22,
+   "db": -15,
+   "dur": 0.45
   },
   {
    "src": "sparkle_twinkle",

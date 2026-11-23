@@ -418,7 +418,7 @@ export function createScienceStage({ origin = new THREE.Vector3(300, 0, 300), se
       puff: { pos: W(0, 1.22, 0.95), target: W(0, 1.2, 0), fov: 36 }, chain: { pos: W(2.4, 1.22, 1.75), target: W(2.4, 1.2, 0), fov: 40 } },
   };
   const tmp = new THREE.Vector3();
-  function set({ pile: kp = 0, puff: kf = 0, chain: kc = 0 } = {}, t = 0) {
+  function set({ pile: kp = 0, puff: kf = 0, chain: kc = 0, hold = false } = {}, t = 0) {   // hold: lit specks keep burning (no burn-out)
     // (a) pile: candle lit, char spot grows, a thin wisp rises (no fire spreads)
     candle.set(ss(0, 0.06, kp) * (kp > 0 ? 1 : 0), t);
     const rad = 0.004 + 0.05 * ss(0.05, 1, kp), col = heap.attributes.color, pos = heap.attributes.position;
@@ -444,15 +444,15 @@ export function createScienceStage({ origin = new THREE.Vector3(300, 0, 300), se
     // (c) chain: haloed specks ignite speck to speck; a spark jumps from the parent to each new speck
     let lit = 0; const fc = new THREE.Vector3();
     for (const s of chS) {
-      const age = (kc - s.ig) / 0.1, burn = age > 0 ? ss(0, 0.25, age) : 0, out = ss(0.6, 1.4, age);
+      const age = (kc - s.ig) / 0.1, burn = age > 0 ? ss(0, 0.25, age) : 0, out = hold ? 0 : ss(0.6, 1.4, age);
       const p = s.p; const jx = Math.sin(t * 0.7 + s.ph) * 0.006, jy = Math.sin(t * 0.5 + s.ph * 2) * 0.006;
       const spc = mixC(mixC(Fl, [0.12, 0.11, 0.1], out), [4, 2.6, 1.2], burn * (1 - out));
       SP.push(p.x + jx, p.y + jy, p.z, s.s, s.s, s.ph, spc[0], spc[1], spc[2], 1 - 0.5 * out, SHAPE.puff, s.seed);
       const halo = 1 - ss(0, 0.3, age), hs = s.s * 2.9 * (1 + 0.06 * Math.sin(t * 2 + s.ph));
       if (halo > 0.003) GL.push(p.x + jx, p.y + jy, p.z, hs, hs, 0, OX[0] * 1.6, OX[1] * 1.6, OX[2] * 1.6, 0.8 * halo, SHAPE.halo, s.seed);
-      if (age > 0 && age < 1.6) { const fe = ss(0, 0.2, age) * (1 - ss(0.5, 1.6, age)), fs = s.s * (2 + 5 * ss(0, 0.6, age));
+      if (age > 0 && (hold || age < 1.6)) { const fe = ss(0, 0.2, age) * (hold ? 0.8 + 0.2 * Math.sin(t * 9 + s.ph * 5) : 1 - ss(0.5, 1.6, age)), fs = s.s * (2 + 5 * ss(0, 0.6, Math.min(age, 0.6)));
         const fcol = mixC(FI.map((v) => v * 3), [4, 3.4, 2.2], 1 - ss(0, 0.6, age));
-        GL.push(p.x + jx, p.y + jy + age * 0.02, p.z, fs, fs, s.ph + age, fcol[0], fcol[1], fcol[2], fe * 0.75, SHAPE.fire, s.seed); lit += fe; fc.addScaledVector(p, fe); }
+        GL.push(p.x + jx, p.y + jy + Math.min(age, 1.5) * 0.02, p.z, fs, fs, s.ph + age, fcol[0], fcol[1], fcol[2], fe * 0.75, SHAPE.fire, s.seed); lit += fe; fc.addScaledVector(p, fe); }
       const ja = (kc - (s.ig - 0.035)) / 0.035;
       if (s.parent && ja > 0 && ja < 1.25) { tmp.copy(s.parent.p).lerp(p, cl(ja)); const a = ss(0, 0.3, ja) * (1 - ss(1, 1.25, ja)), sz = 0.03;
         GL.push(tmp.x, tmp.y, tmp.z, sz, sz, ja * 3, GO[0] * 6, GO[1] * 6, GO[2] * 6, a, SHAPE.spark, s.seed); }

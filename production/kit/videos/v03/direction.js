@@ -72,8 +72,11 @@ export function makeDirection(W) {
     [S.night, cameraPath([                                                   // 6 night outside: freezing
       K(S.night, V(16, 3.4, 24), V(0, 4.0, 0), 52), K(S.sneak, V(12.5, 3.8, 18.5), V(-1, 4.6, 1), 48)])],
     [S.sneak, cameraPath([                                                   // 7 he sneaks up the stairs with the candle (glides inside the mill)
-      K(S.sneak, V(0.6, 1.5, 1.4), V(3.5, 1.6, -0.6), 50), K(T(55), V(1.6, 4.1, 1.3), head(SB.clone().lerp(ST, 0.6)), 56),
-      K(T(60), V(2.9, 4.95, -1.6), head(ST.clone().lerp(TOP, 0.5)), 58), K(S.strange, CF(2.3, 1.0, 0.4), midFace, 56)])],
+      K(S.sneak, V(0.6, 1.5, 1.4), V(3.5, 1.6, -0.6), 50), K(T(55), V(1.1, 2.3, 1.7), head(SB.clone().lerp(ST, 0.55)), 54),
+      K(T(59) - 0.02, V(1.4, 2.7, 1.5), head(ST, 0.9), 54)])],                // stays below the top floor (never through the boards)
+    [T(59), cameraPath([                                                     // 7b whip cut upstairs: framed away from his walking path
+      K(T(59), CF(2.8, 1.5, 0.55), head(ST.clone().lerp(TOP, 0.35)), 58), K(T(62), CF(2.6, 1.25, 0.5), head(ST.clone().lerp(TOP, 0.75)), 58),
+      K(S.strange, CF(2.3, 1.0, 0.4), midFace, 56)])],
     [S.strange, cameraPath([                                                 // 8 the air sparkles (push in, orbit)
       K(S.strange, CF(2.3, 1.0, 0.4), midFace, 56), K(T(75), CF(1.6, 0.6, 0.15), FLAME.clone().lerp(midFace, 0.5), 50),
       K(T(79), CF(1.1, 0.25, 0.05), midFace, 42), K(T(84), CF(1.3, -0.8, 0.1), midFace, 44), K(S.whump - 0.1, CF(1.9, -0.9, 0.3), midFace, 50)])],
@@ -130,7 +133,7 @@ export function makeDirection(W) {
     // transitions: whips/flashes at every cut
     const pulse = (c, a = 0.06, b = 0.16) => sm(c - a, c, t) * (1 - sm(c + 0.02, c + b, t));
     fx.whip = Math.max(pulse(S.rule), pulse(S.nos), pulse(T(22) - 0.02, 0.08, 0.12), pulse(T(24) - 0.02, 0.08, 0.12), pulse(S.laugh), pulse(S.night),
-      pulse(S.sneak), pulse(S.how, 0.04, 0.12), pulse(S.sci), pulse(S.puff), pulse(S.chain), pulse(S.warm), pulse(S.flies), pulse(S.last));
+      pulse(S.sneak), pulse(T(59), 0.05, 0.12), pulse(S.how, 0.04, 0.12), pulse(S.sci), pulse(S.puff), pulse(S.chain), pulse(S.warm), pulse(S.flies), pulse(S.last));
     fx.flash = Math.max(sm(S.tease - 0.03, S.tease, t) * (1 - sm(S.tease + 0.02, S.tease + 0.12, t)), 0.9 * sm(S.boom - 0.03, S.boom, t) * (1 - sm(S.boom + 0.03, S.boom + 0.16, t)),
       0.8 * sm(S.real - 0.03, S.real, t) * (1 - sm(S.real + 0.02, S.real + 0.14, t)));
     fx.sepia = t >= S.real && t < S.last ? 1 : 0;
@@ -147,7 +150,7 @@ export function makeDirection(W) {
     ctrl.fireball = t >= T(90) - 0.1 && t < S.shook ? fb(t) : -1;
     ctrl.dust = t >= T(118) && t < S.boom ? sm(T(118) - 0.3, T(126), t) * (t >= S.warm ? 0.45 + 0.55 * sm(T(196), T(199), t) : 1) : 0;
     ctrl.whiteout = t >= T(127) && t < S.boom ? (t < S.how ? 0.75 * sm(T(127), T(131), t) : t < S.warm ? 0.75 : 0.22 + 0.74 * sm(T(196) - 0.1, T(199), t)) : 0;   // warm-up: he is clearly visible, then the cloud swallows him mid-sentence
-    ctrl.science = { pile: sm(S.sci + 0.2, T(157), t), puff: sm(S.puff + 0.1, T(170), t), chain: 0.62 * sm(S.chain + 0.1, T(188), t) };
+    ctrl.science = { pile: sm(S.sci + 0.2, T(157), t), puff: sm(S.puff + 0.1, T(170), t), chain: sm(S.chain + 0.1, E(188) - 0.15, t), hold: true };   // burns through every speck, finishing with the sentence
     ctrl.splash = t >= T(234) - 0.05 && t < S.real ? cl((t - T(234) + 0.05) / 1.2, 0, 1) : -1;
     ctrl.glassBroken = t >= S.boom;
 

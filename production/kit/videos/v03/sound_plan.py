@@ -12,7 +12,7 @@ S = [  # (file, time, gain dB[, length s]) — RULE 2026-11-23: every effect is 
  ("flight_whoosh", T(24) - 0.12, -14), ("buzzer_nope", T(27), -11),
  ("flight_whoosh", T(31) - 0.12, -11), ("laugh_kneeslap", T(31) + 0.05, -12),
  ("whoosh", T(44) - 0.12, -11), ("wind", T(44), -15, 1.2),
- ("flight_whoosh", T(50) - 0.12, -12), ("tiptoe_stairs", T(52), -12), ("match_strike_candle", T(64) - 0.08, -11),
+ ("flight_whoosh", T(50) - 0.12, -12), ("tiptoe_stairs", T(52), -12), ("whoosh", T(59) - 0.08, -15, 0.45),   # whip cut upstairs ("match_strike_candle", T(64) - 0.08, -11),
  ("sparkle_twinkle", T(76), -12), ("sparks_crackle", T(79), -11, 2.6),
  ("whoosh", T(89) - 0.1, -11), ("fireball_whump", T(90) - 0.02, -10, 1.0, 0.55), ("laugh_kneeslap", T(104), -13),
  ("flight_whoosh", T(107) - 0.12, -11), ("beams_rattle_creak", T(112) - 0.1, -10), ("ship_creak_wave", T(114), -16, 1.0),
