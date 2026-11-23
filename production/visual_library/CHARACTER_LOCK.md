@@ -34,6 +34,10 @@ must recognise the same person in every shot. Story effects (dust, wet, soot) ar
 character (particles, drips, a light overlay), never by changing the spec. A second rig of the same person (for a stunt) uses
 the SAME spec.
 
+## 2c. Back view (2026-11-23)
+When the camera is behind the body (past ~95°), the face drawing fades out and the back of the head (hair/hat) shows. Never a
+face on the back of a head. `state.backView: false` forces the face (rare).
+
 ## 3. How every person on screen is made
 - **Live in the scene:** `createCharacter(SPECS.x)`. Acting = state (`expression`, `mouth`, `lookAt`, arm poses via `armAt`, `sit`, `bob`, `nod`).
 - **On a TV / CCTV / photo / newspaper / book / poster:** a REAL render of a spec through the mini renderer (render target → canvas

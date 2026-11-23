@@ -733,3 +733,18 @@ pre-roll, no decorative noise, booms under the voice, music from frame 1 via `pi
 - No subject passes within 0.6 m of the lens; no blank frames from a camera inside a character (check every insert camera).
 - A character's look never changes; a stunt double uses the same spec. Run `popscan` + a contact sheet of every cut and every
   camera move before the final render.
+
+---
+## 2026-11-23 — Lessons from video 4 (user notes)
+- **Body and face must agree.** If a character's body faces away from the camera, we see the BACK of his head (hair, no face):
+  the character code now fades the face drawing out past ~95° (`faceA`; `state.backView: false` forces the face). Prefer
+  cameras that show the face from the front/3-4; for an action aimed at something (opening a door, a blast), film from behind.
+- **Show struggle from the inside:** a trapped/panicking moment reads best from inside the object (passenger-seat POV: the
+  burning seat in front, his scared face pressed to the window).
+- **Shock/blast hits the character:** a big hit throws him back off his feet (arc back ~1.7 m, lands sitting), with shake.
+- **Every prop/vehicle in our style:** rounded toy-like volumes (big fillets, bulgy shapes), clearcoat/reflective materials
+  that show the sky and sun, casting + receiving shadows, a contact shadow under it. No hard box edges.
+- **No empty places:** exteriors need life and depth in every shot: other parked cars, buildings, doors, signs, and people
+  passing in the background (when the story allows; keep it empty only when the line says so). Avoid low angles that show
+  mostly sky.
+- **Check heads at windows/doors:** frames, blinds and walls above can hide hair (bald look); frame level with the opening.
