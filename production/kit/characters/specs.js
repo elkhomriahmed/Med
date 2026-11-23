@@ -126,6 +126,24 @@ export const MILLER2 = {                                                        
   hat: "beret", hatColor: "#5a6370", bandColor: "#3a404a", pomColor: "#5a6370",
 };
 
+// ---- video 4 (office parking lot, sunny noon; scheme: cool sky/asphalt/teal base + hot dot/fire/red-shirt accents)
+export const DRIVER = {                                                                 // the new guy: bright red polo (brightest thing in frame), short dark hair
+  id: "driver", faceSet: "folk", seed: 241,
+  coat: { type: "jersey", color: "#d8322a", accent: "#9a1e1a", zip: null, buttons: "#f2ece2", placket: true, pockets: false, hem: "#a82420" },
+  hat: null, hair: { color: "#2a1c14", style: "short" },
+};
+export const COWORKER = {                                                               // office coworker: navy blazer over a white blouse, auburn bun, mug in hand
+  id: "coworker", faceSet: "lib_woman_b", seed: 251,
+  coat: { type: "tweed", color: "#2b3f66", accent: "#1d2c4a", shirtPanel: "#eef0f2", panelPlain: true, buttons: null, placket: false, pockets: false },
+  hat: null, hair: { color: "#3a2418", style: "bun" },
+};
+export const IDAHO_MAN = {                                                              // 2017 flashback man: teal check shirt, ball cap (sepia shot)
+  id: "idahoMan", faceSet: "lib_nerd", seed: 263,
+  coat: { type: "check", color: "#2f7f8f", accent: "#1f5560", buttons: "#2a2018", pockets: true },
+  hat: "cap", hatColor: "#3a4a5a",
+};
+
 export const SPECS = { keeper: KEEPER, engineer: ENGINEER, captain: CAPTAIN, sailorA: SAILOR_A, sailorB: SAILOR_B, fisher: FISHER, baker: BAKER, lady: LADY, kid: KID,
   robber: ROBBER, buddy: BUDDY, teller1: TELLER_1, teller2: TELLER_2, cop: COP, cop2: COP_2, anchor: NEWS_ANCHOR, weatherman: WEATHERMAN, professor: PROFESSOR,
-  newguy: NEWGUY, foreman: FOREMAN, miller2: MILLER2 };
+  newguy: NEWGUY, foreman: FOREMAN, miller2: MILLER2,
+  driver: DRIVER, coworker: COWORKER, idahoMan: IDAHO_MAN };

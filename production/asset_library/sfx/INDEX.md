@@ -105,3 +105,12 @@ Check here FIRST. Only generate with ElevenLabs if nothing fits; then save the n
 | cartoon | `buzzer_nope.mp3` | 0.6 | short cartoon wrong-answer buzzer | ElevenLabs (2026-11-23) | video 03 |
 | cartoon | `tiptoe_stairs.mp3` | 2.0 | sneaky cartoon tiptoe steps on creaky wooden stairs | ElevenLabs (2026-11-23) | video 03 |
 | transition | `flashback_swell.mp3` | 1.2 | flashback/time-travel transition: reverse cymbal swell into a soft shimmer whoosh (peaks at the end: place it so the peak hits the cut) | ElevenLabs (2026-11-23) | video 03 |
+| car | `car_door_slam.mp3` | 0.8 | car door slammed shut hard, metallic thunk (onset 0.04 s, peak 0.08 s) | ElevenLabs (2026-11-23) | video 04 |
+| foley | `bottle_toss_seat.mp3` | 0.8 | plastic water bottle tossed onto a car seat, thump + slosh (onset 0.00 s, peak 0.32 s) | ElevenLabs (2026-11-23) | video 04 |
+| foley | `keys_fly_clatter.mp3` | 1.0 | car keys jingling out of a hand and clattering on asphalt (onset 0.30 s, peak 0.40 s) | ElevenLabs (2026-11-23) | video 04 |
+| footsteps | `running_asphalt.mp3` | 1.5 | fast panicked running on asphalt (sneakers) (onset 0.08 s, peak 0.08 s) | ElevenLabs (2026-11-23) | video 04 |
+| footsteps | `stairs_run_down.mp3` | 1.2 | running fast down concrete office stairs, echo (onset 0.00 s, peak 0.00 s) | ElevenLabs (2026-11-23) | video 04 |
+| ambience (loop) | `summer_lot_loop.mp3` | 5.0 | hot summer noon parking lot: cicadas, distant traffic (onset 0.00 s, peak 0.70 s) | ElevenLabs (2026-11-23) | video 04 |
+| car | `car_door_yank.mp3` | 0.7 | car door yanked open fast: latch click + hinge swing (onset 0.18 s, peak 0.20 s) | ElevenLabs (2026-11-23) | video 04 |
+| fire | `seat_fire_burst.mp3` | 1.5 | car seat bursting into flames: fiery whoosh + crackle (onset 0.00 s, peak 0.60 s) | ElevenLabs (2026-11-23) | video 04 |
+| fire | `scorch_sizzle.mp3` | 1.5 | leather/foam scorching under a focused hot spot: quiet sizzle (onset 0.00 s, peak 0.38 s) | ElevenLabs (2026-11-23) | video 04 |

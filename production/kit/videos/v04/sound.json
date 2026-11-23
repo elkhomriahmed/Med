@@ -1,0 +1,347 @@
+{
+ "end": 61.58,
+ "sfx_dir": "../asset_library/sfx",
+ "music": {
+  "src": "../asset_library/music/music_bed_v03_comedic_suspense_140.mp3",
+  "gain_db": -13,
+  "pieces": [
+   [
+    30.0,
+    61.0
+   ],
+   [
+    13.0,
+    28.0
+   ],
+   [
+    30.0,
+    61.0
+   ],
+   [
+    13.0,
+    28.0
+   ]
+  ]
+ },
+ "sfx": [
+  {
+   "src": "scorch_sizzle",
+   "at": 0.05,
+   "db": -14,
+   "dur": 1.4
+  },
+  {
+   "src": "seat_fire_burst",
+   "at": 0.2,
+   "db": -17,
+   "dur": 1.0,
+   "skip": 0.3
+  },
+  {
+   "src": "whoosh",
+   "at": 2.36,
+   "db": -13,
+   "dur": 0.5
+  },
+  {
+   "src": "whoosh",
+   "at": 4.42,
+   "db": -10,
+   "dur": 0.4
+  },
+  {
+   "src": "buzzer_nope",
+   "at": 4.52,
+   "db": -12,
+   "dur": 0.6
+  },
+  {
+   "src": "whoosh",
+   "at": 5.54,
+   "db": -15,
+   "dur": 0.4
+  },
+  {
+   "src": "buzzer_nope",
+   "at": 5.62,
+   "db": -12,
+   "dur": 0.6
+  },
+  {
+   "src": "whoosh",
+   "at": 6.32,
+   "db": -15,
+   "dur": 0.4
+  },
+  {
+   "src": "buzzer_nope",
+   "at": 6.4,
+   "db": -12,
+   "dur": 0.6
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 7.48,
+   "db": -12,
+   "dur": 0.5
+  },
+  {
+   "src": "laugh_kneeslap",
+   "at": 7.63,
+   "db": -13,
+   "dur": 1.1
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 10.26,
+   "db": -13,
+   "dur": 0.45
+  },
+  {
+   "src": "bottle_toss_seat",
+   "at": 10.52,
+   "db": -10,
+   "dur": 0.8
+  },
+  {
+   "src": "car_door_slam",
+   "at": 11.42,
+   "db": -8,
+   "dur": 0.6
+  },
+  {
+   "src": "running_asphalt",
+   "at": 12.0,
+   "db": -20,
+   "dur": 1.0
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 12.96,
+   "db": -13,
+   "dur": 0.5
+  },
+  {
+   "src": "whoosh",
+   "at": 15.84,
+   "db": -13,
+   "dur": 0.45
+  },
+  {
+   "src": "sparkle_twinkle",
+   "at": 17.6,
+   "db": -12,
+   "dur": 0.8
+  },
+  {
+   "src": "scorch_sizzle",
+   "at": 19.52,
+   "db": -15,
+   "dur": 1.2
+  },
+  {
+   "src": "whoosh",
+   "at": 21.36,
+   "db": -13,
+   "dur": 0.45
+  },
+  {
+   "src": "scorch_sizzle",
+   "at": 22.82,
+   "db": -12,
+   "dur": 1.4
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 25.62,
+   "db": -13,
+   "dur": 0.5
+  },
+  {
+   "src": "whoosh",
+   "at": 28.02,
+   "db": -15,
+   "dur": 0.4
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 28.62,
+   "db": -12,
+   "dur": 0.45
+  },
+  {
+   "src": "stairs_run_down",
+   "at": 28.77,
+   "db": -10,
+   "dur": 1.0
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 29.6,
+   "db": -12,
+   "dur": 0.45
+  },
+  {
+   "src": "running_asphalt",
+   "at": 29.7,
+   "db": -11,
+   "dur": 1.4
+  },
+  {
+   "src": "keys_fly_clatter",
+   "at": 30.82,
+   "db": -10,
+   "dur": 0.9,
+   "skip": 0.2
+  },
+  {
+   "src": "whoosh",
+   "at": 31.8,
+   "db": -13,
+   "dur": 0.45
+  },
+  {
+   "src": "scorch_sizzle",
+   "at": 32.6,
+   "db": -11,
+   "dur": 1.5
+  },
+  {
+   "src": "whoosh",
+   "at": 34.6,
+   "db": -9,
+   "dur": 0.45
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 36.22,
+   "db": -9,
+   "dur": 0.5
+  },
+  {
+   "src": "sparkle_twinkle",
+   "at": 39.44,
+   "db": -14,
+   "dur": 0.8
+  },
+  {
+   "src": "whoosh",
+   "at": 39.34,
+   "db": -15,
+   "dur": 0.4
+  },
+  {
+   "src": "sparkle_twinkle",
+   "at": 42.39,
+   "db": -12,
+   "dur": 0.8
+  },
+  {
+   "src": "whoosh",
+   "at": 45.26,
+   "db": -10,
+   "dur": 0.4
+  },
+  {
+   "src": "scorch_sizzle",
+   "at": 45.8,
+   "db": -11,
+   "dur": 1.2
+  },
+  {
+   "src": "vapour_hiss",
+   "at": 46.54,
+   "db": -14,
+   "dur": 0.8
+  },
+  {
+   "src": "fireball_whump",
+   "at": 47.18,
+   "db": -16,
+   "dur": 0.9,
+   "skip": 0.55
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 48.62,
+   "db": -9,
+   "dur": 0.45
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 51.32,
+   "db": -9,
+   "dur": 0.45
+  },
+  {
+   "src": "car_door_yank",
+   "at": 51.37,
+   "db": -9,
+   "dur": 0.6,
+   "skip": 0.15
+  },
+  {
+   "src": "seat_fire_burst",
+   "at": 52.68,
+   "db": -8,
+   "dur": 1.4,
+   "skip": 0.05
+  },
+  {
+   "src": "flashback_swell",
+   "at": 52.69,
+   "db": -9,
+   "dur": 1.2
+  },
+  {
+   "src": "polaroid_flash_eject",
+   "at": 53.58,
+   "db": -15,
+   "dur": 0.4
+  },
+  {
+   "src": "scorch_sizzle",
+   "at": 56.3,
+   "db": -15,
+   "dur": 1.2
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 59.04,
+   "db": -12,
+   "dur": 0.45
+  },
+  {
+   "src": "sparkle_twinkle",
+   "at": 60.89,
+   "db": -11,
+   "dur": 0.8
+  }
+ ],
+ "beds": [
+  {
+   "src": "summer_lot_loop",
+   "a": 0.0,
+   "b": 28.72,
+   "db": -25
+  },
+  {
+   "src": "bank_lobby_loop",
+   "a": 28.72,
+   "b": 29.7,
+   "db": -28
+  },
+  {
+   "src": "summer_lot_loop",
+   "a": 29.7,
+   "b": 36.32,
+   "db": -25
+  },
+  {
+   "src": "summer_lot_loop",
+   "a": 48.72,
+   "b": 61.58,
+   "db": -25
+  }
+ ]
+}
