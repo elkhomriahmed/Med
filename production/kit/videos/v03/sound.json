@@ -3,45 +3,61 @@
  "sfx_dir": "../asset_library/sfx",
  "music": {
   "src": "../asset_library/music/music_bed_v03_comedic_suspense_140.mp3",
-  "gain_db": -13
+  "gain_db": -13,
+  "pieces": [
+   [
+    13.0,
+    28.0
+   ],
+   [
+    30.0,
+    61.0
+   ],
+   [
+    13.0,
+    28.0
+   ],
+   [
+    30.0,
+    61.0
+   ]
+  ]
  },
  "sfx": [
   {
    "src": "match_strike_candle",
    "at": 0.13,
-   "db": -10
+   "db": -10,
+   "dur": 1.0
   },
   {
    "src": "explosion_big",
    "at": 1.41,
    "db": -19,
-   "dur": 1.2
+   "dur": 1.1
   },
   {
    "src": "walls_collapse_debris",
    "at": 1.66,
    "db": -19,
-   "dur": 0.9
+   "dur": 0.8
   },
   {
    "src": "whoosh",
    "at": 2.48,
-   "db": -12
-  },
-  {
-   "src": "gears_creak_ping",
-   "at": 2.88,
-   "db": -17
+   "db": -12,
+   "dur": 0.6
   },
   {
    "src": "sign_slap",
-   "at": 3.34,
+   "at": 3.3,
    "db": -9
   },
   {
    "src": "flight_whoosh",
    "at": 4.16,
-   "db": -14
+   "db": -14,
+   "dur": 0.6
   },
   {
    "src": "buzzer_nope",
@@ -51,7 +67,8 @@
   {
    "src": "flight_whoosh",
    "at": 4.78,
-   "db": -14
+   "db": -14,
+   "dur": 0.6
   },
   {
    "src": "buzzer_nope",
@@ -61,7 +78,8 @@
   {
    "src": "flight_whoosh",
    "at": 5.4,
-   "db": -14
+   "db": -14,
+   "dur": 0.6
   },
   {
    "src": "buzzer_nope",
@@ -69,44 +87,46 @@
    "db": -11
   },
   {
-   "src": "laugh_kneeslap",
-   "at": 7.52,
-   "db": -12
+   "src": "flight_whoosh",
+   "at": 6.56,
+   "db": -11,
+   "dur": 0.6
   },
   {
-   "src": "jump_back",
-   "at": 9.4,
-   "db": -16
+   "src": "laugh_kneeslap",
+   "at": 6.73,
+   "db": -12,
+   "dur": 1.2
   },
   {
    "src": "whoosh",
    "at": 9.76,
-   "db": -11
+   "db": -11,
+   "dur": 0.6
   },
   {
-   "src": "footsteps_wood",
-   "at": 10.42,
-   "db": -17
+   "src": "wind",
+   "at": 9.88,
+   "db": -15,
+   "dur": 1.2
   },
   {
-   "src": "door_creak_wood",
-   "at": 11.14,
-   "db": -14
+   "src": "flight_whoosh",
+   "at": 11.02,
+   "db": -12,
+   "dur": 0.6
   },
   {
    "src": "tiptoe_stairs",
    "at": 11.28,
-   "db": -12
+   "db": -12,
+   "dur": 1.9
   },
   {
-   "src": "whoosh",
-   "at": 11.96,
-   "db": -15
-  },
-  {
-   "src": "notes_pop",
-   "at": 14.16,
-   "db": -15
+   "src": "match_strike_candle",
+   "at": 13.28,
+   "db": -11,
+   "dur": 1.0
   },
   {
    "src": "sparkle_twinkle",
@@ -116,22 +136,32 @@
   {
    "src": "sparks_crackle",
    "at": 17.38,
-   "db": -11
+   "db": -11,
+   "dur": 2.6
+  },
+  {
+   "src": "whoosh",
+   "at": 20.48,
+   "db": -11,
+   "dur": 0.6
   },
   {
    "src": "fireball_whump",
    "at": 20.77,
-   "db": -10
-  },
-  {
-   "src": "wind",
-   "at": 22.22,
-   "db": -16
+   "db": -10,
+   "dur": 1.4
   },
   {
    "src": "laugh_kneeslap",
-   "at": 24.82,
-   "db": -13
+   "at": 24.72,
+   "db": -13,
+   "dur": 1.2
+  },
+  {
+   "src": "flight_whoosh",
+   "at": 25.36,
+   "db": -11,
+   "dur": 0.6
   },
   {
    "src": "beams_rattle_creak",
@@ -141,22 +171,26 @@
   {
    "src": "ship_creak_wave",
    "at": 26.96,
-   "db": -16
+   "db": -16,
+   "dur": 1.0
   },
   {
    "src": "dust_pour",
    "at": 28.48,
-   "db": -11
+   "db": -11,
+   "dur": 1.6
   },
   {
    "src": "dust_pour",
    "at": 30.18,
-   "db": -13
+   "db": -13,
+   "dur": 1.6
   },
   {
    "src": "clock_ticking",
    "at": 31.42,
-   "db": -14
+   "db": -14,
+   "dur": 1.0
   },
   {
    "src": "record_scratch",
@@ -170,13 +204,15 @@
   },
   {
    "src": "flight_whoosh",
-   "at": 34.88,
-   "db": -12
+   "at": 34.9,
+   "db": -11,
+   "dur": 0.6
   },
   {
    "src": "vapour_hiss",
    "at": 35.7,
-   "db": -15
+   "db": -15,
+   "dur": 1.0
   },
   {
    "src": "flour_poof",
@@ -191,134 +227,110 @@
   {
    "src": "chain_reaction_crackle",
    "at": 39.3,
-   "db": -10
+   "db": -10,
+   "dur": 1.5
   },
   {
    "src": "whoosh",
    "at": 41.82,
-   "db": -14
+   "db": -14,
+   "dur": 0.6
   },
   {
-   "src": "whoosh",
-   "at": 42.9,
-   "db": -12
+   "src": "flight_whoosh",
+   "at": 42.92,
+   "db": -10,
+   "dur": 0.6
   },
   {
    "src": "dust_pour",
    "at": 44.84,
-   "db": -12
+   "db": -12,
+   "dur": 1.4
   },
   {
    "src": "clock_ticking",
    "at": 45.52,
-   "db": -15
+   "db": -15,
+   "dur": 1.3
   },
   {
    "src": "explosion_big",
    "at": 46.58,
    "db": -17,
-   "dur": 1.6
+   "dur": 1.5
   },
   {
    "src": "walls_collapse_debris",
    "at": 48.78,
    "db": -15,
-   "dur": 1.8
-  },
-  {
-   "src": "wind",
-   "at": 49.0,
-   "db": -14
+   "dur": 1.6
   },
   {
    "src": "impact",
    "at": 50.04,
-   "db": -12
-  },
-  {
-   "src": "window_smash",
-   "at": 52.09,
-   "db": -10
-  },
-  {
-   "src": "cartoon_fall_whistle",
-   "at": 52.32,
-   "db": -12
-  },
-  {
-   "src": "splash",
-   "at": 52.92,
-   "db": -9
-  },
-  {
-   "src": "boing",
-   "at": 54.34,
-   "db": -15
-  },
-  {
-   "src": "polaroid_flash_eject",
-   "at": 55.2,
-   "db": -12
-  },
-  {
-   "src": "page_turn",
-   "at": 56.92,
-   "db": -15
-  },
-  {
-   "src": "distant_boom_echo",
-   "at": 58.18,
-   "db": -9
-  },
-  {
-   "src": "gasp",
-   "at": 59.24,
-   "db": -13
-  },
-  {
-   "src": "whoosh",
-   "at": 60.36,
-   "db": -13
-  },
-  {
-   "src": "bell_ding",
-   "at": 61.86,
-   "db": -11
-  },
-  {
-   "src": "flight_whoosh",
-   "at": 6.56,
-   "db": -11
-  },
-  {
-   "src": "whoosh",
-   "at": 20.48,
-   "db": -11
-  },
-  {
-   "src": "flight_whoosh",
-   "at": 25.36,
-   "db": -11
-  },
-  {
-   "src": "flight_whoosh",
-   "at": 42.92,
-   "db": -10
+   "db": -12,
+   "dur": 0.6
   },
   {
    "src": "flight_whoosh",
    "at": 51.1,
-   "db": -10
+   "db": -10,
+   "dur": 0.6
+  },
+  {
+   "src": "window_smash",
+   "at": 52.09,
+   "db": -10,
+   "dur": 0.9
+  },
+  {
+   "src": "cartoon_fall_whistle",
+   "at": 52.24,
+   "db": -12,
+   "dur": 1.0
+  },
+  {
+   "src": "splash",
+   "at": 52.92,
+   "db": -9,
+   "dur": 1.1
   },
   {
    "src": "whoosh",
    "at": 55.22,
-   "db": -10
+   "db": -10,
+   "dur": 0.6
+  },
+  {
+   "src": "polaroid_flash_eject",
+   "at": 55.2,
+   "db": -12,
+   "dur": 0.45
+  },
+  {
+   "src": "page_turn",
+   "at": 56.92,
+   "db": -15,
+   "dur": 0.7
+  },
+  {
+   "src": "distant_boom_echo",
+   "at": 58.18,
+   "db": -9,
+   "dur": 2.0
   },
   {
    "src": "flight_whoosh",
-   "at": 34.9,
-   "db": -11
+   "at": 60.36,
+   "db": -12,
+   "dur": 0.6
+  },
+  {
+   "src": "bell_ding",
+   "at": 61.86,
+   "db": -11,
+   "dur": 0.9
   }
  ],
  "beds": [

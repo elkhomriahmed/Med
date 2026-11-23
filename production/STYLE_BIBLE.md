@@ -651,3 +651,22 @@ the wrong way. From now on:
 - Real darks and a few crisp highlights (screens, lamps, stars). A colour change (e.g. red alarm light) marks a turning point.
 - Check with `kit/tools/palette_check.py` on the low-res render; targets (from the competitor): base family ≳60% of saturated
   pixels, strongly saturated pixels ≳30%, dark pixels 35–55%.
+
+---
+## 2026-11-23 — Sound editing rules (user, after video 3). WIN over older sound notes
+1. **Never use a sound effect raw.** Library files are often long (whoosh 5.9 s, impact 4.9 s, splash 4.6 s, explosion 7.7 s,
+   door creak 15 s). Cut every effect to the part that belongs to its moment and end it (with a short fade) before the next
+   beat/words/scene: a splash is the splash (~1 s), not the whole water tail; an explosion is its hit (~1–1.5 s), not 7 s of
+   rumble. In `sound_plan.py` every entry carries a length (`(file, time, dB, seconds)` or the CAP table); `tools/mix_fx.py`
+   cuts it and fades it out.
+2. **Every effect sits exactly on its picture.** Each sound belongs to something we SEE at that frame (hit, slap, splash,
+   flash, cut). No sound for an action that isn't on screen (footsteps with nobody walking, a door creak with no door, a gasp
+   with nobody there, a boing with no bounce). Check each effect's time against the direction (what is visible at that time),
+   not only against the words.
+3. **Big hits are not louder than the voice.** Explosions/booms sit under the narration (about −17 to −19 dB in the pre-mix),
+   no stacked thunder layers.
+4. **Music from frame 1.** Before using a music bed, measure its level per second; if it has a quiet intro or gaps (the v03
+   track was almost silent for its first 12 s and had a gap at 28–29 s), build the bed from its loud parts only
+   (`"pieces": [[a, b], ...]` in sound.json, crossfaded by mix_fx). The music is audible under the voice from the first frame.
+5. A sound-only fix never needs a re-render: re-mix (`mix_fx.py`), then mux the voice + fx onto the rendered picture
+   (`ffmpeg … amix=inputs=2:normalize=0`) and master with `timeline/finish.sh` (trim to exactly −14.0 LUFS).

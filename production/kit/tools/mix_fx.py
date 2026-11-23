@@ -12,7 +12,15 @@ def fade(x, a, b):
     return x
 plan = json.load(open(sys.argv[1])); SFX = plan.get("sfx_dir", "public/sfx/v01"); N = int((plan["end"]) * SR); out = np.zeros((N, 2), np.float32)
 db = lambda g: 10 ** (g / 20)
-m = load(plan["music"]["src"] if plan["music"]["src"].startswith("..") else "public/" + plan["music"]["src"])[:N]; m = fade(m, 0.3, 0.5) * db(plan["music"]["gain_db"]); out[:len(m)] += m
+m = load(plan["music"]["src"] if plan["music"]["src"].startswith("..") else "public/" + plan["music"]["src"])
+if plan["music"].get("pieces"):                       # build the bed from loud parts only (no quiet intro / gaps), 0.5 s crossfades
+    xf = int(0.5 * SR); bed = None; i = 0; P = plan["music"]["pieces"]
+    while bed is None or len(bed) < N + SR:
+        a0, a1 = P[i % len(P)]; seg = fade(m[int(a0 * SR):int(a1 * SR)].copy(), 0.5, 0.5); i += 1
+        if bed is None: bed = seg
+        else: bed = np.concatenate([bed[:-xf], bed[-xf:] + seg[:xf], seg[xf:]])
+    m = bed
+m = m[:N]; m = fade(m, 0.02, 0.6) * db(plan["music"]["gain_db"]); out[:len(m)] += m
 for b in plan["beds"]:
     src = load(SFX + "/" + b["src"] + ".mp3"); a0, a1 = int(b["a"] * SR), min(N, int(b["b"] * SR)); L = a1 - a0
     reps = int(np.ceil(L / len(src))) + 1; xf = int(0.08 * SR); seg = np.zeros((L + xf, 2), np.float32); pos = 0

@@ -66,6 +66,10 @@ Resume a stopped agent with SendMessage (same context) instead of starting a new
 `asset_library/sfx` + `music` INDEX first; generate with ElevenLabs only what is missing, save it to the library + INDEX row the
 same day. ≥ 30 distinct effects, each accurate to its action and on its word; an accent on EVERY transition (shutter, whoosh,
 swipe, crackle); steady music bed (cleared tracks only). `tools/mix_fx.py`.
+**Sound editing rules (STYLE_BIBLE 2026-11-23):** every effect gets a length (cut to its moment, never played raw to the end), sits
+on a VISIBLE action at that exact frame (check against the direction, not just the words), booms stay under the voice, and the
+music is measured per second first and built from its loud parts (`pieces`) so it plays from frame 1. Sound-only fixes: re-mix +
+mux onto the existing render, no re-render.
 
 ## 7. Checks → GATE C (all on ONE low-res render of the whole video, ~5 min; never chains of single stills)
 - `tools/sheet.py` contact sheets of every shot, `tools/popscan.py` (1–3 frame pops), `tools/transition_check.py` (sound on every
