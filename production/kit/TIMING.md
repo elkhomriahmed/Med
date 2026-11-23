@@ -39,6 +39,7 @@ lower the quality to save time without asking; and log the real time of every st
 | Video | Script + shot list | Voice + timing | Places + characters | Direction | Checks + fixes | Render + master | Total |
 |---|---|---|---|---|---|---|---|
 | 01 Lighthouse (2026-11-17, 64.0 s, 28 shots, 6 places, 9 characters) | ~4 min | ~3 min | ~45 min wall (4 agents in parallel; first full world: lamp room fixes, exterior, town, cast) | ~25 min | ~75 min (6 low-res whole-video renders + spot renders) | ~7 min (5.9 min render + mastering) | **~2 h 25 min** (+ ~10 min sound: 41 ElevenLabs sounds + pre-mix) |
+| 03 Flour mill (2026-11-23, 62.4 s, 18 shots, 1 place cluster + science stage, 3 characters) | ~10 min | ~15 min (voice + new music + 16 SFX) | ~25 min wall (2 agents in parallel: mill 22 min, FX 14 min) | ~30 min | ~60 min (3 low-res rounds) | ~5 min per final | **~2.5 h to first delivery**; +~2.5 h for 7 user fix rounds (sound-only rounds ~5 min each via re-mix, picture rounds ~10 min) |
 
 ## What building the sample actually took (one-time kit cost)
 | Step | Time |

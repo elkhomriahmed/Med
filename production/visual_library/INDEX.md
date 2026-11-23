@@ -23,6 +23,7 @@ the improved version REPLACES the old one, and the status here is changed to ✅
 | **BANK_LOBBY** | `buildBank()` · `world/bank/index.js` | Teller counter with glass, ceiling CCTV camera (lens view = `cctv` anchors), queue posts, doors from the street | Any counter/office/shop interior: post office, ticket hall, pharmacy | ✅ video 02 |
 | **POLICE_STATION** | `buildPolice()` · `world/police/index.js` | Interrogation room (table, lamp, one-way mirror, TV on a cart) + holding cells with a sliding barred door | Any interview room, prison, hospital ward, office back room | ✅ video 02 |
 | **PROFESSOR_OFFICE** | `buildOffice()` · `world/office/index.js` | Book-lined office with a chalkboard that writes itself (`board.set`), desk, armchair | Classroom, study, lab, library (far from the other places = normal transition allowed) | ✅ video 02 |
+| **FLOUR_MILL + RIVER (1870s, night)** | `buildMill()` · `world/mill/index.js` (+ parts.js, outside.js, river.js; layout `world/LAYOUT_v03.md`) | Two-floor timber/stone mill: ground floor (millstones, sacks, NO FLAMES sign, stairs) + attic with heavy trusses and flour-dusted beams; breakaway roof/walls `set({blast})`, beam shake, water wheel, river shader, stone bridge, far town; night/day | Any barn, warehouse, workshop, factory floor, attic; river/canal town at night | ✅ video 03 (2026-11-23); interior a bit dark |
 | **Set building blocks** | `world/geometry.js`, `world/materials.js` | roundedBox, plankField (boards with gaps), lathe, extrude, gearShape, tube, PBR materials from Poly Haven/ambientCG, chalkboard/plaque/sign textures | Any new room or building | ✅ tools |
 
 ## Story props (all ✅ from video 01 unless noted)
@@ -37,6 +38,7 @@ the improved version REPLACES the old one, and the status here is changed to ✅
 | INSTANT CAMERA + PHOTO | `createPolaroidCamera({photoImage})`, `createPolaroidPhoto` · props_v02 | Flash, eject, develop; `photoImage` = a LIVE render of the real scene (see v02 Video.jsx selfie) |
 | PAPER / NEWSPAPER / TEXTBOOK / VHS | `createInkPaper`, `createNewspaper({photo})`, `createTextbook({pagePhoto})`, `createVHSTape` · props_v02 | Readable text, photos are real character renders |
 | SCREENS + CCTV + REWIND | `createScreen`, `drawCCTVOverlay`, `drawRewind` · props_v02 | TV/monitor with live mini-renders of real characters; CCTV look; rewind transition |
+| FIRE / FLOUR FX (v03) | `createCandle`, `createFlourHaze`, `createSparkSwirl`, `createFireball`, `createDustCascade`, `createWhiteout`, `createScienceStage` (macro: pile / oxygen halos / chain reaction with `hold`), `createExplosion`, `createSplash` · `world/fx_v03/index.js` | Deterministic `set(k, t)`; any fire, dust, smoke, explosion, splash, science macro |
 | SNOWFALL | `createSnowfall()` · world/exterior/fx.js | Non-flickering falling snow |
 | DUST MOTES | `createDust()` · world/fx.js | Motes in the key light, never in front of faces |
 | LIQUID POOL / POUR | `createPool()`, `createPour()` · world/fx.js | Mirror-like liquid in a basin that fills, wobbles; pouring stream from a spout (any liquid: recolour) |
@@ -58,7 +60,7 @@ slapKnee, fistsUp, mimic, handshake, climb, hold, tapHead, limp; `sit`/`seat`, `
 ## Video tools
 | Tool | File |
 |---|---|
-| **Latest direction template (use this one)** | `videos/v02/direction.js` + `Video.jsx`: 3 camera paths joined at page-fill dives, rewind/whip/CCTV transitions, pick-up/put-down blends (`blendFrom`), live selfie render-to-texture, real-character TV/newspaper renders, check-only `dbgCam` input prop |
+| **Latest direction template (use this one)** | `videos/v03/` (VIDEO 3 FORMULA: CF() facing-based orbits, shake/fov punch, whip cuts, red alarm glow, frame capture) and `videos/v02/direction.js` + `Video.jsx`: 3 camera paths joined at page-fill dives, rewind/whip/CCTV transitions, pick-up/put-down blends (`blendFrom`), live selfie render-to-texture, real-character TV/newspaper renders, check-only `dbgCam` input prop |
 | Smooth camera paths + flights | `timeline/camPath.js` (monotone tangents, flightKeys) |
 | Word-keyed direction template | `videos/v01/direction.js` (shot keys, `F()` distance framing, props in hands, 2D gag overlays) |
 | World assembly + render loop | `videos/v01/Video.jsx` |

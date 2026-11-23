@@ -163,6 +163,13 @@ sending; never hand over a video with a known problem as if it were finished.
 - **Save tokens and credits:** library first for sound, music and visuals; reuse templates; fewer, smarter check renders (contact
   sheets + `tools/popscan.py`), and fix whole categories of problems per round instead of one shot at a time.
 
+## ★ VIDEO 3 FORMULA — LOCKED (user, 2026-11-23): read STYLE_BIBLE "VIDEO 3 FORMULA" first; `kit/videos/v03/` = latest template
+Approved as "almost perfect": "If you…" stake-first script with punchy lines + callback button; ~4.4 words/s voice; a new framing
+every ~1 s; smooth room orbits around the character (character + effect + prop in one move) used often; screen shake/beat on
+every bomb or shock; one cool colour scheme + hot accents; sound cut and timed to each hit, no decorative noise, music from frame 1;
+instrumental music and voice-free effects only; no camera through floors/walls/particles (no glow flashes), no blank frames.
+Small notes from the user on video 3 are still to be discussed before video 4.
+
 ## STORY GATE + transitions + colour (user, 2026-11-23): read STYLE_BIBLE "2026-11-23" and analysis/astronauts_flush/ANALYSIS.md
 Video 2's story was weak (trick given away at 5 s, no rising stakes, caught at 43 s, then a boring professor tangent). Before any
 voice is generated, the script must pass: (1) the hook promises a stake that only the last line pays; (2) one protagonist, one

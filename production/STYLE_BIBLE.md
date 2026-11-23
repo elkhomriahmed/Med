@@ -685,3 +685,51 @@ the wrong way. From now on:
 - **Never fill the whole frame with an effect for a whole beat** (user, 2026-11-23, video 3 "warm-up" white-out): keep the
   character readable first, then let the cloud/smoke/flash take him in the MIDDLE of the sentence; a full-screen effect lasts
   ≤ ~1 s. The viewer must always have a face or a clear object to look at.
+
+
+---
+## ★ VIDEO 3 FORMULA — LOCKED (user approved 2026-11-23: "almost perfect … lock it in"). Use it for every next video
+Reference: `final_videos/03_if_you_light_a_candle_in_a_flour_mill/` (MP4, script, NOTES, contact sheets) and the code in
+`production/kit/videos/v03/` (latest direction template). Everything below WINS over older notes.
+
+**Script and story (worked much better than videos 1–2)**
+- "If you…" second-person hook with a deadly/absurd stake ("If you light a candle inside a flour mill, the whole building explodes").
+- Spine: the rule ("You see, flour mills ban every flame") → rule of three in short punches ("No candles. No lamps. Not even a
+  match in your pocket.") → the mocker's quoted line in his own voice ("It's flour! It makes pancakes, not bombs!") → the sneaky
+  act → a strange, beautiful mystery picture (sparks like fireflies) → a small first payoff (whump) → escalation + ticking clock
+  ("And the candle is still burning.") → the viewer's question out loud → the mechanism in 3 picture steps (pile / oxygen / chain)
+  → the big payoff → a real-history anchor (1878) → a callback button that flips the mocker's line ("And it makes bombs.").
+- Punchy, powerful words; one-word sound lines ("Whump." "Boom."); short sentences; ~275 words.
+
+**Pace (the fast pace worked)**
+- Voice ~4.4 words/s after speed-up (TTS speed 1.1 + atempo ~1.29), still > 60 s; pauses ≤ 0.2 s.
+- A new framing every ~0.8–1.2 s; whips between quick inserts; fov "punch" (snap zoom −4°) on accent words.
+
+**Camera (the user loved these: use them OFTEN)**
+- **The smooth room orbit:** inside a place the camera glides around the character in one continuous arc (the v03 top-floor
+  360°), showing the character, the effect (dust, sparks, fire) and the key prop (candle) in one move. Build keys from the
+  character's facing (`CF(dist, side, up, from)` in v03 direction.js) so the camera always stays in front of the face.
+- **Screen shake / beat on every bomb and shock moment** (`camAt` shake amplitude + fov punch): explosions, the fireball, beams
+  shaking, the flash-forward. Short, strong, deterministic; it decays within ~1 s.
+- Whip cuts (blur pulse + whoosh) between far places and quick inserts; designed match/flash/sepia cuts; glides only inside a place.
+
+**Colour (perfect, keep it)**: one video-wide cool base (night navy/teal/steel, ~69% of saturated pixels) + hot accents only
+(fire orange, the protagonist's red); dark cool wood/stone, no brown midtones. Check with `tools/palette_check.py`.
+
+**Sound (now timed correctly, keep it)**: the 2026-11-23 sound editing rules above (cut to the moment, start on the hit, skip
+pre-roll, no decorative noise, booms under the voice, music from frame 1 via `pieces`, flashback swell on time jumps).
+- **No vocals in music or effects:** compose music with `force_instrumental`; SFX prompts say "no voice, no speech"; listen-check
+  every new effect for words/voices. Human sounds (laugh, gasp) only when that character is on screen doing it. Nothing may talk
+  over the narrator.
+
+**Effects and gags**
+- A red alarm glow over the whole frame (edges deep red, light wash, ~0.3 s decay) for "No/forbidden" beats, not 2D icons.
+- A full-frame effect (cloud, smoke, flash) lasts ≤ ~1 s and takes the character mid-sentence; he is readable first.
+- An effect never stops before its sentence ends (the chain reaction keeps burning with `hold` until the line is complete).
+
+**Never again (glitches the user saw)**
+- The camera never passes through floors, walls, props or near-lens particles (a white/glow flash for a few frames). To go
+  between floors: stay below, then whip-cut. Check camera clearance on every key, especially when the subject climbs.
+- No subject passes within 0.6 m of the lens; no blank frames from a camera inside a character (check every insert camera).
+- A character's look never changes; a stunt double uses the same spec. Run `popscan` + a contact sheet of every cut and every
+  camera move before the final render.
