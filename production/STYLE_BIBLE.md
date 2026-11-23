@@ -659,7 +659,13 @@ the wrong way. From now on:
    beat/words/scene: a splash is the splash (~1 s), not the whole water tail; an explosion is its hit (~1–1.5 s), not 7 s of
    rumble. In `sound_plan.py` every entry carries a length (`(file, time, dB, seconds)` or the CAP table); `tools/mix_fx.py`
    cuts it and fades it out.
-2. **Every effect sits exactly on its picture.** Each sound belongs to something we SEE at that frame (hit, slap, splash,
+2. **Every effect STARTS, PEAKS and ENDS at the right moment, and adds meaning.** It starts on the frame its action becomes
+   visible (not before), peaks on the hit, and is cut before the next beat. It must match what we see AND what the voiceover
+   says at that moment; an effect that only "decorates" (a record scratch or boing on a question, a crackle-whoosh over an
+   explanation, a ticking clock with no clock, a page turn on a title, a bell on the last word) is noise and is left out.
+   Cuts keep only a short, quiet accent (whoosh/shutter ≤0.5 s). The "≥30 distinct effects" target never justifies filler:
+   fewer, meaningful effects beat a full count (video 3 ended at 24).
+2b. **Every effect sits exactly on its picture.** Each sound belongs to something we SEE at that frame (hit, slap, splash,
    flash, cut). No sound for an action that isn't on screen (footsteps with nobody walking, a door creak with no door, a gasp
    with nobody there, a boing with no bounce). Check each effect's time against the direction (what is visible at that time),
    not only against the words.

@@ -16,17 +16,17 @@ S = [  # (file, time, gain dB[, length s]) — RULE 2026-11-23: every effect is 
  ("sparkle_twinkle", T(76), -12), ("sparks_crackle", T(79), -11, 2.6),
  ("whoosh", T(89) - 0.1, -11), ("fireball_whump", T(90) - 0.05, -10), ("laugh_kneeslap", T(104), -13),
  ("flight_whoosh", T(107) - 0.12, -11), ("beams_rattle_creak", T(112) - 0.1, -10), ("ship_creak_wave", T(114), -16, 1.0),
- ("dust_pour", T(121), -11, 1.6), ("dust_pour", T(127), -13, 1.6), ("clock_ticking", T(133), -14, 1.0),
- ("record_scratch", T(138) - 0.05, -10), ("question_boing", T(150), -13),
- ("flight_whoosh", T(151) - 0.1, -11), ("vapour_hiss", T(156), -15, 1.0), ("flour_poof", T(159), -11), ("sparkle_twinkle", T(169), -13),
- ("chain_reaction_crackle", T(173), -10), ("whoosh", T(184), -14),
- ("flight_whoosh", T(189) - 0.1, -10), ("dust_pour", T(197), -12, 1.4), ("clock_ticking", T(201), -15, 1.3),
+ ("dust_pour", T(121), -11, 1.6), ("dust_pour", T(127), -13, 1.6),
+ ("whoosh", T(138) - 0.1, -15, 0.45),                                        # snap to his face (cut accent only)
+ ("flight_whoosh", T(151) - 0.1, -11), ("vapour_hiss", T(156), -15, 1.0), ("flour_poof", T(159), -11),
+ ("whoosh", T(171) - 0.1, -16, 0.4),                                         # cut to the chain-reaction stage (quiet accent only)
+ ("flight_whoosh", T(189) - 0.1, -10), ("dust_pour", T(197), -12, 1.4),
  ("explosion_big", T(206) - 0.04, -17, 1.5), ("walls_collapse_debris", T(215), -15, 1.6), ("impact", T(221), -12, 0.6),
  ("flight_whoosh", T(225) - 0.12, -10), ("window_smash", T(230) - 0.05, -10, 0.9), ("cartoon_fall_whistle", T(230) + 0.1, -12, 1.0),
  ("splash", T(234), -9, 1.1),
- ("whoosh", T(245) - 0.08, -10), ("polaroid_flash_eject", T(245) - 0.1, -12, 0.45), ("page_turn", T(253), -15, 0.7),
+ ("whoosh", T(245) - 0.08, -10), ("polaroid_flash_eject", T(245) - 0.1, -12, 0.45),
  ("distant_boom_echo", T(257), -9, 2.0),
- ("flight_whoosh", T(267) - 0.12, -12), ("bell_ding", T(274), -11, 0.9),
+ ("flight_whoosh", T(267) - 0.12, -12),
 ]
 CAP = {"whoosh": 0.6, "flight_whoosh": 0.6, "wind": 1.2, "impact": 0.6, "splash": 1.1, "page_turn": 0.7, "bell_ding": 0.9, "clock_ticking": 1.2,
        "laugh_kneeslap": 1.2, "match_strike_candle": 1.0, "fireball_whump": 1.4, "tiptoe_stairs": 1.9, "chain_reaction_crackle": 1.5}

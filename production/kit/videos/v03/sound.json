@@ -187,20 +187,10 @@
    "dur": 1.6
   },
   {
-   "src": "clock_ticking",
-   "at": 31.42,
-   "db": -14,
-   "dur": 1.0
-  },
-  {
-   "src": "record_scratch",
-   "at": 32.45,
-   "db": -10
-  },
-  {
-   "src": "question_boing",
-   "at": 34.5,
-   "db": -13
+   "src": "whoosh",
+   "at": 32.4,
+   "db": -15,
+   "dur": 0.45
   },
   {
    "src": "flight_whoosh",
@@ -220,21 +210,10 @@
    "db": -11
   },
   {
-   "src": "sparkle_twinkle",
-   "at": 38.22,
-   "db": -13
-  },
-  {
-   "src": "chain_reaction_crackle",
-   "at": 39.3,
-   "db": -10,
-   "dur": 1.5
-  },
-  {
    "src": "whoosh",
-   "at": 41.82,
-   "db": -14,
-   "dur": 0.6
+   "at": 38.8,
+   "db": -16,
+   "dur": 0.4
   },
   {
    "src": "flight_whoosh",
@@ -247,12 +226,6 @@
    "at": 44.84,
    "db": -12,
    "dur": 1.4
-  },
-  {
-   "src": "clock_ticking",
-   "at": 45.52,
-   "db": -15,
-   "dur": 1.3
   },
   {
    "src": "explosion_big",
@@ -309,12 +282,6 @@
    "dur": 0.45
   },
   {
-   "src": "page_turn",
-   "at": 56.92,
-   "db": -15,
-   "dur": 0.7
-  },
-  {
    "src": "distant_boom_echo",
    "at": 58.18,
    "db": -9,
@@ -325,12 +292,6 @@
    "at": 60.36,
    "db": -12,
    "dur": 0.6
-  },
-  {
-   "src": "bell_ding",
-   "at": 61.86,
-   "db": -11,
-   "dur": 0.9
   }
  ],
  "beds": [
