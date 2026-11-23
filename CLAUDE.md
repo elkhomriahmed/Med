@@ -5,6 +5,7 @@ Read these before any creative or pipeline work. They are the source of truth; t
 **Making a video? Follow `production/RUNBOOK.md` top to bottom** (every note in one ordered checklist with 3 approval gates:
 script → look board → low-res check). **Any character work? `production/visual_library/CHARACTER_LOCK.md` +
 `CHARACTERS_LOCKED_reference.jpg`**: the approved look is locked; only specs, face identities and named poses change.
+**A character's clothes, colours, hat and face are FIXED for the whole video** (never swapped for a "dirty/powdered" version mid-video).
 
 | File | What it rules |
 |---|---|

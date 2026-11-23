@@ -27,6 +27,13 @@ wasted time and usage. Do not repeat that.
   `accessory` (glasses), `scale` (kids 0.75), `seed` (outline wobble).
 - One signature item per character, readable across the room.
 
+## 2b. A character's look is FIXED for the whole video (user, 2026-11-23)
+Clothes, colours, hat, hair and face set never change between scenes, not even "because he got covered in flour/mud/water".
+Video 3 swapped the new guy's red jumper for a white "powdered" version in the river scene and the user rejected it: the viewer
+must recognise the same person in every shot. Story effects (dust, wet, soot) are shown with effects AROUND or ON TOP of the
+character (particles, drips, a light overlay), never by changing the spec. A second rig of the same person (for a stunt) uses
+the SAME spec.
+
 ## 3. How every person on screen is made
 - **Live in the scene:** `createCharacter(SPECS.x)`. Acting = state (`expression`, `mouth`, `lookAt`, arm poses via `armAt`, `sit`, `bob`, `nod`).
 - **On a TV / CCTV / photo / newspaper / book / poster:** a REAL render of a spec through the mini renderer (render target → canvas

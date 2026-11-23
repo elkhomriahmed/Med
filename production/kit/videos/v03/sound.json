@@ -252,22 +252,16 @@
    "dur": 0.6
   },
   {
-   "src": "window_smash",
-   "at": 52.09,
-   "db": -10,
-   "dur": 0.9
-  },
-  {
    "src": "cartoon_fall_whistle",
-   "at": 52.24,
+   "at": 52.14,
    "db": -12,
-   "dur": 1.0
+   "dur": 0.9
   },
   {
    "src": "splash",
    "at": 52.92,
    "db": -9,
-   "dur": 1.1
+   "dur": 1.0
   },
   {
    "src": "whoosh",

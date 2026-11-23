@@ -22,8 +22,8 @@ S = [  # (file, time, gain dB[, length s]) — RULE 2026-11-23: every effect is 
  ("whoosh", T(171) - 0.1, -16, 0.4),                                         # cut to the chain-reaction stage (quiet accent only)
  ("flight_whoosh", T(189) - 0.1, -10), ("dust_pour", T(197), -12, 1.4),
  ("explosion_big", T(206) - 0.04, -17, 1.5), ("walls_collapse_debris", T(215), -15, 1.6), ("impact", T(221), -12, 0.6),
- ("flight_whoosh", T(225) - 0.12, -10), ("window_smash", T(230) - 0.05, -10, 0.9), ("cartoon_fall_whistle", T(230) + 0.1, -12, 1.0),
- ("splash", T(234), -9, 1.1),
+ ("flight_whoosh", T(225) - 0.12, -10), ("cartoon_fall_whistle", T(230), -12, 0.9),   # launch out of the (already broken) window
+ ("splash", T(234), -9, 1.0),                                                      # exactly on the landing frame
  ("whoosh", T(245) - 0.08, -10), ("polaroid_flash_eject", T(245) - 0.1, -12, 0.45),
  ("distant_boom_echo", T(257), -9, 2.0),
  ("flight_whoosh", T(267) - 0.12, -12),

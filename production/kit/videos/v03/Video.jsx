@@ -33,7 +33,7 @@ async function build(canvas, W, H) {
   const puff = FX.createWhiteout({ box: { min: V(-2.6, 1.0, -1.1), max: V(-1.5, 2.2, 0.2) }, lights: [mill.lights.key], count: 40 });
   const explosion = FX.createExplosion({ center: A.millExteriorBlastCenter, scale: 1.2, groundY: 0 });
   const farBoom = FX.createExplosion({ center: V(100, 0, 48), scale: 4.0, groundY: 0, debris: 0 });
-  const splash = FX.createSplash({ at: A.riverLanding });
+  const splash = FX.createSplash({ at: A.riverLanding, flour: false, scale: 0.85 });
   const fxAll = [candle, candle2, haze, sparks, fireball, dust, whiteout, puff, explosion, farBoom, splash];
   for (const o of fxAll) scene.add(o);
   // props
@@ -47,7 +47,7 @@ async function build(canvas, W, H) {
   for (const o of [lantern, matchbox]) { o.visible = false; scene.add(o); }
   // cast
   const chars = {};
-  for (const k of ["newguy", "foreman", "miller2"]) { chars[k] = await createCharacter(SPECS[k]); scene.add(chars[k].root); }
+  for (const k of ["newguy", "newguyF", "foreman", "miller2"]) { chars[k] = await createCharacter(SPECS[k === "newguyF" ? "newguy" : k]); scene.add(chars[k].root); }   // newguyF = the SAME spec (clothes never change mid-video)
   const look = createLook(renderer, scene, camera, W, H, {});
   await look.ready;
   const dir = makeDirection({ mill, science: { anchors: science.userData.anchors || science.anchors } });

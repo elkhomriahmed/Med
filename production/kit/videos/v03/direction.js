@@ -93,8 +93,9 @@ export function makeDirection(W) {
     [S.boom, cameraPath([                                                    // 14 BOOM: the roof flies off, the walls fold out
       K(S.boom, V(14, 3.0, 22), V(-1, 4.0, 0), 50), K(T(215), V(17, 6.5, 26), V(0, 7.5, 0), 58), K(S.flies - 0.05, V(19, 7.0, 28), V(-1, 5.0, 0), 56)])],
     [S.flies, cameraPath([                                                   // 15 he flies out the window into the river
-      K(S.flies, V(-0.4, 5.0, 10.5), WIN, 50), K(T(231), V(0.4, 3.8, 12.8), WIN.clone().lerp(LAND, 0.45), 56),
-      K(T(234), V(0.6, 0.6, 12.4), LAND.clone().add(V(0, 1.0, 0)), 50), K(S.real - 0.05, V(2.8, 0.55, 12.6), LAND.clone().add(V(1.6, 0.9, 0)), 46)])],
+      K(S.flies, V(-1.7, 5.0, 8.6), WIN.clone().add(V(0, -0.35, 0)), 46), K(T(230), V(-1.4, 4.7, 9.4), WIN.clone().add(V(0, -0.3, 0)), 48),
+      K(T(232), V(-0.3, 2.6, 11.6), WIN.clone().lerp(LAND, 0.55).add(V(0, 0.6, 0)), 54), K(T(234), V(0.4, 0.55, 12.0), LAND.clone().add(V(0, 0.55, 0)), 50),
+      K(S.real - 0.05, V(1.8, 0.5, 11.2), LAND.clone().add(V(1.2, 0.5, 0.25)), 46)])],
     [S.real, cameraPath([                                                    // 16 1878 (sepia): the far town hears it
       K(S.real, V(-16, 3.2, 10), V(10, 0.8, 18), 52), K(T(257), V(-13.5, 3.0, 11.5), V(12, 1.2, 19), 50), K(S.last - 0.05, V(-12.5, 2.9, 12.2), V(12, 1.4, 19), 48)])],
     [S.last, cameraPath([                                                    // 17 the foreman in front of the smoking ruins
@@ -190,19 +191,30 @@ export function makeDirection(W) {
           [S.how, { pose: "shrug" }], [S.sci, { pose: "rest" }], [T(201), { pose: "fistsUp", phase: t * 4 + 0.5 }]], t, 0.22),
       };
       props.candle = t < T(63) + 0.1 ? { holder: "newguy", side: "R" } : { place: CANDLE, rot: 0.3 };
-    } else if (t < S.real) {                                                 // blown out of the window, into the river
-      const fly = sm(T(230) - 0.02, T(234), t), p = WIN.clone().lerp(LAND, fly); p.y += Math.sin(Math.PI * fly) * 2.2;
-      const drift = Math.max(0, t - T(234));
-      if (t < T(230) - 0.02) R.visible = false;
-      R.pos = t < T(234) ? p.add(V(0, -1.0, 0)) : LAND.clone().add(V(0.55 * drift, -0.95 + 0.04 * Math.sin(t * 3.1), 0.12 * drift));
-      R.rot = t < T(234) ? Math.PI * 0.1 + fly * 2.2 : 0.35 + 0.15 * Math.sin(t * 0.9);
-      R.s = { expression: t < T(234) ? "shock" : "sleepy", mouth: t < T(234) ? "_O" : blink([54.0]), lookAt: cam,
-        lean: t < T(234) ? -0.5 : -0.25, side: t < T(234) ? 0.3 * Math.sin(t * 9) : 0.1 * Math.sin(t * 1.7),
-        armL: { pose: t < T(234) ? "fistsUp" : "shrug", phase: t * 6 }, armR: { pose: t < T(234) ? "fistsUp" : "shrug", phase: t * 6 + 0.5 } };
+    } else if (t < S.real) {                                                 // (river part is played by the powdered double, below)
+      R.visible = false;
     } else R.visible = false;
     if (t < S.tease) props.candle = { place: CANDLE, rot: 0.3 };            // the hook: the candle stands on the crate
     if (z === "science" || z === "outside" && !(t >= S.flies && t < S.real)) R.visible = false;
     cast.newguy = R;
+
+    // ================= NEW GUY (second rig, same spec): at the window, out of it, into the river =================
+    const WIN_IN = WIN.clone().addScaledVector(M.flyWindow.normal, -0.45); WIN_IN.y = TOP.y;
+    const G = { visible: t >= S.flies && t < S.real, pos: WIN_IN.clone(), rot: 0, s: {} };
+    if (G.visible) {
+      const fly = sm(T(230), T(234), t), launched = t >= T(230);
+      const start = WIN_IN.clone().add(V(0, 0.1, 0)), end = LAND.clone().add(V(0, -1.0, 0));
+      const p = start.clone().lerp(end, fly); p.y += Math.sin(Math.PI * fly) * 0.9;
+      const drift = Math.max(0, t - T(234));
+      G.pos = !launched ? WIN_IN.clone() : t < T(234) ? p : LAND.clone().add(V(0.5 * drift, -1.0 + 0.4 * sm(T(234), T(234) + 0.5, t) + 0.035 * Math.sin(t * 3.1), 0.1 * drift));   // bobs up: his body shows above the water
+      G.rot = !launched ? 0 : t < T(234) ? fly * 1.2 : 0.5 + 0.1 * Math.sin(t * 0.9);
+      G.s = { expression: !launched ? "sleepy" : t < T(234) ? "shock" : "sleepy", mouth: launched && t < T(234) ? "_O" : blink([51.6, 54.1]), lookAt: cam,
+        lean: !launched ? 0.08 : t < T(234) ? -0.35 : -0.75, side: launched && t < T(234) ? 0.25 * Math.sin(t * 8) : 0,
+        nod: !launched ? 0.15 : 0, bob: !launched ? 0 : 0,
+        armL: { pose: launched && t < T(234) ? "fistsUp" : launched ? "shrug" : "rest", phase: t * 6 },
+        armR: { pose: launched && t < T(234) ? "fistsUp" : launched ? "shrug" : "rest", phase: t * 6 + 0.5 } };
+    }
+    cast.newguyF = G;
 
     // ================= FOREMAN =================
     const F = { visible: false, pos: FM.clone(), rot: M.foremanSpot.yaw, s: {} };
