@@ -49,7 +49,7 @@ Additions (user, 2026-11-17), apply to EVERY full video:
   quality step (still checks, fixes, sound) just to finish sooner.
 - **Every known issue gets fixed in the full build:** lighting logic, camera movement and tracking, textured 3D backgrounds,
   character movement, expressions, hands, faces, lip-sync, and the camera moves between places.
-- **One connected world, fast flights between places.** All (or almost all) places of a video are built next to each other in
+- **[SUPERSEDED 2026-11-23 → see "Story, transitions, colour (user, 2026-11-23)"]** **One connected world, fast flights between places.** All (or almost all) places of a video are built next to each other in
   the same world. To change place, the camera flies through the world to the next one with a fast, sped-up move (no cut). A
   normal transition (cut or dissolve) is used only when the next place is too far away to fly to, for a jump into the past
   (flashback) or a dream, or when the whole context changes.
@@ -129,7 +129,7 @@ A3. Bodies stay calm: weight shifts, small leans, hands talk; jumps/shakes only 
 F1. Head width ≈ 18–25% of frame width (median). Dialogue close-ups ≤ 30%, rare. Full bodies in medium/wide shots. Never crop the top
     of a head. Measured target: competitors 21% median; v11 was 37.5% (too close).
 F2. One continuous spline per shot (no ease-to-zero at every key); ease only at shot start/end; holds ≥ 1.2 s; speed/acceleration caps.
-F3. Between places: real camera flights through the connected world, or a hard cut when time jumps. No double-exposure dissolves.
+F3. [SUPERSEDED 2026-11-23: glide only within a place; far places = designed cut + sound] Between places: real camera flights through the connected world, or a hard cut when time jumps. No double-exposure dissolves.
 F4. Per-frame camera check: nothing within 0.6 m of the lens, no wall/plank filling the frame, both heads fully in frame when they talk.
 
 ## L. Light logic
@@ -443,7 +443,7 @@ These are the rules for every video in this project. Change them only on purpose
 - That texture also bumps the lighting, and contact shadows (ambient occlusion) darken corners and the spots under furniture. Together these make places read as real 3D, not just colour plus outlines.
 
 ## 3. Colour and light
-- **Calm, not neon.** Saturation is never pushed. Pair one warm and one cool family per location, e.g. warm wood with sage/teal walls, or blue night with warm lamps.
+- **[SUPERSEDED 2026-11-23: one cool base + hot accents for the whole video]** **Calm, not neon.** Saturation is never pushed. Pair one warm and one cool family per location, e.g. warm wood with sage/teal walls, or blue night with warm lamps.
 - **Light tells the story:** day for setup, blue-violet night for scheming or danger, a warm candle or lamp for flashbacks, golden sunrise for the resolution.
 - **Visible light sources:** lamps, windows, a stove glow. A sun patch on the floor through the window frame.
 - **Soft bloom** on bright sources only.
@@ -551,7 +551,7 @@ Every video follows these rules.
   narrator's); the narration stays calm and natural, never exaggerated.
 - **Transitions (user, 2026-11-17, after video 1):** a change of context without a camera flight is always a designed transition,
   never a raw hard cut (raw cuts looked glitchy and make viewers scroll away).
-- **Colour (user, 2026-11-17, after video 1):** one harmonious palette per place (dominant + accent family); characters contrast
+- **Colour (user, 2026-11-17, after video 1; extended 2026-11-23: ONE scheme for the whole video):** one harmonious palette per place (dominant + accent family); characters contrast
   with it instead of fighting it.
 - **Opening retention (user, 2026-11-17, after video 1):** the first 10–15 s must never drop in pace (video 1 slowed at ~3–3.5 s
   after the hook). Camera always moving (no resting keys), a new picture/strong action every ~1.5–2 s, no raw cuts, no voice
@@ -607,3 +607,47 @@ User notes collected while making video 2. Each one cost a re-render; check them
 - The ending picture must match the story's outcome (video 2: a smug robber reading his textbook read as a happy ending; the user
   wanted him caught: cuffed, sad, mugshot flash, the frozen frame revealed as the newspaper front page). Short "punchline" beats
   (e.g. "his eyes are burning, but the plan works") still need a new framing every ~0.4–0.5 s and an action on each half.
+
+
+---
+## 2026-11-23 — Story, transitions, colour (user feedback on video 2 + competitor deep-dive). WINS over older notes
+Evidence and numbers: `analysis/astronauts_flush/ANALYSIS.md`. These were partly in the rules (curiosity gap, karma payoff,
+shutter on cuts, two colour families) but not enforced, and two older rules (fast flights everywhere; "calm, not neon") pushed
+the wrong way. From now on:
+
+**A. Story spine (script gate: a script that fails any line is rewritten before voice is generated)**
+1. **The hook makes a promise that only the LAST line pays.** It names a stake (danger, loss, absurd consequence), not the trick.
+   Never give away the mechanism in the first 40 s.
+2. **One protagonist, one place cluster, one question.** No new main character after the first third; no lecture or expert
+   tangent (video 2's professor/Dunning-Kruger part lost viewers).
+3. **A chain of cause and effect:** rule/setup → someone breaks it (attitude, quoted line) → a strange consequence we can SEE
+   (a mystery picture) → bigger consequence (ticking clock, blame, escalation) → the viewer's question said out loud near the
+   middle ("But how does …?") → the mechanism in 2–3 picture steps → the last line ties it back to the hook's stake.
+4. **Every setup pays off and every payoff was set up.** List them in the script file (setup → payoff, with times).
+5. **Tension rises in every block of ~8 s:** each beat raises the stakes or opens a question before the last one is answered.
+6. The ending is the story's real outcome (consequence/karma), shown as a picture, never a happy or neutral wrap-up by accident.
+
+**B. Two hook/topic formats**
+- **Story:** "He/They did [strange deliberate act]…" (as before, but stake-first).
+- **"If you…" / what-if (second person):** "If you [everyday act] in/at [unusual place], you'll [shocking consequence]." The
+  viewer is the protagonist; we SHOW what happens step by step ("You see, …", the rule, someone like you breaks it, the strange
+  result, the escalation, the reason, the payoff). Use it for hypotheticals ("what happens if…") and for real facts.
+
+**C. Transitions**
+- **Glide (continuous camera) only within one place or between two places in direct view of each other** (≲10 m, e.g. kitchen →
+  couch in the same room).
+- **Everything else is a designed cut**, never a flight across the world: match cut on a shared picture (the same message on two
+  screens, a photo, a sign), sound-bridge cut (radio crackles → the speaker), whip-pan, swipe, quick flash, push into a
+  screen/porthole/page. Keep it fast: ≤0.3 s of transition.
+- **Every place change and every whip/flash/dive gets an accent sound** (shutter click, whoosh, swipe, crackle, impact), placed on
+  the cut frame. Check with `kit/tools/transition_check.py` (every change should read ≳8× median).
+
+**D. Colour: one scheme for the whole video**
+- Pick ONE video-wide base family (e.g. cool navy/teal/blue) + ONE complementary accent family (e.g. yellow/orange/red). Every
+  place is built and graded inside that scheme, so cuts feel like one world.
+- Saturation lives in the accents and the characters' clothes (the protagonist's colour is the brightest thing in the frame);
+  backgrounds are darker, cooler, less saturated. Avoid saturated brown/beige/orange MIDTONES (video 2: 78% of saturated pixels were
+  orange-brown, nothing popped).
+- Real darks and a few crisp highlights (screens, lamps, stars). A colour change (e.g. red alarm light) marks a turning point.
+- Check with `kit/tools/palette_check.py` on the low-res render; targets (from the competitor): base family ≳60% of saturated
+  pixels, strongly saturated pixels ≳30%, dark pixels 35–55%.

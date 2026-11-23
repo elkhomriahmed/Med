@@ -435,3 +435,24 @@ Rules:
 - **3–4 characters at most**, each with one signature colour, hat or prop.
 - **Strangest picture in the first 2 s.** Twist in the last few seconds. Every line must have a picture.
 - **Final check, the mute test:** with the sound off, every face should still tell the story.
+
+
+---
+## 8. Update 2026-11-23: story spine + "If you…" format (from "Why Astronauts Can't Flush in Space")
+Full beat map and measurements: `analysis/astronauts_flush/ANALYSIS.md`. The template in 7.2 still holds, with these changes:
+- The hook states a **stake**, not the trick: "If you flush the toilet on a spaceship, you'll never make it back to Earth."
+- The "why" is held back to ~58% and explained in 2–3 picture steps; the **last line closes the hook's stake**.
+- The narrator voices the viewer's question near the middle: "But how do you get lost from one flush?"
+- One protagonist and one place cluster; no expert or lecture tangent.
+
+```
+[0–3s]    If you [everyday act] [in an unusual place], you'll [outsized consequence].        (or: He [strange act] … [stake])
+[3–8s]    You see, [the rule / how things normally work there].
+[8–13s]   [Someone like you] breaks it. "[dismissive quoted line]."
+[13–17s]  [Time cue], [the act, shown].
+[17–25s]  [Time cue]: [a strange consequence we can SEE: the mystery picture]. [One-line emphasis.]
+[25–33s]  [Alarm / blame / ticking clock]. [Escalation: every hour/day, worse.]
+[33–35s]  But how does [act] cause [consequence]?
+[35–55s]  Well, [mechanism step 1 → explains consequence A]. [Step 2 → explains the mystery picture].
+[55–61s]  And because [last fact], [the hook's stake, closed]. END.
+```

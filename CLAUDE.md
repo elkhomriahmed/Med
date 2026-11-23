@@ -6,6 +6,7 @@ Read these before any creative or pipeline work. They are the source of truth; t
 |---|---|
 | `production/STYLE_BIBLE.md` | THE style rules. Top section = **v12 LOCKED** (wins over everything below it). Older v2–v11 notes are cumulative history; where they conflict with v12, v12 wins |
 | `analysis/STYLE_BREAKDOWN.md` | Measured competitor formula: script beats, hooks, pace, sound mix, captions, shot rhythm, script template + LLM prompt |
+| `analysis/astronauts_flush/ANALYSIS.md` | **Competitor deep-dive (2026-11-23)**: story spine, "If you…" hook, cut-vs-glide transitions + sounds, one video-wide colour scheme, measured numbers vs video 2 |
 | `analysis/reference_tutorial/TUTORIAL_BREAKDOWN.md` | Creator's own guide: word timing first, shot = place, ~3 framings/shot, mute test, 4 rules + 2 mistakes |
 | `production/research/*.md` | Mine Salting + Mirror Horse Race breakdowns, v11 audit, v11 scorecard (gaps to fix) |
 | `production/videos/01_lighthouse_mercury/` | Video 1: `script.md` (v3 = current), `shotlist.md` |
@@ -63,10 +64,10 @@ Reason: protect ElevenLabs credits and Claude usage — video 1 used a lot of bo
   - Framing: head width 18–25% of frame (not close-ups); full bodies in medium/wide.
   - Captions: one word at a time (v11) — white bold rounded sans, black outline, ~70% down.
 - **Acting:** calm by default (neutral, half-lid, smirk, side-eye); peaks ≤15% of time, ≤1 s each. Faces change on their exact word.
-- **Camera:** one continuous spline per shot, holds ≥1.2 s; flights between places, hard cut only for time jumps; no double-exposure dissolves; nothing within 0.6 m of lens.
+- **Camera:** one continuous spline per shot, holds ≥1.2 s; glide only within a place (or to a place in direct view, ≲10 m); far places = a designed cut (match cut, sound bridge, whip, swipe, flash, push into a screen), never a long flight (2026-11-23); no double-exposure dissolves; nothing within 0.6 m of lens.
 - **Light:** visible key source in every scene, characters lit from it; warm pools vs cool shadows/moonlight.
-- **Script:** hook = weird deliberate act in first line (strangest picture in first 2 s); "You see," context; mockery w/ quoted line; deadpan hero; time-jump escalation; twist late; mechanism in 1–3 sentences; ironic one-line button; no CTA. ~220–240 words, >60 s, 3.8 words/s, pauses ≤0.34 s. Every line has its own picture; if you can't say what we see, rewrite the line.
-- **Sound:** voice from frame 1, ends ≤0.3 s after last word; music bed steady under voice; effect on every action (≥30 distinct per video); story SFX exactly on their word; master −14.0 LUFS.
+- **Script:** passes the STORY GATE below first. Hook = strange act or "If you…" with a STAKE in the first line (strangest picture in first 2 s); "You see," context; mockery w/ quoted line; deadpan hero; time-jump escalation; twist late; mechanism in 1–3 sentences; ironic one-line button; no CTA. ~220–240 words, >60 s, 3.8 words/s, pauses ≤0.34 s. Every line has its own picture; if you can't say what we see, rewrite the line.
+- **Sound:** voice from frame 1, ends ≤0.3 s after last word; music bed steady under voice; effect on every action (≥30 distinct per video); story SFX exactly on their word; **an accent sound on EVERY transition/place change** (shutter, whoosh, swipe, crackle; check `kit/tools/transition_check.py`); master −14.0 LUFS.
 - **Checks:** low-res stills of every beat before full render; mute test; no flashes; hands visible when the action needs them.
 - Max 3–4 characters, each with one signature item visible across the room.
 
@@ -80,9 +81,9 @@ mercury pool); some keeper hand moves make the hand look like it disappears.
 - Follow the workflow from start to finish, efficiently, but never sacrifice quality to finish early.
 - Fix every noted issue in the build: lighting logic, camera movement/tracking, textured 3D backgrounds, character movement,
   expressions, hands, faces, lip-sync, camera moves between places.
-- **One connected world:** (almost) all places sit next to each other in the same world; the camera changes place with a fast,
-  sped-up flight through it. A normal transition (cut/dissolve) only for a place too far to fly to, a flashback or dream, or a
-  complete change of context.
+- **One connected world (revised 2026-11-23):** places share one world and one colour scheme, but the camera only GLIDES within a
+  place or to a place in direct view (kitchen → couch). Any farther change (house → bank → other bank → police) is a fast designed
+  cut with a sound (video 2's long flights between buildings lost viewers).
 
 ## Keep the user informed while making EVERY video (user, 2026-11-17)
 1. **Time per step:** every step gets a target time from `production/kit/TIMING.md`. After each step, tell the user the time it
@@ -154,6 +155,17 @@ sending; never hand over a video with a known problem as if it were finished.
   small detail that a still frame looks rich. Check stills of each place against the look reference before building shots.
 - **Save tokens and credits:** library first for sound, music and visuals; reuse templates; fewer, smarter check renders (contact
   sheets + `tools/popscan.py`), and fix whole categories of problems per round instead of one shot at a time.
+
+## STORY GATE + transitions + colour (user, 2026-11-23): read STYLE_BIBLE "2026-11-23" and analysis/astronauts_flush/ANALYSIS.md
+Video 2's story was weak (trick given away at 5 s, no rising stakes, caught at 43 s, then a boring professor tangent). Before any
+voice is generated, the script must pass: (1) the hook promises a stake that only the last line pays; (2) one protagonist, one
+place cluster, one question, no expert/lecture tangent; (3) a cause-and-effect chain: setup/rule → broken (quoted attitude) →
+a strange consequence we SEE → escalation (ticking clock) → the viewer's question said aloud mid-video → mechanism in 2–3 picture
+steps → the last line closes the hook; (4) every setup pays off (list them); (5) tension rises every ~8 s; (6) the ending shows
+the real outcome. Two formats: real story told stake-first, or **"If you…" / what-if** in second person (the viewer is the hero).
+Transitions: glide only within a place; far = designed cut + sound on every change. Colour: ONE video-wide scheme (a base family
++ a complementary accent), saturation in accents/clothes, real darks, no muddy brown/orange midtones; check with
+`kit/tools/palette_check.py` against the competitor numbers. Also present the script to the user for approval before voicing.
 
 ## Lessons from video 2 (user, 2026-11-19): read STYLE_BIBLE "Lessons from video 2" before directing
 Face library + new bodies/clothes per video; props never pop (hand reaches, prop eases in/out); long one-character scenes switch
