@@ -12,6 +12,7 @@ import { createCharacter } from "../../characters/index.js";
 import { SPECS } from "../../characters/specs.js";
 import { Captions } from "../../timeline/Captions.jsx";
 import { FPS, WORDS, makeDirection } from "./direction.js";
+import { runAudit } from "./audit.js";
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const mat = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.5, ...o });
@@ -22,11 +23,13 @@ async function build(canvas, W, H) {
   const camera = new THREE.PerspectiveCamera(52, W / H, 0.03, 2000);
   const lot = await buildLot({}); scene.add(lot.group);
   const A = lot.anchors;
+  lot.lights.key.shadow.normalBias = 0.06; lot.lights.key.shadow.bias = -0.0008;   // no shadow-acne stripes on the rounded toy cars (popscan 14-15 s)
   const car = await buildHeroCar({}); car.position.copy(A.heroBay.pos || A.heroBay); car.rotation.y = 0; scene.add(car); car.updateMatrixWorld(true);
   const CA = car.anchors;
+  const parked = [];
   // more parked cars around the hero bay (same toy-car builder, other paints); the driver-door side (-x) stays clear
-  for (const [x, z, yaw, paint] of [[5.15, -4.0, 0, "#2f7f8f"], [7.8, -4.0, 0, "#2c5f9e"], [2.5, 6.0, Math.PI, "#9aa6b2"], [-2.8, 6.0, Math.PI, "#3f86d6"]]) {
-    const pc = await buildHeroCar({ paint }); pc.position.set(x, 0, z); pc.rotation.y = yaw; scene.add(pc); }
+  for (const [x, z, yaw, paint] of [[5.15, -4.0, 0, "#2f7f8f"]]) {
+    const pc = await buildHeroCar({ paint }); pc.position.set(x, 0, z); pc.rotation.y = yaw; scene.add(pc); parked.push(pc); }
   const bottle = createBottle({}); scene.add(bottle);
   const burn = createBurnSpot({ at: CA.seatBurnPoint, normal: CA.seatNormal, bottle }); car.add(burn);
   const haze = createHeatHaze({}); car.add(haze);
@@ -50,7 +53,7 @@ async function build(canvas, W, H) {
   // cast
   const chars = {};
   for (const k of ["driver", "coworker", "idahoMan", "extraSuit", "extraTeal", "extraBlue"]) { chars[k] = await createCharacter(SPECS[k]); scene.add(chars[k].root); }
-  const look = createLook(renderer, scene, camera, W, H, { hdri: false, grade: { exposure: lot.hint.exposure } });
+  const look = createLook(renderer, scene, camera, W, H, { hdri: false, ao: getInputProps().noAO ? false : undefined, grade: { exposure: lot.hint.exposure } });
   await look.ready;
   lot.makeEnvironment(renderer, scene);
   const dir = makeDirection({ lot, car, optics: { anchors: optics.anchors || optics.userData.anchors } });
@@ -65,11 +68,7 @@ async function build(canvas, W, H) {
     o.position.copy(f.position); o.updateMatrixWorld(true); o.position.sub(gripOf(o)); };
   const seatPos = CA.driverSeatTop.clone().applyMatrix4(car.matrixWorld);
   const upright = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI / 2));
-  const state = { last: null };
-  return {
-    camera, state,
-    async renderFrame(frame) {
-      const t = frame / FPS;
+  const applyFrame = (t) => {
       const c = dir.camAt(t); const dbg = getInputProps().dbgCam;
       if (dbg) { c.pos = new THREE.Vector3(...dbg.pos); c.target = new THREE.Vector3(...dbg.target); c.fov = dbg.fov ?? 50; }
       camera.position.copy(c.pos); camera.fov = c.fov; camera.lookAt(c.target); camera.near = 0.03; camera.updateProjectionMatrix(); camera.updateMatrixWorld();
@@ -87,6 +86,16 @@ async function build(canvas, W, H) {
         if (!s || !s.visible) { ch.root.visible = false; continue; }
         ch.root.visible = true; ch.root.position.copy(s.pos); ch.root.rotation.set(0, s.rot ?? 0, 0);
         ch.update(s.s || {}, { camera, keyLightPos: key, time: t }); }
+      return { a, c, z };
+  };
+  const state = { last: null };
+  return {
+    camera, state,
+    async renderFrame(frame) {
+      const t = frame / FPS;
+      const { a, c, z } = applyFrame(t); const k = a.ctrl;
+      if (getInputProps().audit && !state.audited) { state.audited = true;
+        runAudit({ dir, chars, car, cars: parked, lot, optics, camera, live, FPS, END: WORDS[WORDS.length - 1][1] + 0.3, applyFrame }); applyFrame(t); }
       // bottle AFTER the characters are updated (hand frames are current) and BEFORE the burn spot (the dot follows its roll)
       const b = a.props.bottle; bottle.visible = !!b && z !== "optics";
       if (b && b.seat) { bottle.position.copy(seatPos); bottle.quaternion.copy(car.quaternion); bottle.set({ rock: t }); }
@@ -104,7 +113,7 @@ async function build(canvas, W, H) {
       chestDot.visible = k.chestDot > 0.001;
       if (chestDot.visible) { const d = chars.driver, hc = d.headCenter(), yaw = a.cast.driver.rot, f = V(Math.sin(yaw), 0, Math.cos(yaw));
         chestDot.position.copy(hc).add(V(0, -0.62, 0)).addScaledVector(f, 0.17); chestDot.lookAt(chestDot.position.clone().add(f));
-        chestDot.material.opacity = k.chestDot * (0.85 + 0.15 * Math.sin(t * 40)); chestDot.scale.setScalar(0.6 + 0.6 * k.chestDot); }
+        chestDot.material.opacity = k.chestDot; chestDot.scale.setScalar(0.6 + 0.6 * k.chestDot); }
       await Promise.all(Object.values(chars).map((c) => c.ready?.()));
       look.render();
       state.last = a;
@@ -118,10 +127,7 @@ function FxLayer({ a, t, W, H }) {
   useEffect(() => {
     const cv = ref.current; if (!cv || !a) return; const g = cv.getContext("2d"); g.clearRect(0, 0, W, H);
     if (a.fx.sepia > 0.001) {                                                    // 1878: film grain + vignette + scratches
-      const r = (n) => { const x = Math.sin(n * 12.9898 + Math.floor(t * 24) * 78.233) * 43758.5453; return x - Math.floor(x); };
-      g.fillStyle = "rgba(40,28,14,0.10)"; for (let i = 0; i < 260; i++) g.fillRect(r(i) * W, r(i + 500) * H, 2, 2);
-      g.fillStyle = "rgba(255,240,210,0.10)"; for (let i = 0; i < 160; i++) g.fillRect(r(i + 900) * W, r(i + 1300) * H, 2, 2);
-      g.fillStyle = "rgba(30,20,10,0.25)"; for (let i = 0; i < 2; i++) g.fillRect(r(i + 77) * W, 0, 1.5, H);
+      // calm old-photo look: warm vignette only (no per-frame grain or scratches = no jitter)
       const v = g.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, H * 0.75); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(30,18,6,0.55)");
       g.fillStyle = v; g.fillRect(0, 0, W, H);
     }

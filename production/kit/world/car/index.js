@@ -10,6 +10,8 @@
 //                          z of the focused dot) follows the roll. userData.grip = finger-hook point (neck).
 // All set() are pure functions of their inputs. No Math.random (seeded rng only).
 import * as THREE from "three";
+// 2026-11-24: buildHeroCar = the toy car (toycar.js, same API + anchors); the previous builder stays as buildHeroCarOld
+export { buildToyCar as buildHeroCar } from "./toycar.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { roundedBox, place, boxUV, tube } from "../geometry.js";
 import { plain, canvasTex, noiseNormal } from "../materials.js";
@@ -212,7 +214,7 @@ export const CAR = {
 };
 
 // ================================================================================================== buildHeroCar
-export async function buildHeroCar({ paint = "#e8edf2", seed = 4, sunDir = [-0.35, 0.85, 0.4], name = "heroCar", interior = true } = {}) {
+export async function buildHeroCarOld({ paint = "#e8edf2", seed = 4, sunDir = [-0.35, 0.85, 0.4], name = "heroCar", interior = true } = {}) {
   const root = new THREE.Group(); root.name = name;
   const M = {
     // toy look: soft clay/plastic paint with a gentle clearcoat (broad soft highlights), satin "silver clay" instead of mirror chrome
