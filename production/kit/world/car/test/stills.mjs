@@ -6,7 +6,7 @@ import path from "node:path";
 const ids = process.argv.slice(2);
 const entry = path.resolve("world/car/test/index.js");
 const serveUrl = await bundle({ entryPoint: entry });
-const all = ["CarExt", "CarRear", "Windshield", "SideWindow", "SeatSmoke", "SeatRing", "WindshieldRing", "FireBurst", "FireDoor", "OptRays", "OptFocus", "OptMelt"];
+const all = ["CarInterior", "CarFront34", "CarExt", "CarRear", "Windshield", "SideWindow", "SeatSmoke", "SeatRing", "WindshieldRing", "FireBurst", "FireDoor", "OptRays", "OptFocus", "OptMelt"];
 for (const id of ids.length ? ids : all) {
   const t0 = Date.now();
   const composition = await selectComposition({ serveUrl, id, chromiumOptions: { gl: "angle" }, timeoutInMilliseconds: 300000 });

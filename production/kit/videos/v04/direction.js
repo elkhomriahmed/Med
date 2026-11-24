@@ -52,7 +52,7 @@ export function makeDirection(W) {
     let d = cl(k, 0, 1) * tot; for (let i = 1; i < pts.length; i++) { if (d <= seg[i - 1]) return pts[i - 1].clone().lerp(pts[i], d / seg[i - 1]); d -= seg[i - 1]; }
     return pts[pts.length - 1].clone();
   };
-  const STRUG = carW(V(-1.1, 0, 0.12));                                     // pressed against the driver window (keys gone, door locked)
+  const STRUG = carW(V(-1.5, 0, 0.12));                                     // at the driver window (keys gone, door locked); far enough that his head (which leans toward the camera) never passes the glass
   const RUN = [...WALK].reverse().concat([STRUG.clone()]);                  // entrance -> the driver window
   const runK = (t) => sm(S.lot - 0.02, T(150), t);
   const runner = (t) => along(RUN, runK(t));
@@ -80,19 +80,22 @@ export function makeDirection(W) {
     [S.stairs, cameraPath([vw(L.views.stairsDown, 0, 0, S.stairs), vw(L.views.stairsBottom, 0, 0, S.lot - 0.03)])],
     [S.lot, cameraPath([0, 0.25, 0.5, 0.75, 1].map((f) => { const t = S.lot + f * (S.ring - S.lot - 0.03), p = runner(t), d = fwd(faceTo(p, along(RUN, runK(t) + 0.05)));
       return K(t, p.clone().addScaledVector(d, 2.6).add(V(0.6, 1.3, 0)), head(p, 1.0), 54); })) ],
-    [S.ring, cameraPath([K(S.ring, carW(V(0.62, 0.92, 0.42)), carW(V(-0.8, 0.86, -0.05)), 62), K(T(150), carW(V(0.6, 0.92, 0.4)), carW(V(-0.9, 0.96, -0.04)), 60),     // passenger-seat POV (low, under the headrest line)
-      K(S.how - 0.03, carW(V(0.58, 0.93, 0.38)), carW(V(-0.95, 1.02, -0.03)), 56)])],
-    [S.how, cameraPath([K(S.how, carW(V(0.45, 0.95, 0.3)), carW(V(-1.0, 1.05, -0.02)), 50), K(S.sci - 0.03, carW(V(0.38, 0.96, 0.27)), carW(V(-1.0, 1.06, -0.02)), 46)])],
+    [S.ring, cameraPath([K(S.ring, carW(V(0.27, 1.06, -0.16)), carW(V(-1.0, 0.8, 0.12)), 70), K(T(150), carW(V(0.25, 1.06, -0.15)), carW(V(-1.0, 0.86, 0.1)), 66),   // low between the front seats: burning seat + bottle, his face outside the window
+      K(S.how - 0.03, carW(V(0.24, 1.07, -0.15)), carW(V(-1.0, 0.92, 0.1)), 62)])],
+    [S.how, cameraPath([K(S.how, carW(V(0.24, 1.08, -0.15)), carW(V(-1.0, 1.0, 0.1)), 58), K(S.sci - 0.03, carW(V(0.2, 1.08, -0.14)), carW(V(-1.0, 1.04, 0.1)), 52)])],
     [S.sci, cameraPath([vw(OPT.rays, 0, 0, S.sci), vw(OPT.rays, 0.15, -3, S.focus - 0.03)])],
     [S.focus, cameraPath([vw(OPT.focus, -0.1, 2, S.focus), vw(OPT.focus, 0.2, -4, S.melt - 0.03)])],
     [S.melt, cameraPath([vw(OPT.melt, 0, 0, S.melt), vw(OPT.melt, 0.15, -3, S.oven - 0.03)])],
     [S.oven, cameraPath([K(S.oven, WS.pos.clone().add(V(0.4, -0.6, -0.3)), SEATC, 34), K(S.rips - 0.03, WS.pos.clone().add(V(-0.3, -0.7, -0.1)), SEATC, 30)])],
     [S.rips, cameraPath([K(S.rips, carW(V(-6.3, 2.15, 1.15)), carW(V(-0.6, 0.9, -0.05)), 40), K(T(237), carW(V(-6.2, 2.12, 1.12)), carW(V(-0.7, 0.9, -0.05)), 40),   // from behind him
       K(S.real - 0.03, carW(V(-6.3, 2.2, 1.15)), carW(V(-1.6, 0.7, 0.05)), 44)])],
-    [S.real, cameraPath([K(S.real, DOV.pos, DOV.target, DOV.fov + 2), K(T(256), DOV.pos.clone().lerp(DOV.target, 0.1), DOV.target, DOV.fov),
-      K(T(257), WS.pos, WS.target, 26), K(S.last - 0.03, WS.pos.clone().lerp(WS.target, 0.2), SEAT, 18)])],
-    [S.last, cameraPath([K(S.last, head(DOOR).add(V(-3.3, -0.2, 0.9)), head(DOOR, 1.15), 50), K(T(268), head(DOOR).add(V(-2.8, -0.25, 0.75)), head(DOOR, 1.1), 48),
-      K(S.end, head(DOOR).add(V(-2.3, -0.3, 0.6)), head(DOOR, 0.98), 46)])],
+    [S.real, cameraPath([K(S.real, head(DOOR).add(V(-2.5, 0.05, 2.5)), head(DOOR, 1.05), 48), K(T(250), head(DOOR).add(V(-2.3, 0.05, 2.3)), head(DOOR, 1.1), 46),
+      K(T(251) - 0.03, head(DOOR).add(V(-2.35, 0.1, 2.35)), head(DOOR, 1.1).add(V(0, 0, -0.3)), 46)])],   // whole man in frame, he jumps away from the lens
+    [T(251), cameraPath([K(T(251), WS.pos, WS.target, 28), K(T(257) - 0.03, WS.pos.clone().lerp(WS.target, 0.22), SEAT.clone().add(V(0, 0.35, 0)), 20)])],   // smoke rising off the seat
+    [T(257), cameraPath([K(T(257), carW(CA.views.seatMacro.pos), carW(CA.views.seatMacro.target), 48), K(T(259), carW(CA.views.seatMacro.pos).lerp(carW(CA.views.seatMacro.target), 0.18), carW(CA.views.seatMacro.target), 40),
+      K(S.last - 0.03, carW(CA.views.seatMacro.pos).lerp(carW(CA.views.seatMacro.target), 0.34), carW(CA.views.seatMacro.target), 34)])],   // "The culprit? His water bottle." 
+    [S.last, cameraPath([K(S.last, V(0.3, 1.25, -0.7), head(DOOR.clone().add(V(-0.55, 0, 0.25)), 1.15), 48), K(T(268), V(0.38, 1.22, -1.05), head(DOOR.clone().add(V(-0.55, 0, 0.25)), 1.08), 46),
+      K(S.end, V(0.45, 1.2, -1.4), head(DOOR.clone().add(V(-0.55, 0, 0.25)), 0.98), 44)])],   // from the aisle (clear of parked cars)
   ];
   const segAt = (t) => { let i = 0; for (let k = 0; k < P.length; k++) if (t >= P[k][0]) i = k; return i; };
 
@@ -101,9 +104,10 @@ export function makeDirection(W) {
     const amp = 0.035 * sm(T(57), T(57) + 0.05, t) * (1 - sm(T(58), T(59), t))                        // door slam
       + 0.03 * sm(T(91) - 0.05, T(91), t) * (1 - sm(T(92), T(92) + 0.3, t))                             // "Burning."
       + 0.05 * sm(S.how - 0.02, S.how + 0.05, t) * (1 - sm(S.how + 0.3, S.how + 0.6, t))                // shock: how?
-      + 0.2 * sm(T(237) - 0.03, T(237) + 0.05, t) * (1 - sm(T(237) + 0.5, T(239) + 0.3, t));           // seat bursts into flames (bigger hit)
+      + 0.2 * sm(T(237) - 0.03, T(237) + 0.05, t) * (1 - sm(T(237) + 0.5, T(239) + 0.3, t))            // seat bursts into flames (bigger hit)
+      + 0.05 * sm(T(250) - 0.05, T(250) + 0.02, t) * (1 - sm(T(250) + 0.3, T(251), t));            // 2017: he spots the smoke
     if (amp > 1e-4) { const s = shakeV(t, amp); c.pos = c.pos.clone().add(s); c.target = c.target.clone().add(s.multiplyScalar(0.5)); }
-    const punch = [T(13), T(25), T(30), T(32), T(45), T(84), T(90), T(91), T(155), T(165), T(190), T(201), T(237), T(270)]
+    const punch = [T(13), T(25), T(30), T(32), T(45), T(84), T(90), T(91), T(155), T(165), T(190), T(201), T(237), T(250), T(258), T(260), T(270)]
       .reduce((a, w) => a + 4 * Math.exp(-Math.pow((t - w) / 0.09, 2)), 0);
     return { ...c, fov: c.fov - punch };
   }
@@ -115,7 +119,7 @@ export function makeDirection(W) {
     const pulse = (c, a = 0.06, b = 0.16) => sm(c - a, c, t) * (1 - sm(c + 0.02, c + b, t));
     fx.whip = Math.max(pulse(S.warn), pulse(S.nos), pulse(T(29), 0.05, 0.12), pulse(T(32), 0.05, 0.12), pulse(S.laugh), pulse(S.toss), pulse(S.noon),
       pulse(S.strange), pulse(S.smoke), pulse(S.up), pulse(S.carPov, 0.05, 0.12), pulse(S.stairs), pulse(S.lot), pulse(S.ring), pulse(S.how, 0.04, 0.12),
-      pulse(S.sci), pulse(S.focus), pulse(S.melt), pulse(S.oven), pulse(S.rips), pulse(S.last));
+      pulse(S.sci), pulse(S.focus), pulse(S.melt), pulse(S.oven), pulse(S.rips), pulse(T(251)), pulse(T(257), 0.05, 0.12), pulse(S.last));
     fx.flash = 0.8 * sm(S.real - 0.03, S.real, t) * (1 - sm(S.real + 0.02, S.real + 0.14, t));
     fx.sepia = t >= S.real && t < S.last ? 1 : 0;
     fx.red = [T(24), T(29), T(32)].reduce((m, w) => Math.max(m, t >= w - 0.04 ? sm(w - 0.04, w + 0.03, t) * Math.exp(-Math.max(0, t - w - 0.03) / 0.28) : 0), 0);
@@ -144,7 +148,7 @@ export function makeDirection(W) {
       D.s = { expression: step([[0, "laugh"], [T(44), "happy"], [S.toss, "smug"], [T(60), "happy"]], t), lookAt: t < S.toss ? cam : t < T(60) ? SEAT : head(D.pos).addScaledVector(fwd(D.rot), 3),
         mouth: quote ? visemeAt(WORDS, t) : t < T(44) ? "_talk" : blink([10.0]),
         lean: t < T(44) ? 0.18 + 0.06 * Math.sin(t * 18) : 0, bob: t < T(44) ? 0.03 * Math.abs(Math.sin(t * 14)) : t >= T(60) ? 0.025 * Math.abs(Math.sin(t * 10)) : 0,
-        armR: armAt([[0, { pose: "holdUp", height: 1.25 }], [S.toss - 0.1, { pose: "present" }], [T(54), { pose: "rest" }], [T(56), { pose: "push", target: carW(V(-0.86, 0.9, 0.2)), phase: 0 }], [T(60), { pose: "rest" }]], t, 0.18),
+        armR: armAt([[0, { pose: "present" }], [S.toss - 0.1, { pose: "present" }], [T(54), { pose: "rest" }], [T(56), { pose: "push", target: carW(V(-0.86, 0.9, 0.2)), phase: 0 }], [T(60), { pose: "rest" }]], t, 0.18),
         armL: armAt([[0, { pose: "slapKnee", phase: t * 5 }], [T(44), { pose: "hip" }], [T(60), { pose: "rest" }]], t, 0.22) };
       if (t < S.toss + 0.05) props.bottle = { holder: "driver", side: "R" };
       else if (t < T(54)) props.bottle = { arc: { from: "hand", k: sm(S.toss + 0.05, T(54), t) } };
@@ -156,7 +160,7 @@ export function makeDirection(W) {
         armL: { pose: "rest" }, armR: { pose: "rest" } };
       props.bottle = { seat: true };
     } else if (t < S.lot) {                                                  // down the stairs
-      const k = sm(S.stairs + 0.02, S.lot - 0.02, t); D.pos = L.stairTop.pos.clone().lerp(L.stairBottom.pos, k); D.rot = faceTo(L.stairTop.pos, L.stairBottom.pos);
+      const k = 0.45 + 0.55 * sm(S.stairs + 0.02, S.lot - 0.02, t); D.pos = L.stairTop.pos.clone().lerp(L.stairBottom.pos, k);   // starts a few steps down: never near the lens D.rot = faceTo(L.stairTop.pos, L.stairBottom.pos);
       D.s = { expression: "shock", mouth: "_O", lookAt: head(D.pos).addScaledVector(fwd(D.rot), 3), bob: 0.04 * Math.abs(Math.sin(t * 16)), lean: 0.2,
         armL: { pose: "fistsUp", phase: t * 8 }, armR: { pose: "fistsUp", phase: t * 8 + 0.5 } };
       props.bottle = { seat: true };
@@ -168,10 +172,10 @@ export function makeDirection(W) {
         bob: running ? 0.045 * Math.abs(Math.sin(t * 15)) : 0, lean: running ? 0.22 : 0,
         armL: running ? { pose: "fistsUp", phase: t * 8 } : { pose: "shrug" }, armR: running ? { pose: "fistsUp", phase: t * 8 + 0.5 } : { pose: "shrug" } };
       if (runK(t) >= 0.99) {                                                 // at the window: tugging the locked door, pounding the glass, terrified
-        D.pos = STRUG.clone().add(V(0, -0.18, 0)); D.rot = yDoor;   // crouched so his face is against the glass
+        D.pos = STRUG.clone(); D.rot = yDoor;
         const handle = CAR.getDoorHandle(new THREE.Vector3()).applyMatrix4(CAR.matrixWorld);
         D.s = { expression: step([[0, "shock"], [S.how + 0.4, "worried"], [S.sci, "shock"]], t), mouth: "_O", lookAt: SEAT,
-          lean: 0.28 + 0.05 * Math.sin(t * 13), side: 0.04 * Math.sin(t * 9), bob: 0.015 * Math.abs(Math.sin(t * 11)), sit: 0.35, seat: 0.75,
+          lean: 0.06 + 0.03 * Math.sin(t * 13), side: 0.04 * Math.sin(t * 9), bob: 0.012 * Math.abs(Math.sin(t * 11)), sit: 0.6, seat: 0.62,   // crouched: face level with the window, head stays outside the glass
           armR: { pose: "grab", target: handle.add(V(-0.04 * Math.abs(Math.sin(t * 10)), 0, 0)) },
           armL: { pose: "push", target: carW(V(-0.88, 1.18, 0.02)), phase: t * 4.5 } };
       }
@@ -187,9 +191,9 @@ export function makeDirection(W) {
       props.bottle = { seat: true };
     } else if (t < S.last) { D.visible = false; props.bottle = { seat: true }; }
     else {                                                                   // the button: he holds the rescued bottle; the sun puts a dot on his own shirt
-      D.pos = DOOR.clone().add(V(-0.55, 0, 0.25)); D.rot = faceTo(D.pos, V(-3.5, 0, -2.0));
+      D.pos = DOOR.clone().add(V(-0.55, 0, 0.25)); D.rot = faceTo(D.pos, V(0.35, 0, -0.9));   // faces the camera in the aisle
       D.s = { expression: step([[0, "skeptical"], [T(264), "smug"], [T(270), "shock"]], t), lookAt: t < T(268) ? cam : t < T(270) + 0.2 ? head(D.pos, 0.95).addScaledVector(fwd(D.rot), 0.3) : cam,
-        mouth: t >= T(270) ? "_O" : blink([59.5]), armR: { pose: "holdUp", height: 1.02 }, armL: { pose: "hip" }, tilt: 0.08 };
+        mouth: t >= T(270) ? "_O" : blink([59.5]), armR: { pose: "present" }, armL: { pose: "hip" }, tilt: 0.08 };   // bottle held out in front, in view
       props.bottle = { holder: "driver", side: "R", upright: true };
     }
     if (z !== "lot" && !(z === "stairs")) D.visible = false;
@@ -203,12 +207,17 @@ export function makeDirection(W) {
     if (cast.coworker.visible) props.mug = { holder: "coworker", side: "R" };
 
     // ================= IDAHO MAN (2017 flashback, sepia) =================
-    cast.idahoMan = { visible: t >= S.real && t < S.last, pos: DOOR.clone(), rot: yDoor * 0.45 + faceTo(DOOR, DOV.pos) * 0.55,   // 3/4 toward the camera (face readable)
-      s: { expression: step([[0, "skeptical"], [T(251), "shock"]], t), lookAt: SEAT, mouth: t >= T(251) ? "_O" : blink([55.0]), lean: 0.12, armR: { pose: "rest" }, armL: { pose: "hip" } } };
+    { // 2017: he leans in to look, SPOTS the smoke, jumps back terrified and fans it away (fast, never "chilling")
+      const jump = sm(T(250) - 0.05, T(250) + 0.3, t), base = DOOR.clone().add(V(0.25, 0, 0)), away = V(0, 0, -1);   // jumps sideways toward the car front, away from the camera (camera sits at +z)
+      cast.idahoMan = { visible: t >= S.real && t < T(251), pos: base.addScaledVector(away, 0.55 * jump).add(V(0, Math.sin(Math.PI * jump) * 0.12, 0)), rot: yDoor * 0.45 + faceTo(DOOR, DOV.pos) * 0.55,
+        s: { expression: step([[0, "skeptical"], [T(250) - 0.05, "shock"]], t), lookAt: SEAT, mouth: t >= T(250) - 0.05 ? "_O" : blink([54.6]),
+          lean: 0.25 * (1 - jump) - 0.35 * jump, nod: 0.12 * (1 - jump),
+          armR: jump > 0.05 ? { pose: "wave", phase: t * 5 } : { pose: "rest" }, armL: jump > 0.05 ? { pose: "fistsUp", phase: t * 6 } : { pose: "hip" } } };
+    }
 
     // ================= MORNING EXTRAS: coworkers crossing the lot into the office (none at noon: "not a single person in sight") =================
-    const ROUTE = (from) => [from, V(0.45, 0, -1.0), V(0.15, 0, -7.2), V(0, 0.15, -12.9)];
-    for (const [name, from, t0, t1] of [["extraSuit", V(-10.0, 0, 0.8), 0.2, 9.6], ["extraTeal", V(9.0, 0, 5.0), 2.0, 11.6], ["extraBlue", V(5.4, 0, 1.2), -1.5, 6.4]]) {
+    const ROUTE = (from) => [from, V(Math.sign(from.x) * 0.9, 0.15, -11.75)];                                 // along the sidewalk in front of the building, stops BEFORE the glass doors
+    for (const [name, from, t0, t1] of [["extraSuit", V(-12.5, 0.15, -11.55), -1.0, 14.0], ["extraTeal", V(12.5, 0.15, -11.7), 1.0, 16.0], ["extraBlue", V(-7.5, 0.15, -11.85), 3.0, 18.0]]) {
       const k = sm(t0, t1, t), route = ROUTE(from), p = along(route, k), ahead = along(route, Math.min(1, k + 0.03));
       cast[name] = { visible: t < S.noon && k > 0 && k < 0.985 && z === "lot", pos: p, rot: faceTo(p, ahead),
         s: { expression: name === "extraTeal" ? "happy" : "neutral", lookAt: head(p).addScaledVector(fwd(faceTo(p, ahead)), 3), bob: 0.022 * Math.abs(Math.sin(t * 9 + t0)),

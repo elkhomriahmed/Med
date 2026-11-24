@@ -46,7 +46,8 @@ async function build(scene, renderer, P) {
   const burn = createBurnSpot({ at: A.seatBurnPoint, normal: A.seatNormal, bottle }); car.add(burn);
   const haze = createHeatHaze({}); car.add(haze); haze.set(P.haze || 0, P.t);
   if (P.person) capsule(scene, P.view === "doorOpen" ? new THREE.Vector3(-1.9, 0, 0.15) : A.driverDoorOpenSpot.clone().add(new THREE.Vector3(-0.25, 0, 0.1)), car);
-  C.view = P.view === "ext" ? { pos: new THREE.Vector3(-6.2, 2.1, -6.0), target: new THREE.Vector3(0, 0.7, 0), fov: 38 }
+  C.view = P.cpos ? { pos: new THREE.Vector3(...P.cpos), target: new THREE.Vector3(...P.ctarget), fov: P.fov || 50 }
+    : P.view === "ext" ? { pos: new THREE.Vector3(-6.2, 2.1, -6.0), target: new THREE.Vector3(0, 0.7, 0), fov: 38 }
     : P.view === "rear" ? { pos: new THREE.Vector3(3.6, 1.6, 4.8), target: new THREE.Vector3(0, 0.7, 0), fov: 38 }
     : toWorld(A.views[P.view], car);
   C.post = (cam) => { burn.setCamera(cam); burn.set(P.k, P.t); };

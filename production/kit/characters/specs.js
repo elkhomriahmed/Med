@@ -148,11 +148,11 @@ export const EXTRA_SUIT = { id: "extraSuit", faceSet: "lib_pencil", seed: 271,
   coat: { type: "tweed", color: "#4a5563", accent: "#333b46", shirtPanel: "#e6e9ec", panelPlain: true, tie: "#2c5f9e", placket: false, buttons: null, pockets: false },
   hat: null, hair: { color: "#2a2420", style: "slick" } };
 export const EXTRA_TEAL = { id: "extraTeal", faceSet: "lib_woman_glasses", seed: 277,
-  coat: { type: "knit", color: "#2f7f8f", accent: "#1f5560", buttons: null, placket: false, pockets: false },
-  hat: null, hair: { color: "#5a3a26", style: "bob" } };
+  coat: { type: "knit", color: "#8fa3a6", accent: "#6d8285", buttons: null, placket: false, pockets: false },
+  hat: null, hair: { color: "#5a3a26", style: "bob" } };   // muted (extras never compete with the hero red)
 export const EXTRA_BLUE = { id: "extraBlue", faceSet: "lib_toughguy", seed: 281,
-  coat: { type: "jersey", color: "#3a6ea8", accent: "#2a5080", zip: null, buttons: "#e8eef2", placket: true, pockets: true },
-  hat: "cap", hatColor: "#e8edf2" };
+  coat: { type: "jersey", color: "#a9a08e", accent: "#8a816f", zip: null, buttons: "#e8eef2", placket: true, pockets: true },
+  hat: "cap", hatColor: "#6b7280" };   // muted sand (was a loud saturated blue)
 
 export const SPECS = { keeper: KEEPER, engineer: ENGINEER, captain: CAPTAIN, sailorA: SAILOR_A, sailorB: SAILOR_B, fisher: FISHER, baker: BAKER, lady: LADY, kid: KID,
   robber: ROBBER, buddy: BUDDY, teller1: TELLER_1, teller2: TELLER_2, cop: COP, cop2: COP_2, anchor: NEWS_ANCHOR, weatherman: WEATHERMAN, professor: PROFESSOR,

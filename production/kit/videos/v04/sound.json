@@ -318,10 +318,28 @@
    "dur": 0.4
   },
   {
+   "src": "gasp",
+   "at": 56.01,
+   "db": -14,
+   "dur": 0.7
+  },
+  {
+   "src": "whoosh",
+   "at": 56.22,
+   "db": -13,
+   "dur": 0.4
+  },
+  {
    "src": "scorch_sizzle",
    "at": 56.3,
    "db": -15,
-   "dur": 1.2
+   "dur": 1.0
+  },
+  {
+   "src": "whoosh",
+   "at": 57.68,
+   "db": -12,
+   "dur": 0.4
   },
   {
    "src": "flight_whoosh",

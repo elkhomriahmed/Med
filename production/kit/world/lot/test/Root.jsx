@@ -7,6 +7,8 @@ export const Root = () => (
   <>
     {C("LotWide", { view: "lotWide" })}
     {C("LotLow", { view: "lotLow" })}
+    {C("CarLot34", { view: "carLot34" })}
+    {C("CarInterior", { view: "carInterior", figures: false })}
     {C("WindowFromLot", { view: "windowFromLot" })}
     {C("CarFromBuilding", { view: "carFromBuilding" })}
     {C("Entrance", { view: "entrance" })}

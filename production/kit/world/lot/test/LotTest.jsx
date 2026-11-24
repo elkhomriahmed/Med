@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { AbsoluteFill, continueRender, delayRender, useCurrentFrame, useVideoConfig } from "remotion";
 import { createLook } from "../../look.js";
 import { buildLot } from "../index.js";
+import { buildHeroCar } from "../../car/index.js";
 
 function figure(color) {
   const g = new THREE.Group();
@@ -43,8 +44,11 @@ export const LotTest = ({ view = "lotWide", set = {}, figures = true, car = true
       const A = lot.anchors;
       if (figures) for (const [k, c] of [["driverDoorSpot", 0xd8322a], ["coworkerSpot", 0x5a6f86], ["entrance", 0x2c5f9e], ["stairTop", 0xd8322a], ["stairBottom", 0xd8322a]]) {
         const p = figure(c); p.position.copy(A[k].pos); p.rotation.y = A[k].yaw; scene.add(p); }
-      if (car) { const c = carStub(); c.position.copy(A.heroBay.pos); c.rotation.y = A.heroBay.yaw; scene.add(c); }
-      const V = A.views[view];
+      let heroCar = null;
+      if (car) { heroCar = await buildHeroCar({}); heroCar.position.copy(A.heroBay.pos); heroCar.rotation.y = 0; scene.add(heroCar); heroCar.updateMatrixWorld(true); }
+      const CV = { carLot34: { pos: [-1.2, 1.55, -9.2], target: [2.5, 0.75, -4.0], fov: 40 }, carInterior: { pos: [0.38, 1.0, 0.3], target: [-0.88, 0.5, -0.2], fov: 70, local: true } }[view];
+      const V = CV ? (CV.local ? heroCar.toWorld({ pos: new THREE.Vector3(...CV.pos), target: new THREE.Vector3(...CV.target), fov: CV.fov }, heroCar)
+        : { pos: new THREE.Vector3(...CV.pos), target: new THREE.Vector3(...CV.target), fov: CV.fov }) : A.views[view];
       camera.fov = V.fov; camera.updateProjectionMatrix(); camera.position.copy(V.pos); camera.lookAt(V.target); camera.updateMatrixWorld();
       const look = createLook(renderer, scene, camera, width, height, { hdri: false, grade: { exposure: lot.hint.exposure } });
       lot.makeEnvironment(renderer, scene, lot.hint.envIntensity);

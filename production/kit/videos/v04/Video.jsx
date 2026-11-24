@@ -79,13 +79,6 @@ async function build(canvas, W, H) {
       lot.group.visible = z !== "optics"; car.visible = z !== "optics"; optics.visible = z === "optics";
       lot.set({ t }); lot.update(t, camera);
       car.set({ door: k.door }); car.updateMatrixWorld(true);
-      // bottle (seat / arc / hand) BEFORE the burn spot (the dot follows its roll)
-      const b = a.props.bottle; bottle.visible = !!b && z !== "optics";
-      if (b && b.seat) { bottle.position.copy(seatPos); bottle.quaternion.copy(car.quaternion); bottle.set({ rock: t }); }
-      else if (b && b.holder) { bottle.set({ rock: 0, amp: 0 }); toHand(bottle, b.holder, b.side, b.upright ? upright : null); }
-      else if (b && b.arc) { const p0 = V(1.05, 1.15, -3.55), kk = b.arc.k; bottle.position.copy(p0.clone().lerp(seatPos, kk)); bottle.position.y += Math.sin(Math.PI * kk) * 0.35;
-        bottle.quaternion.copy(car.quaternion); bottle.rotateZ((1 - kk) * 2.5); bottle.set({ rock: 0, amp: 0 }); }
-      burn.visible = z !== "optics"; burn.setCamera?.(camera); burn.set(k.burn, t);
       haze.visible = k.haze > 0.001; if (haze.visible) haze.set(k.haze, t);
       if (optics.visible) { optics.setCamera?.(camera); optics.set(k.optics, t); }
       // cast
@@ -94,6 +87,13 @@ async function build(canvas, W, H) {
         if (!s || !s.visible) { ch.root.visible = false; continue; }
         ch.root.visible = true; ch.root.position.copy(s.pos); ch.root.rotation.set(0, s.rot ?? 0, 0);
         ch.update(s.s || {}, { camera, keyLightPos: key, time: t }); }
+      // bottle AFTER the characters are updated (hand frames are current) and BEFORE the burn spot (the dot follows its roll)
+      const b = a.props.bottle; bottle.visible = !!b && z !== "optics";
+      if (b && b.seat) { bottle.position.copy(seatPos); bottle.quaternion.copy(car.quaternion); bottle.set({ rock: t }); }
+      else if (b && b.holder) { bottle.set({ rock: 0, amp: 0 }); toHand(bottle, b.holder, b.side, b.upright ? upright : null); if (getInputProps().dbgBottle) console.log("BOTTLE", JSON.stringify(bottle.position), bottle.visible, JSON.stringify(chars[b.holder].handFrame(b.side).position)); }
+      else if (b && b.arc) { const p0 = V(1.05, 1.15, -3.55), kk = b.arc.k; bottle.position.copy(p0.clone().lerp(seatPos, kk)); bottle.position.y += Math.sin(Math.PI * kk) * 0.35;
+        bottle.quaternion.copy(car.quaternion); bottle.rotateZ((1 - kk) * 2.5); bottle.set({ rock: 0, amp: 0 }); }
+      burn.visible = z !== "optics"; burn.setCamera?.(camera); burn.set(k.burn, t);
       // small props
       mug.visible = !!a.props.mug; if (mug.visible) toHand(mug, "coworker", "R");
       keys.visible = !!a.props.keys; if (keys.visible) { const q = a.props.keys, p = q.from.clone().lerp(q.to, q.fly); p.y += Math.sin(Math.PI * Math.min(1, q.fly)) * 0.8 * (1 - q.fly * 0.3);

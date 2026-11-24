@@ -34,7 +34,8 @@ S = [  # (file, time, dB, length s[, skip s])
  ("seat_fire_burst", T(237) - 0.02, -8, 1.4, 0.05),                                                     # bursts into flames (shake)
  ("impact", T(237) + 0.42, -12, 0.5),                                                                    # thrown back, lands on the asphalt
  ("flashback_swell", T(240) - 0.95, -9, 1.2), ("polaroid_flash_eject", T(240) - 0.06, -15, 0.4),        # 2017 flashback
- ("scorch_sizzle", T(251), -15, 1.2),
+ ("gasp", T(250) - 0.05, -14, 0.7),                                                                        # 2017: he spots the smoke (on screen, shocked)
+ ("whoosh", T(251) - 0.08, -13, 0.4), ("scorch_sizzle", T(251), -15, 1.0), ("whoosh", T(257) - 0.08, -12, 0.4),   # quick cuts: smoke, the culprit
  ("flight_whoosh", T(262) - 0.1, -12, 0.45), ("sparkle_twinkle", T(270) - 0.05, -11, 0.8),              # the dot on his shirt
 ]
 B = [("summer_lot_loop", 0.0, T(130), -25), ("bank_lobby_loop", T(130), T(135), -28), ("summer_lot_loop", T(135), T(166), -25),

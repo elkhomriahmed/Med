@@ -82,6 +82,9 @@ Full render (~7 min) → `timeline/finish.sh` (−14.0 LUFS) → popscan + trans
 the "Deliver only a finished video" checklist in CLAUDE.md. Then: copy to Downloads + `production/videos/<NN>/`, send it in chat
 (SendUserFile), commit + push code (never MP4s > 100 MB or node_modules), report ElevenLabs characters used (voice / SFX / music).
 
+**Google Drive (`G:/My Drive/MED/`) only after the user says the video is FINAL** (user, 2026-11-24): never upload work-in-progress
+or fix rounds there; send drafts in the chat + Downloads/project only.
+
 ## 9. After approval
 `final_videos/<NN>/` (MP4, script, shot list, contact sheets, NOTES.md: what worked / what went wrong) → log real step times in
 `kit/TIMING.md` → add new builders/props/faces/SFX to the libraries → append new lessons to STYLE_BIBLE (dated) → push.
