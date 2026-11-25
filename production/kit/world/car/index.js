@@ -11,7 +11,9 @@
 // All set() are pure functions of their inputs. No Math.random (seeded rng only).
 import * as THREE from "three";
 // 2026-11-24: buildHeroCar = the toy car (toycar.js, same API + anchors); the previous builder stays as buildHeroCarOld
-export { buildToyCar as buildHeroCar } from "./toycar.js";
+export { buildToyCar } from "./toycar.js";
+// 2026-11-24: every car is a REAL model (Sketchfab 1950s pack, realCar.js); the hand-built toy car was rejected as "not our style"
+export { buildRealHeroCar as buildHeroCar, loadCarModel, CAR_MODELS } from "./realCar.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { roundedBox, place, boxUV, tube } from "../geometry.js";
 import { plain, canvasTex, noiseNormal } from "../materials.js";

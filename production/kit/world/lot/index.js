@@ -18,7 +18,7 @@
 import * as THREE from "three";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { roundedBox, boxUV, grainUV, tint, clean, mergeGeometries, lathe, place, tube } from "../geometry.js";
-import { buildHeroCar } from "../car/index.js";
+import { loadCarModel } from "../car/index.js";
 import { pbr, plain, canvasTex, noiseNormal } from "../materials.js";
 import { rng } from "../../shared/assets.js";
 import { createExteriorSky } from "../exterior/sky.js";
@@ -446,19 +446,12 @@ export async function buildLot(opts = {}) {
   CARS_B.forEach(([x, c], i) => car(x + (r() - 0.5) * 0.15, 6.0 + (r() - 0.5) * 0.2, (r() < 0.5 ? -1 : 1) * Math.PI / 2 + (r() - 0.5) * 0.03, c, { rack: i === 3 }));
   // a couple on the road beyond (depth)
   car(-22, 16, 0, "#2c5f9e"); car(30, 19.5, Math.PI, "#aab4be");
-  { const CB = {}, CM = {};
-    for (const [x, z, yaw, color] of carJobs) {
-      const c = await buildHeroCar({ paint: "#ffffff", interior: false, name: "parkedCar" });
-      c.position.set(x, 0, z); c.rotation.y = yaw - Math.PI / 2; c.updateMatrixWorld(true);       // lot +x-front convention -> car nose -z
-      c.traverse((o) => { if (!o.isMesh) return; const k = o.material.name || "car_misc"; if (!CM[k]) CM[k] = o.material; (CB[k] = CB[k] || []);
-        const g = o.geometry.clone(); g.applyMatrix4(o.matrixWorld); const gc = clean(g); if (k === "car_paint") tint(gc, C(color)); CB[k].push(gc); });
-    }
-    for (const [k, list] of Object.entries(CB)) { let m = CM[k];
-      if (k === "car_paint") { m = m.clone(); m.vertexColors = true; m.color.set(0xffffff); }
-      const mesh = new THREE.Mesh(mergeGeometries(list), m); mesh.name = `lot_cars_${k}`;
-      const glass = !!m.isShaderMaterial, shadow = k.startsWith("car_shadow");
-      mesh.castShadow = !glass && !shadow; mesh.receiveShadow = !shadow; if (glass) mesh.renderOrder = 2; if (shadow) mesh.renderOrder = -1;
-      extra.push(mesh); } }
+  { // real vintage car models (world/car/realCar.js; the hero model 54buick is kept for the hero car only)
+    const PARKED = ["patrician", "clipper", "buickwagon", "hudson", "buick_50", "buick_coupe", "packard_caribbean", "surferwagon", "buick_conv"];
+    let i = 0;
+    for (const [x, z, yaw] of carJobs) {
+      const c = await loadCarModel(PARKED[i++ % PARKED.length], { length: 4.9 });
+      c.position.set(x, 0, z); c.rotation.y = yaw - Math.PI / 2; c.name = "lot_car_" + i; extra.push(c); } }
 
   // ================================================================ STAIRWELL (separate interior, x 58.8..61.2)
   { const { x0, x1, z0, z1, top, ceil, zTop, n, run, rise } = ST, T = 0.25;

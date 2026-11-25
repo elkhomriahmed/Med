@@ -5,6 +5,7 @@ import { AbsoluteFill, continueRender, delayRender, useCurrentFrame, useVideoCon
 import { createLook } from "../../look.js";
 import { createSky } from "../../sky.js";
 import { buildHeroCar, createBottle, toWorld } from "../index.js";
+import { loadCarModel, CAR_MODELS } from "../realCar.js";
 import { createBurnSpot, createHeatHaze, createOpticsStage } from "../../fx_v04/index.js";
 
 const SUN = new THREE.Vector3(-0.35, 0.85, 0.4).normalize();
@@ -39,6 +40,12 @@ async function build(scene, renderer, P) {
     return C;
   }
   world(scene, renderer);
+  if (P.dbg) globalThis.__DBGPARTS = P.dbg;
+  if (P.lineup) { const names = P.names || CAR_MODELS; for (let i = 0; i < names.length; i++) { const m = await loadCarModel(names[i], { length: P.len || 5.0 }); m.position.set((i - (names.length - 1) / 2) * 2.6, 0, 0); scene.add(m); }
+    if (P.markers) { const mm = new THREE.MeshBasicMaterial({ color: 0xff2020 }), gm = new THREE.MeshBasicMaterial({ color: 0x20ff20 });
+      for (let z = -2.6; z <= 2.61; z += 0.2) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.02, Math.abs(z % 1) < 0.05 ? 2.2 : 1.8, 0.02), Math.abs(z + 0.84) < 0.05 || Math.abs(z - 0.2) < 0.05 ? gm : mm); b.position.set(-1.3, 0.9, z); scene.add(b); }
+      for (const y of [0.56, 0.98, 1.42]) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 5.5), gm); b.position.set(-1.3, y, 0); scene.add(b); } }
+    C.view = { pos: new THREE.Vector3(...P.cpos), target: new THREE.Vector3(...P.ctarget), fov: P.fov || 40 }; C.post = () => {}; return C; }
   const car = await buildHeroCar({}); car.position.set(0, 0, 0); car.rotation.y = P.yaw || 0; scene.add(car);
   car.set({ door: P.door || 0 });
   const A = car.anchors;

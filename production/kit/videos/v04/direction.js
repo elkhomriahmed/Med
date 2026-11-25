@@ -61,11 +61,11 @@ export function makeDirection(W) {
   const vw = (v, push, dfov, t) => K(t, v.pos.clone().lerp(v.target, push), v.target, v.fov + dfov);
 
   const P = [
-    [S.hook, cameraPath([K(0, orb(-2.7, 5.6, 0.9), SEATC, 46), K(S.warn - 0.03, WS.pos, SEAT, 30)])],
+    [S.hook, cameraPath([K(0, orb(-2.7, 5.6, 0.9), SEATC, 46), K(S.warn - 0.03, carW(V(0.15, 2.3, -1.9)), SEAT, 30)])],   // ends over the bonnet, looking in through the windshield
     [S.warn, cameraPath([K(S.warn, V(-6.8, 1.7, 5.8), V(0.8, 2.3, -10.5), 50), K(S.nos - 0.03, V(-5.9, 1.65, 4.7), V(0.9, 2.5, -10.5), 47)])],   // building, cars, people arriving (no empty sky)
     [S.nos, cameraPath([                                                     // 3 three inserts through the windshield (whips between)
       K(S.nos, carW(V(0.3, 1.12, 0.25)), carW(V(-0.1, 0.97, -0.72)), 40), K(T(29) - 0.04, carW(V(0.25, 1.1, 0.12)), carW(V(-0.1, 0.97, -0.72)), 36),
-      K(T(29), carW(V(-0.15, 1.15, -0.45)), carW(V(0.4, 0.62, 0.05)), 44), K(T(32) - 0.04, carW(V(-0.1, 1.1, -0.38)), carW(V(0.4, 0.62, 0.05)), 40),
+      K(T(29), carW(V(0.3, 1.2, -0.68)), carW(V(0.4, 0.62, -0.25)), 50), K(T(32) - 0.04, carW(V(0.32, 1.18, -0.62)), carW(V(0.4, 0.62, -0.25)), 46),   // inside, from the driver side: spray can on the passenger seat   // spray can on the passenger seat, through the passenger window
       K(T(32), carW(V(0.05, 1.12, 0.2)), carW(V(0.3, 0.98, -0.75)), 40), K(S.laugh - 0.03, carW(V(0.1, 1.1, 0.08)), carW(V(0.3, 0.98, -0.75)), 34)])],
     [S.laugh, cameraPath([K(S.laugh, V(-1.5, 1.05, -2.2), head(LAUGH_AT, 1.3), 52), K(T(44), V(-1.25, 1.08, -2.5), head(LAUGH_AT, 1.32), 48),
       K(S.toss - 0.03, V(-1.05, 1.1, -2.75), head(LAUGH_AT, 1.32), 46)])],
@@ -87,7 +87,7 @@ export function makeDirection(W) {
     [S.sci, cameraPath([vw(OPT.rays, 0, 0, S.sci), vw(OPT.rays, 0.15, -3, S.focus - 0.03)])],
     [S.focus, cameraPath([vw(OPT.focus, -0.1, 2, S.focus), vw(OPT.focus, 0.2, -4, S.melt - 0.03)])],
     [S.melt, cameraPath([vw(OPT.melt, 0, 0, S.melt), vw(OPT.melt, 0.15, -3, S.oven - 0.03)])],
-    [S.oven, cameraPath([K(S.oven, WS.pos.clone().add(V(0.4, -0.6, -0.3)), SEATC, 34), K(S.rips - 0.03, WS.pos.clone().add(V(-0.3, -0.7, -0.1)), SEATC, 30)])],
+    [S.oven, cameraPath([K(S.oven, carW(V(0.1, 2.6, -1.92)), SEATC, 34), K(S.rips - 0.03, carW(V(-0.6, 2.5, -2.0)), SEATC, 30)])],
     [S.rips, cameraPath([K(S.rips, carW(V(-6.3, 2.15, 1.15)), carW(V(-0.6, 0.9, -0.05)), 40), K(T(237), carW(V(-6.2, 2.12, 1.12)), carW(V(-0.7, 0.9, -0.05)), 40),   // from behind him
       K(S.real - 0.03, carW(V(-6.3, 2.2, 1.15)), carW(V(-1.6, 0.7, 0.05)), 44)])],
     [S.real, cameraPath([K(S.real, carW(V(0.32, 1.1, -0.22)), carW(V(-3.0, 1.3, 0.15)), 56),             // 2017, ONE shot from the passenger seat, out through the open door:

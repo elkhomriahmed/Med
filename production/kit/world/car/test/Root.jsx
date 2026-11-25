@@ -5,6 +5,9 @@ import { CarTest } from "./CarTest.jsx";
 const C = (id, props) => <Composition key={id} id={id} component={CarTest} durationInFrames={90} fps={30} width={540} height={960} defaultProps={{ id, t: 3, ...props }} />;
 export const Root = () => (
   <>
+    {C("Lineup", { lineup: true, names: ["patrician", "clipper", "54buick", "buickwagon", "hudson", "buick_50"], cpos: [-9, 2.2, -9], ctarget: [0, 0.7, 0], fov: 50 })}
+    {C("Lineup2", { lineup: true, names: ["buick_coupe", "fordpolice", "taxi", "packard_caribbean", "surferwagon", "van"], cpos: [-9, 2.2, -9], ctarget: [0, 0.7, 0], fov: 50 })}
+    {C("HeroSide", { lineup: true, markers: true, len: 4.9, names: ["54buick"], dbg: "54buick", cpos: [-8, 1.0, 0], ctarget: [0, 0.8, 0], fov: 38 })}
     {C("CarExt", { view: "ext", k: {}, person: true })}
     {C("CarRear", { view: "rear", k: {} })}
     {C("CarInterior", { view: "int", k: {}, cpos: [0.42, 1.02, 0.12], ctarget: [-0.9, 0.55, -0.32], fov: 62 })}

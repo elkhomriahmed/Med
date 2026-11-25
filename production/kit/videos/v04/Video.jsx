@@ -6,7 +6,7 @@ import { AbsoluteFill, Audio, continueRender, delayRender, getInputProps, static
 import * as THREE from "three";
 import { createLook } from "../../world/look.js";
 import { buildLot } from "../../world/lot/index.js";
-import { buildHeroCar, createBottle } from "../../world/car/index.js";
+import { buildHeroCar, createBottle, loadCarModel } from "../../world/car/index.js";
 import { createBurnSpot, createHeatHaze, createOpticsStage } from "../../world/fx_v04/index.js";
 import { createCharacter } from "../../characters/index.js";
 import { SPECS } from "../../characters/specs.js";
@@ -29,7 +29,7 @@ async function build(canvas, W, H) {
   const parked = [];
   // more parked cars around the hero bay (same toy-car builder, other paints); the driver-door side (-x) stays clear
   for (const [x, z, yaw, paint] of [[5.15, -4.0, 0, "#2f7f8f"]]) {
-    const pc = await buildHeroCar({ paint }); pc.position.set(x, 0, z); pc.rotation.y = yaw; scene.add(pc); parked.push(pc); }
+    const pc = await loadCarModel("buick_coupe", { length: 4.9 }); void paint; pc.position.set(x, 0, z); pc.rotation.y = yaw; scene.add(pc); parked.push(pc); }
   const bottle = createBottle({}); scene.add(bottle);
   const burn = createBurnSpot({ at: CA.seatBurnPoint, normal: CA.seatNormal, bottle }); car.add(burn);
   const haze = createHeatHaze({}); car.add(haze);
@@ -108,8 +108,8 @@ async function build(canvas, W, H) {
       keys.visible = !!a.props.keys; if (keys.visible) { const q = a.props.keys, p = q.from.clone().lerp(q.to, q.fly); p.y += Math.sin(Math.PI * Math.min(1, q.fly)) * 0.8 * (1 - q.fly * 0.3);
         if (q.fly >= 1) p.y = q.to.y; keys.position.copy(p); keys.rotation.set(q.fly * 9, q.fly * 6, q.fly >= 1 ? Math.PI / 2 : q.fly * 4); }
       lighter.visible = spray.visible = shades.visible = !!a.props.lighter;
-      if (lighter.visible) { lighter.position.copy(V(-0.1, 0.975, -0.72).applyMatrix4(car.matrixWorld)); spray.position.copy(V(0.4, 0.62, 0.0).applyMatrix4(car.matrixWorld));
-        shades.position.copy(V(0.3, 0.985, -0.75).applyMatrix4(car.matrixWorld)); const m = a.props.shades.melt; shades.scale.set(1 + 0.25 * m, 1 - 0.55 * m, 1); shades.rotation.x = 0.4 * m; }
+      if (lighter.visible) { lighter.position.copy((CA.dashLighter || V(-0.1, 0.975, -0.72)).clone().applyMatrix4(car.matrixWorld)); spray.position.copy((CA.passSeat || V(0.4, 0.62, 0.0)).clone().applyMatrix4(car.matrixWorld));
+        shades.position.copy((CA.dashShades || V(0.3, 0.985, -0.75)).clone().applyMatrix4(car.matrixWorld)); const m = a.props.shades.melt; shades.scale.set(1 + 0.25 * m, 1 - 0.55 * m, 1); shades.rotation.x = 0.4 * m; }
       chestDot.visible = k.chestDot > 0.001;
       if (chestDot.visible) { const d = chars.driver, hc = d.headCenter(), yaw = a.cast.driver.rot, f = V(Math.sin(yaw), 0, Math.cos(yaw));
         chestDot.position.copy(hc).add(V(0, -0.62, 0)).addScaledVector(f, 0.17); chestDot.lookAt(chestDot.position.clone().add(f));
