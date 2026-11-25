@@ -23,7 +23,10 @@ async function build(canvas, W, H) {
   const camera = new THREE.PerspectiveCamera(52, W / H, 0.03, 2000);
   const lot = await buildLot({}); scene.add(lot.group);
   const A = lot.anchors;
-  scene.fog = new THREE.FogExp2(0xb9cbe0, 0.0065);   // aerial depth (STYLE_BIBLE: depth fog per scene): far rows, trees, buildings fade into light haze
+  scene.fog = new THREE.FogExp2(0xd8c8b0, 0.0085);   // aerial depth (STYLE_BIBLE: depth fog per scene): far rows, trees, buildings fade into cool haze
+  // STYLE light logic (warm key pools vs cool shadows, real darks): warmer, stronger sun; cooler, weaker sky fill -> shadows + form read
+  { const L = lot.lights; L.key.color.set(0xffc583); L.key.intensity = 3.6; if ('intensity' in L.key.shadow) L.key.shadow.intensity = 0.9;
+    L.hemi.color.set(0x9dbbe6); L.hemi.groundColor.set(0xa07c58); L.hemi.intensity = 1.15; }   // warm golden sun + warm ground bounce, cool sky in the shadows
   const car = await buildHeroCar({}); car.position.copy(A.heroBay.pos || A.heroBay); car.rotation.y = 0; scene.add(car); car.updateMatrixWorld(true);
   const CA = car.anchors;
   const parked = [];
@@ -74,6 +77,8 @@ async function build(canvas, W, H) {
       camera.position.copy(c.pos); camera.fov = c.fov; camera.lookAt(c.target); camera.near = 0.03; camera.updateProjectionMatrix(); camera.updateMatrixWorld();
       const z = dir.zoneAt(t);
       look.grade.set("exposure", z === "optics" ? 1.3 : lot.hint.exposure);
+      { const ext = z === "lot"; look.grade.set("contrast", ext ? 0.26 : 0.18); look.grade.set("sat", ext ? 1.36 : 1.3); look.grade.set("warm", ext ? 0.11 : 0.06);
+        look.grade.set("cool", ext ? 0.16 : 0.10); look.grade.set("vig", ext ? 0.34 : 0.28); }   // outdoor depth grade (warm highlights / cool shadows)
       const a = dir.act(t, live), k = a.ctrl;
       lot.group.visible = z !== "optics"; car.visible = z !== "optics"; optics.visible = z === "optics";
       lot.set({ t }); lot.update(t, camera);

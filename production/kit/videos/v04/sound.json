@@ -28,7 +28,7 @@
    "src": "scorch_sizzle",
    "at": 0.05,
    "db": -14,
-   "dur": 1.4
+   "dur": 0.7
   },
   {
    "src": "seat_fire_burst",
@@ -137,7 +137,7 @@
    "src": "scorch_sizzle",
    "at": 19.52,
    "db": -15,
-   "dur": 1.2
+   "dur": 0.7
   },
   {
    "src": "whoosh",
@@ -149,7 +149,7 @@
    "src": "scorch_sizzle",
    "at": 22.82,
    "db": -12,
-   "dur": 1.4
+   "dur": 0.7
   },
   {
    "src": "flight_whoosh",
@@ -204,7 +204,7 @@
    "src": "scorch_sizzle",
    "at": 32.6,
    "db": -11,
-   "dur": 1.5
+   "dur": 0.7
   },
   {
    "src": "police_knock",
@@ -258,7 +258,7 @@
    "src": "scorch_sizzle",
    "at": 45.8,
    "db": -11,
-   "dur": 1.2
+   "dur": 0.7
   },
   {
    "src": "vapour_hiss",
@@ -327,7 +327,7 @@
    "src": "scorch_sizzle",
    "at": 56.3,
    "db": -17,
-   "dur": 1.2
+   "dur": 0.7
   },
   {
    "src": "flight_whoosh",
@@ -342,30 +342,5 @@
    "dur": 0.8
   }
  ],
- "beds": [
-  {
-   "src": "summer_lot_loop",
-   "a": 0.0,
-   "b": 28.72,
-   "db": -25
-  },
-  {
-   "src": "bank_lobby_loop",
-   "a": 28.72,
-   "b": 29.7,
-   "db": -28
-  },
-  {
-   "src": "summer_lot_loop",
-   "a": 29.7,
-   "b": 36.32,
-   "db": -25
-  },
-  {
-   "src": "summer_lot_loop",
-   "a": 48.72,
-   "b": 61.58,
-   "db": -25
-  }
- ]
+ "beds": []
 }

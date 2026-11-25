@@ -72,8 +72,8 @@ export function makeDirection(W) {
     [S.toss, cameraPath([K(S.toss, V(-0.9, 1.75, -0.6), SEAT.clone().lerp(head(LAUGH_AT, 1.0), 0.45), 50), K(T(57), V(-1.1, 1.7, -0.9), carW(V(-0.84, 0.9, 0)), 48),
       K(T(61), V(-1.6, 1.8, -0.4), head(along(WALK, 0.12), 1.1), 54), K(S.noon - 0.03, V(-1.9, 1.9, -1.4), head(along(WALK, 0.2), 1.1), 56)])],
     [S.noon, cameraPath([vw(L.views.lotWide, 0, 0, S.noon), vw(L.views.lotWide, 0.12, -2, S.strange - 0.03)])],
-    [S.strange, cameraPath([K(S.strange, WS.pos, WS.target, 34), K(T(84), WS.pos.clone().lerp(WS.target, 0.15), SEAT, 24),
-      K(T(90), WS.pos.clone().lerp(WS.target, 0.22).add(V(0.15, 0, 0)), SEAT, 18), K(S.smoke - 0.03, WS.pos.clone().lerp(WS.target, 0.26).add(V(-0.12, 0, 0)), SEAT, 16)])],
+    [S.strange, cameraPath([K(S.strange, carW(V(0.22, 1.32, -0.12)), SEAT, 50), K(T(84), carW(V(0.06, 1.2, -0.22)), SEAT, 42),   // inside, over the passenger seat: bottle + the dot beside it, clear + lit
+      K(T(90), carW(V(-0.04, 1.12, -0.27)), SEAT, 36), K(S.smoke - 0.03, carW(V(-0.08, 1.07, -0.28)), SEAT, 32)])],
     [S.smoke, cameraPath([K(S.smoke, orb(Math.PI + 0.55, 2.9, 2.0), SEAT.clone().add(V(0, 0.15, 0)), 34), K(T(104), orb(Math.PI + 0.15, 2.8, 2.05), SEAT.clone().add(V(0, 0.2, 0)), 32),     // the loved orbit, across the front of the car, looking down through the windshield
       K(T(110), orb(Math.PI - 0.25, 2.8, 2.1), SEAT.clone().add(V(0, 0.25, 0)), 32), K(S.up - 0.03, orb(Math.PI - 0.6, 3.0, 2.2), SEAT.clone().add(V(0, 0.3, 0)), 34)])],
     [S.up, cameraPath([K(S.up, L.windowCenter.clone().add(V(0.6, -0.15, 6.5)), L.windowCenter.clone().add(V(0.2, -0.3, 0)), 34), K(S.carPov - 0.03, L.windowCenter.clone().add(V(0.4, -0.15, 5.4)), L.windowCenter.clone().add(V(0.2, -0.3, 0)), 32)])],   // level with the window: heads + hair readable
@@ -81,9 +81,9 @@ export function makeDirection(W) {
     [S.stairs, cameraPath([K(S.stairs, V(59.6, 2.3, 7.5), V(60.0, 2.6, 0.8), 58), K(S.lot - 0.03, V(59.35, 1.65, 7.95), V(60.0, 1.35, 3.6), 54)])],   // from the stairs' foot: he runs DOWN toward us, stops ~4 m away (never past the lens)
     [S.lot, cameraPath([0, 0.25, 0.5, 0.75, 1].map((f) => { const t = S.lot + f * (S.ring - S.lot - 0.03), p = runner(t), d = fwd(faceTo(p, along(RUN, runK(t) + 0.05)));
       return K(t, p.clone().addScaledVector(d, 2.6).add(V(0.6, 1.3, 0)), head(p, 1.0), 54); })) ],
-    [S.ring, cameraPath([K(S.ring, carW(V(0.27, 1.06, -0.16)), carW(V(-0.75, 0.94, -0.02)), 76), K(T(150), carW(V(0.25, 1.06, -0.15)), carW(V(-0.75, 0.93, -0.02)), 74),   // his face at the window AND the glowing dot + bottle, same frame   // low between the front seats: burning seat + bottle, his face outside the window
-      K(S.how - 0.03, carW(V(0.24, 1.07, -0.15)), carW(V(-0.75, 0.9, -0.02)), 72)])],
-    [S.how, cameraPath([K(S.how, carW(V(0.24, 1.08, -0.15)), carW(V(-0.75, 0.92, -0.02)), 74), K(S.sci - 0.03, carW(V(0.2, 1.08, -0.14)), carW(V(-0.75, 0.94, -0.02)), 72)])],
+    [S.ring, cameraPath([K(S.ring, carW(V(0.27, 1.06, -0.16)), carW(V(-0.75, 0.94, -0.2)), 76), K(T(150), carW(V(0.25, 1.06, -0.15)), carW(V(-0.75, 0.93, -0.2)), 74),   // his face at the window AND the glowing dot + bottle, same frame   // low between the front seats: burning seat + bottle, his face outside the window
+      K(S.how - 0.03, carW(V(0.24, 1.07, -0.15)), carW(V(-0.75, 0.9, -0.2)), 72)])],
+    [S.how, cameraPath([K(S.how, carW(V(0.24, 1.08, -0.15)), carW(V(-0.75, 0.92, -0.2)), 74), K(S.sci - 0.03, carW(V(0.2, 1.08, -0.14)), carW(V(-0.75, 0.94, -0.2)), 72)])],
     [S.sci, cameraPath([vw(OPT.rays, 0, 0, S.sci), vw(OPT.rays, 0.15, -3, S.focus - 0.03)])],
     [S.focus, cameraPath([vw(OPT.focus, -0.1, 2, S.focus), vw(OPT.focus, 0.2, -4, S.melt - 0.03)])],
     [S.melt, cameraPath([vw(OPT.melt, 0, 0, S.melt), vw(OPT.melt, 0.15, -3, S.oven - 0.03)])],
@@ -94,8 +94,8 @@ export function makeDirection(W) {
       K(T(250), carW(V(-2.25, 1.5, -2.1)), carW(V(-1.5, 1.15, 0.3)), 44),                                   // ...spots the smoke, yanks the door open, steps back...
       K(T(250) + 0.65, carW(V(-2.05, 2.15, -0.9)), carW(V(-0.7, 0.8, -0.15)), 46),   // over the open door (never beside it)                           // ...the camera glides round the open door...
       K(T(250) + 1.15, carW(V(-1.15, 1.75, 0.15)), carW(V(-0.4, 0.6, -0.22)), 48),   // 0.8 m clear of the open door                         // ...in through the doorway...
-      K(T(257), carW(V(-0.6, 1.17, 0.02)), carW(V(-0.4, 0.56, -0.18)), 46),                               // ...onto the glowing dot + the bottle from behind the spot (wheel out of frame)
-      K(S.last - 0.03, carW(V(-0.55, 1.13, 0.0)), carW(V(-0.4, 0.56, -0.19)), 40)])],
+      K(T(257), carW(V(-0.6, 1.17, 0.02)), SEAT.clone().add(V(0, 0, 0.04)), 46),                               // ...onto the glowing dot + the bottle from behind the spot (wheel out of frame)
+      K(S.last - 0.03, carW(V(-0.55, 1.13, 0.0)), SEAT.clone().add(V(0, 0, 0.04)), 40)])],
     [S.last, cameraPath([K(S.last, V(0.3, 1.25, -0.7), head(DOOR.clone().add(V(-0.55, 0, 0.25)), 1.15), 48), K(T(268), V(0.38, 1.22, -1.05), head(DOOR.clone().add(V(-0.55, 0, 0.25)), 1.08), 46),
       K(S.end, V(0.45, 1.2, -1.4), head(DOOR.clone().add(V(-0.55, 0, 0.25)), 0.98), 44)])],   // from the aisle (clear of parked cars)
   ];

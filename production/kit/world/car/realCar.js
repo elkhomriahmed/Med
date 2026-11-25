@@ -85,7 +85,7 @@ export async function buildRealHeroCar({ name = "heroCar" } = {}) {
   // line is raised x1.45 (windshield ~ as tall as the old code car's), and its big wheel is replaced by a lower slim one
   { const YB = 0.95, KG = 1.45; for (const m of body.children) { const q = m.geometry.attributes.position;
       for (let i = 0; i < q.count; i++) { const y = q.getY(i); if (y > YB) q.setY(i, YB + (y - YB) * KG); } q.needsUpdate = true; m.geometry.computeBoundingBox(); m.geometry.computeBoundingSphere(); }
-    cutRegion({ children: body.children }, new THREE.Box3(new THREE.Vector3(-0.66, 0.74, -0.58), new THREE.Vector3(-0.02, 1.35, -0.3)));   // old wheel (discarded)
+    cutIslands(body.children.filter((m) => m.isMesh), new THREE.Box3(new THREE.Vector3(-0.75, 0.55, -1.05), new THREE.Vector3(0.1, 1.45, -0.2)), { minInside: 0.8 });   // old wheel: whole pieces removed (no leftover strips)
     const wm = new THREE.MeshStandardMaterial({ color: "#1d2025", roughness: 0.5 }); wm.name = "hero_wheel";
     const SW = new THREE.Vector3(-0.4, 0.86, -0.5), sw = new THREE.Group(); sw.position.copy(SW); sw.rotation.x = 0.42; body.add(sw);
     const rim = new THREE.Mesh(new THREE.TorusGeometry(0.165, 0.022, 12, 40), wm), hub = new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 10).scale(1, 1, 0.5), wm);
@@ -108,6 +108,10 @@ export async function buildRealHeroCar({ name = "heroCar" } = {}) {
   const seatHits = []; for (const z of [-0.35, -0.25, -0.15]) { const rc = new THREE.Raycaster(new THREE.Vector3(-0.4, 1.3, z), new THREE.Vector3(0, -1, 0)); rc.far = 1.25;
     for (const h of rc.intersectObjects(rest.filter((m) => !/glass/i.test(m.name)), false)) if (h.point.y < 0.65 && h.point.y > 0.35) { seatHits.push(h.point.y); break; } }
   const seatY = seatHits.length ? Math.max(...seatHits) : 0.56;
+  // the dot sits just IN FRONT of the lying bottle (visible from the windshield + both seats), on the cushion measured right there
+  let dotY = seatY; { const r = new THREE.Raycaster(new THREE.Vector3(-0.4, 1.0, -0.39), new THREE.Vector3(0, -1, 0)); r.far = 0.8;
+    for (const h of r.intersectObjects(rest.filter((m) => !/glass/i.test(m.name)), false)) if (h.point.y < 0.65 && h.point.y > 0.35) { dotY = h.point.y; break; } }
+  console.log("HERO_DOT", dotY.toFixed(3));
   console.log("HERO_SEAT", seatY.toFixed(3), JSON.stringify(seatHits.map((v) => +v.toFixed(3))));
   const solid = rest.filter((m) => !/glass/i.test(m.name));
   const topAt = (x, z, def, y0 = 1.38) => { const r = new THREE.Raycaster(new THREE.Vector3(x, y0, z), new THREE.Vector3(0, -1, 0)); r.far = 1.2; const h = r.intersectObjects(solid, false)[0]; return h ? h.point.y : def; };
@@ -115,15 +119,16 @@ export async function buildRealHeroCar({ name = "heroCar" } = {}) {
   const passSeat = new THREE.Vector3(0.4, topAt(0.4, -0.25, 0.56, 0.85) + 0.05, -0.25);
   const V = (x, y, z) => new THREE.Vector3(x, y, z), handleLocal = V(-0.93, 0.84, 0.05);
   const A = {
-    dashLighter, dashShades, passSeat, driverSeatTop: V(-0.4, seatY, -0.3), seatBurnPoint: V(-0.4, seatY + 0.0005, -0.18), seatNormal: V(0, 1, 0),
+    dashLighter, dashShades, passSeat, driverSeatTop: V(-0.4, seatY, -0.3), seatBurnPoint: V(-0.4, dotY + 0.002, -0.39), seatNormal: V(0, 1, 0),
     doorHandle: handleLocal.clone(), driverDoorOpenSpot: V(-1.32, 0, 0.32), driverDoorOpenYaw: Math.PI / 2, doorHinge: H.clone(),
     views: {
-      throughWindshield: { pos: V(-0.4, 3.1, -1.6), target: V(-0.4, seatY + 0.04, -0.22), fov: 30 },   // through the (now tall) windshield, over the slim wheel
+      throughWindshield: { pos: V(-0.4, 3.1, -1.6), target: V(-0.4, dotY + 0.03, -0.37), fov: 30 },   // through the (now tall) windshield, over the slim wheel
       seatMacro: { pos: V(-0.15, seatY + 0.3, -0.45), target: V(-0.4, seatY + 0.015, -0.2), fov: 42 },
       sideWindow: { pos: V(-1.62, 1.9, -0.2), target: V(-0.38, seatY + 0.04, -0.22), fov: 34 },
       doorOpen: { pos: V(-3.5, 1.6, 1.7), target: V(-0.75, 0.85, -0.25), fov: 42 },
     },
   };
+  const fill = new THREE.PointLight(0xffc27a, 2.6, 2.8, 2); fill.position.set(-0.15, 1.38, -0.45); fill.name = "cabinSunSpill"; root.add(fill);   // sun through the windshield onto the seats
   root.userData.anchors = root.anchors = A; root.userData.door = doorPivot; root.userData.seatY = seatY;
   root.getDoorHandle = (out = new THREE.Vector3()) => out.copy(handleLocal).sub(doorPivot.position).applyAxisAngle(V(0, 1, 0), doorPivot.rotation.y).add(doorPivot.position);
   root.toWorld = (view, carGroup = root) => toWorld(view, carGroup);
