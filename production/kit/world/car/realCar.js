@@ -4,6 +4,7 @@
 //   loadCarModel(name)  -> normalized Group: nose -Z, wheels on y=0, centred, real size (length ~5 m)
 //   CAR_MODELS          -> names in the pack (sedans/wagons/coupes/vans)
 import * as THREE from "three";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { loadGLTF } from "../../shared/assets.js";
 
 export const CAR_MODELS = ["patrician", "clipper", "54buick", "buickwagon", "hudson", "buick_50", "buick_coupe", "fordpolice", "taxi", "packard_caribbean", "surferwagon", "van"];
@@ -43,6 +44,10 @@ export async function loadCarModel(name, { length = 5.0, stretch = [1, 1, 1], un
     const m = new THREE.Mesh(p.g, p.mat); m.name = p.name; m.castShadow = !/glass/i.test(p.name); m.receiveShadow = true; root.add(m); }
   if (globalThis.__DBGPARTS === name) for (const m of root.children) { const b = m.geometry.boundingBox; console.log('PART', m.name, b.min.toArray().map((v) => v.toFixed(2)).join(','), b.max.toArray().map((v) => v.toFixed(2)).join(',')); }   // DBGPARTS
   root.userData.size = new THREE.Vector3(size.x, size.y, size.z).multiplyScalar(k);
+  { const cv = document.createElement("canvas"); cv.width = cv.height = 64; const g = cv.getContext("2d"), gr = g.createRadialGradient(32, 32, 4, 32, 32, 32);
+    gr.addColorStop(0, "rgba(0,0,0,0.75)"); gr.addColorStop(0.6, "rgba(0,0,0,0.45)"); gr.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+    const sz = root.userData.size, sh = new THREE.Mesh(new THREE.PlaneGeometry(sz.x * 1.25, sz.z * 1.12), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false, opacity: 0.85 }));
+    sh.rotation.x = -Math.PI / 2; sh.position.y = 0.012; sh.renderOrder = -1; sh.name = "carContactShadow"; root.add(sh); }   // grounds every car (depth)
   if (!unique) cache.set(key, root);
   return unique ? root : root.clone(true);
 }
@@ -76,12 +81,25 @@ export async function buildRealHeroCar({ name = "heroCar" } = {}) {
   const root = new THREE.Group(); root.name = name;
   const body = await loadCarModel("54buick", { length: 4.9, stretch: [1.08, 1.05, 1], unique: true }); root.add(body);
   for (const m of body.children) { m.material = m.material.clone(); m.material.name = "hero_" + m.material.name; if (/hula/i.test(m.name)) m.visible = false; }
+  // TALLER GLASS (user, 2026-11-25): the Buick's windshield was too low to see inside comfortably -> everything above the belt
+  // line is raised x1.45 (windshield ~ as tall as the old code car's), and its big wheel is replaced by a lower slim one
+  { const YB = 0.95, KG = 1.45; for (const m of body.children) { const q = m.geometry.attributes.position;
+      for (let i = 0; i < q.count; i++) { const y = q.getY(i); if (y > YB) q.setY(i, YB + (y - YB) * KG); } q.needsUpdate = true; m.geometry.computeBoundingBox(); m.geometry.computeBoundingSphere(); }
+    cutRegion({ children: body.children }, new THREE.Box3(new THREE.Vector3(-0.66, 0.74, -0.58), new THREE.Vector3(-0.02, 1.35, -0.3)));   // old wheel (discarded)
+    const wm = new THREE.MeshStandardMaterial({ color: "#1d2025", roughness: 0.5 }); wm.name = "hero_wheel";
+    const SW = new THREE.Vector3(-0.4, 0.86, -0.5), sw = new THREE.Group(); sw.position.copy(SW); sw.rotation.x = 0.42; body.add(sw);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.165, 0.022, 12, 40), wm), hub = new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 10).scale(1, 1, 0.5), wm);
+    sw.add(rim, hub); for (const a of [0, 2.1, -2.1]) { const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.16, 6), wm); sp.position.set(Math.sin(a) * 0.08, Math.cos(a) * 0.08, 0); sp.rotation.z = -a; sw.add(sp); }
+    const c0 = new THREE.Vector3(-0.4, 0.8, -0.64), cd = SW.clone().sub(c0), col = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, cd.length(), 10), wm);
+    col.position.copy(c0).addScaledVector(cd, 0.5); col.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), cd.normalize()); body.add(col);
+    for (const o of [rim, hub, col]) { o.castShadow = o.receiveShadow = true; } }
   // driver door: triangles on the outer driver side between the hinge and the B pillar (glass: the tumblehome sits further in)
   const H = new THREE.Vector3(-0.9, 0, -0.84), doorPivot = new THREE.Group(); doorPivot.position.copy(H); root.add(doorPivot);
-  const glass = body.children.filter((m) => /glass/i.test(m.name) && !/headlight/i.test(m.name)), rest = body.children.filter((m) => !glass.includes(m));
+  const glass = body.children.filter((m) => m.isMesh && /glass/i.test(m.name) && !/headlight/i.test(m.name)), rest = body.children.filter((m) => m.isMesh && !glass.includes(m) && m.material.name !== "hero_wheel");
   const tmp = new THREE.Group();
-  const cutA = cutRegion({ children: rest }, new THREE.Box3(new THREE.Vector3(-2, 0.2, -0.82), new THREE.Vector3(-0.76, 1.3, 0.17)));
-  const cutB = cutRegion({ children: glass }, new THREE.Box3(new THREE.Vector3(-2, 0.95, -0.82), new THREE.Vector3(-0.6, 1.36, 0.17)));
+  const DOORBOX = new THREE.Box3(new THREE.Vector3(-2, 0.1, -0.9), new THREE.Vector3(-0.55, 1.75, 0.24));
+  const cutA = cutIslands(rest, DOORBOX), cutB = cutIslands(glass, DOORBOX);
+  console.log("HERO_DOOR_PIECES", cutA.children.length + cutB.children.length, cutA.children.map((c) => c.name + ':' + c.geometry.attributes.position.count / 3).join(' '));
   for (const c of [...cutA.children, ...cutB.children]) { c.geometry.translate(-H.x, -H.y, -H.z); doorPivot.add(c); }
   void tmp;
   // seat height (raycast down at the driver seat)
@@ -100,7 +118,7 @@ export async function buildRealHeroCar({ name = "heroCar" } = {}) {
     dashLighter, dashShades, passSeat, driverSeatTop: V(-0.4, seatY, -0.3), seatBurnPoint: V(-0.4, seatY + 0.0005, -0.18), seatNormal: V(0, 1, 0),
     doorHandle: handleLocal.clone(), driverDoorOpenSpot: V(-1.32, 0, 0.32), driverDoorOpenYaw: Math.PI / 2, doorHinge: H.clone(),
     views: {
-      throughWindshield: { pos: V(0.3, 1.15, -0.55), target: V(-0.4, seatY + 0.04, -0.22), fov: 30 },   // the Buick's big wheel hides the seat from the front: look down through the driver window   // under the (lower) Buick roof edge, over the dash
+      throughWindshield: { pos: V(-0.4, 3.1, -1.6), target: V(-0.4, seatY + 0.04, -0.22), fov: 30 },   // through the (now tall) windshield, over the slim wheel
       seatMacro: { pos: V(-0.15, seatY + 0.3, -0.45), target: V(-0.4, seatY + 0.015, -0.2), fov: 42 },
       sideWindow: { pos: V(-1.62, 1.9, -0.2), target: V(-0.38, seatY + 0.04, -0.22), fov: 34 },
       doorOpen: { pos: V(-3.5, 1.6, 1.7), target: V(-0.75, 0.85, -0.25), fov: 42 },
@@ -113,4 +131,29 @@ export async function buildRealHeroCar({ name = "heroCar" } = {}) {
   const set = ({ door = 0 } = {}) => { doorPivot.rotation.y = -1.15 * ss(door); };
   root.set = set; root.userData.set = set; set({ door: 0 });
   return root;
+}
+
+/** Move whole connected pieces (islands) whose bounds sit inside `box` out of every mesh -> clean door edges, as modelled. */
+export function cutIslands(meshes, box, { minInside = 0.85 } = {}) {
+  const cut = new THREE.Group(), v = new THREE.Vector3();
+  for (const m of meshes) {
+    const g = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry, pos = g.attributes.position, n = pos.count / 3;
+    // union-find over triangles that share a (welded) vertex position
+    const parent = new Int32Array(n).map((_, i) => i), find = (i) => { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
+    const key = (i) => `${Math.round(pos.getX(i) * 2000)},${Math.round(pos.getY(i) * 2000)},${Math.round(pos.getZ(i) * 2000)}`, seen = new Map();
+    for (let i = 0; i < pos.count; i++) { const k = key(i), t = (i / 3) | 0; if (seen.has(k)) { const a = find(seen.get(k)), b = find(t); if (a !== b) parent[a] = b; } else seen.set(k, t); }
+    const stats = new Map();
+    for (let t = 0; t < n; t++) { const r = find(t); let st = stats.get(r); if (!st) stats.set(r, st = { tot: 0, ins: 0 });
+      for (let q = 0; q < 3; q++) { v.fromBufferAttribute(pos, 3 * t + q); st.tot++; if (box.containsPoint(v)) st.ins++; } }
+    const inside = new Uint8Array(n); let any = 0;
+    for (let t = 0; t < n; t++) { const st = stats.get(find(t)); if (st.ins / st.tot >= minInside) { inside[t] = 1; any++; } }
+    if (!any) continue;
+    const pick = (want) => { const out = new THREE.BufferGeometry();
+      for (const k in g.attributes) { const at = g.attributes[k], is = at.itemSize, arr = new at.array.constructor((want ? any : n - any) * 3 * is); let w = 0;
+        for (let t = 0; t < n; t++) if (inside[t] === want) for (let q = 0; q < 3 * is; q++) arr[w++] = at.array[3 * t * is + q];
+        out.setAttribute(k, new THREE.BufferAttribute(arr, is, at.normalized)); }
+      return out; };
+    m.geometry = pick(0); const cm = new THREE.Mesh(pick(1), m.material); cm.name = m.name + "_door"; cm.castShadow = m.castShadow; cm.receiveShadow = true; cut.add(cm);
+  }
+  return cut;
 }

@@ -23,7 +23,7 @@ async function build(canvas, W, H) {
   const camera = new THREE.PerspectiveCamera(52, W / H, 0.03, 2000);
   const lot = await buildLot({}); scene.add(lot.group);
   const A = lot.anchors;
-  lot.lights.key.shadow.normalBias = 0.06; lot.lights.key.shadow.bias = -0.0008;   // no shadow-acne stripes on the rounded toy cars (popscan 14-15 s)
+  scene.fog = new THREE.FogExp2(0xb9cbe0, 0.0065);   // aerial depth (STYLE_BIBLE: depth fog per scene): far rows, trees, buildings fade into light haze
   const car = await buildHeroCar({}); car.position.copy(A.heroBay.pos || A.heroBay); car.rotation.y = 0; scene.add(car); car.updateMatrixWorld(true);
   const CA = car.anchors;
   const parked = [];
