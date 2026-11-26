@@ -1,0 +1,35 @@
+How to make Rick Clips quality animated videos with only Claude, step by step. 2D characters living in a real 3D world, every object built from code, lit by a real sun, with smooth cameras and real sound effects. Made on my own PC with three.js. No AI video generator, no character sheets.
+
+In this video:
+• Why most AI cartoons look flat (character sheets, one-colour faces, flat lighting)
+• Shading that follows the light, so the characters never look flat
+• Faces drawn from emotions every frame, with blended feelings and blinks
+• Clothes wrapped round an invisible 3D body, so they turn with the character
+• A real 3D skeleton under every character: kneel, sit, drive, pick things up
+• A whole world built from code, part by part: opening car doors, bending guardrails, a spinning saw
+• A real sun, cloud shadows, sunsets and dark nights with headlights
+• Cameras that follow the story, and real sound effects on the exact frame
+• How I plan every scene before anything gets made
+
+Get the skill, the prompt guide, the camera editor and the music picker ($9): https://www.skool.com/bookshelf-knowledge-7329/about
+
+Chapters
+0:00 Rick Clips quality
+0:19 My video vs his
+0:52 The real difference
+0:55 Characters and shading
+1:32 Expressions
+2:20 Clothes and accessories
+3:25 Character movement
+4:32 Backgrounds and objects
+5:38 Lighting
+6:32 Camera and sound effects
+7:27 Planning every scene
+7:43 The skill ($9.99)
+8:16 Outro
+
+Music: Gone with the wind by gchoc (OpenGameArt)
+
+#ClaudeAI #AIAnimation #threejs
+CHAPTERS [{'start_time': 0, 'title': 'Rick Clips quality', 'end_time': 19}, {'start_time': 19, 'title': 'My video vs his', 'end_time': 52}, {'start_time': 52, 'title': 'The real difference', 'end_time': 55}, {'start_time': 55, 'title': 'Characters and shading', 'end_time': 92}, {'start_time': 92, 'title': 'Expressions', 'end_time': 140}, {'start_time': 140, 'title': 'Clothes and accessories', 'end_time': 205}, {'start_time': 205, 'title': 'Character movement', 'end_time': 272}, {'start_time': 272, 'title': 'Backgrounds and objects', 'end_time': 338}, {'start_time': 338, 'title': 'Lighting', 'end_time': 392}, {'start_time': 392, 'title': 'Camera and sound effects', 'end_time': 447}, {'start_time': 447, 'title': 'Planning every scene', 'end_time': 463}, {'start_time': 463, 'title': 'The skill ($9.99)', 'end_time': 496}, {'start_time': 496, 'title': 'Outro', 'end_time': 500}]
+TAGS []
