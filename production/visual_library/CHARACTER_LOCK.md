@@ -56,3 +56,7 @@ If something looks off, fix the SPEC or the direction, never the locked geometry
 ## 5. Agent rule
 Agents that touch characters get this file + the reference image in their brief and may only add/modify specs, face-library
 identities and named poses. A brief that asks an agent to "make characters" without this file is wrong.
+
+## 2d. Cast by role + glowy faces (user, 2026-11-27)
+- Each character's face features and clothes are chosen from their role and situation in the story (who they are must read at a glance).
+- Faces are never dry/matte: a slight glowy, luminous quality (soft inner brightness, gentle sheen on the lit side), like the competitor's characters.
